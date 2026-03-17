@@ -8,12 +8,11 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { WebBadge } from '@/components/web-badge';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
-import LoginScreen from './login';
-
+import Skeleton from '@/components/skeleton';
 
 export default function HomeScreen() {
   return (
-   <LoginScreen />
+   <Skeleton/>
   );
 }
 

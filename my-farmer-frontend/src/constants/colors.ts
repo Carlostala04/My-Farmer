@@ -6,6 +6,7 @@ export const Colors = {
   INPUT_BORDER: "#D1D5DB",
   PLACEHOLDER_GRAY: "#9CA3AF",
   LINK_GRAY: "#6B7280",
+  SKELETON_BACKGROUND:"#d4d5d2",
 } as const;
 
 export default Colors;

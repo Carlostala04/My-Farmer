@@ -1,0 +1,102 @@
+import { View, Text, Pressable, StyleSheet } from 'react-native';
+import React, { useMemo } from 'react';
+import { Link, usePathname } from 'expo-router';
+
+import colors from '@/constants/colors';
+
+import House from './ui/home_icon';
+import AnimalsIcon from './ui/animals_icon';
+import CultivosIcon from './ui/cultivos_icon';
+import RecordatoriosIcon from './ui/recordatorios_icon';
+
+type NavKey = 'home' | 'animales' | 'cultivos' | 'recordatorios';
+
+export default function navBar() {
+  const pathname = usePathname();
+
+  const items = useMemo(
+    () =>
+      [
+        {
+          key: 'home' as const,
+          label: 'Inicio',
+          href: '/' as any,
+          renderIcon: (color: string) => <House color={color} size={28} />,
+        },
+        {
+          key: 'animales' as const,
+          label: 'Animales',
+          href: '/animals' as any,
+          renderIcon: (color: string) => <AnimalsIcon color={color} size={28} />,
+        },
+        {
+          key: 'cultivos' as const,
+          label: 'Cultivos',
+          href: '/cultivos' as any,
+          renderIcon: (color: string) => <CultivosIcon color={color} size={28} />,
+        },
+        {
+          key: 'recordatorios' as const,
+          label: 'Recordatorios',
+          href: '/recordatorios' as any,
+          renderIcon: (color: string) => <RecordatoriosIcon color={color} size={28} />,
+        },
+      ] as const,
+    []
+  );
+
+  return (
+    <View style={styles.navBar_container}>
+      {items.map((item) => {
+        const isSelected =
+          item.href === '/'
+            ? pathname === '/' || pathname === '/index'
+            : pathname === item.href;
+        const iconAndTextColor = isSelected ? colors.PRIMARY_GREEN : colors.LINK_GRAY;
+
+        return (
+          <Link key={item.key} href={item.href as any} asChild>
+            <Pressable style={({ pressed }) => [pressed && styles.pressed]}>
+              <View style={styles.item}>
+                {item.renderIcon(iconAndTextColor)}
+                <Text style={[styles.label, { color: iconAndTextColor }]}>
+                  {item.label}
+                </Text>
+              </View>
+            </Pressable>
+          </Link>
+        );
+      })}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  navBar_container: {
+    width: '100%',
+    height: 96,
+    backgroundColor: '#fff',
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-around',
+    paddingHorizontal: 8,
+    zIndex: 20,
+  },
+  item: {
+    width: 90,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  label: {
+    marginTop: 4,
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  pressed: {
+    opacity: 0.75,
+  },
+});

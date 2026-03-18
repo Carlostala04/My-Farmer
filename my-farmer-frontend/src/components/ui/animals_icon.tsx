@@ -30,8 +30,8 @@ export function AnimalsIcon(props: AnimalsIconProps) {
         <Path d="M7.5 12c0-4 2.5-7 4.5-7s4.5 3 4.5 7v8h-9v-8Z" />
 
         {/* Eyes */}
-        <Circle cx={10.2} cy={13.2} r={1} />
-        <Circle cx={13.8} cy={13.2} r={1} />
+        <Circle cx={10.2} cy={13.2} r={1} fill={strokeColor} stroke="none" />
+        <Circle cx={13.8} cy={13.2} r={1} fill={strokeColor} stroke="none" />
 
         {/* Snout */}
         <Path d="M10 16c0-1 1-2 2-2s2 1 2 2v2c0 1-1 2-2 2s-2-1-2-2v-2Z" />

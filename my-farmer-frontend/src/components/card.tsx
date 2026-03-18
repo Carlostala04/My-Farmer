@@ -1,0 +1,89 @@
+import React from "react";
+import { View, Text, Image, StyleSheet } from "react-native";
+import Colors from "@/constants/colors";
+
+type CardProps = {
+  nombre: string;
+  edad: number;
+  estado: string;
+  imagen: string;
+};
+
+export default function Card({ nombre, edad, estado, imagen }: CardProps) {
+  return (
+    <View style={styles.card}>
+      <Image style={styles.image} source={{ uri: imagen }} />
+
+      <View style={styles.content}>
+        <Text style={styles.title} numberOfLines={1}>
+          {nombre}
+        </Text>
+        <Text style={styles.subtitle}>{`${edad} años`}</Text>
+
+        <View style={styles.badge}>
+          <Text style={styles.badgeText} numberOfLines={1}>
+            {estado}
+          </Text>
+        </View>
+      </View>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  card: {
+    width: "100%",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 20,
+    padding: 14,
+    borderRadius: 18,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "rgba(0,0,0,0.06)",
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 2,
+  },
+
+  image: {
+    width: 82,
+    height: 82,
+    borderRadius: 16,
+    backgroundColor: Colors.SKELETON_BACKGROUND,
+  },
+
+  content: {
+    flex: 1,
+    gap: 6,
+    minWidth: 0,
+  },
+
+  title: {
+    fontSize: 22,
+    fontWeight: "700",
+    color: "#111827",
+  },
+
+  subtitle: {
+    fontSize: 16,
+    fontWeight: "500",
+    color: "#6B7280",
+  },
+
+  badge: {
+    alignSelf: "flex-start",
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 999,
+    backgroundColor: Colors.PRIMARY_GREEN,
+  },
+
+  badgeText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "700",
+  }
+});

@@ -91,8 +91,8 @@ const styles = StyleSheet.create({
   },
 
   card: {
-    width: "70%",
-    minHeight: 380,
+    width: "88%",
+    minHeight: 460,
     backgroundColor: "#fff",
     borderRadius: 16,
     overflow: "hidden",
@@ -101,7 +101,7 @@ const styles = StyleSheet.create({
 
   card_header: {
     width: "100%",
-    height: 150,
+    height: 180,
     backgroundColor: "#19c91f",
     justifyContent: "flex-end",
     paddingBottom: 10,
@@ -109,38 +109,38 @@ const styles = StyleSheet.create({
   },
 
   price: {
-    fontSize: 48,
+    fontSize: 50,
     fontWeight: "800",
     color: "#fff",
     textAlign: "left",
-    marginBottom: 30,
-    marginLeft: 5,
+    marginBottom: 20,
+    marginLeft: 15,
   },
 
   premium: {
     position: "absolute",
     backgroundColor: "#137a11",
-    width: 100,
-    height: 40,
+    width: 115,
+    height: 44,
     top: 5,
     left: 10,
     borderRadius: 50,
   },
 
   dot: {
-    width: 5,
-    height: 5,
+    width: 7,
+    height: 7,
     backgroundColor: "#4ade80",
     borderRadius: 10,
-    top: 19,
-    left: 10,
+    top: 20,
+    left: 12,
   },
   title: {
     color: "#c8f0d2",
     position: "absolute",
-    top: 8,
-    left: 20,
-    fontSize: 16,
+    top: 10,
+    left: 25,
+    fontSize: 17,
     fontWeight: "700",
     textAlign: "center",
   },
@@ -148,9 +148,9 @@ const styles = StyleSheet.create({
   time: {
     color: "#fff",
     position: "absolute",
-    bottom: 50,
-    left: 89,
-    fontSize: 16,
+    bottom: 40,
+    left: 100,
+    fontSize: 18,
     fontWeight: "700",
   },
   ribbonContainer: {
@@ -183,14 +183,14 @@ const styles = StyleSheet.create({
   },
 
   body: {
-    padding: 24,
+    padding: 30,
   },
 
   feature: {
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
-    paddingVertical: 11,
+    paddingVertical: 14,
   },
 
   featureBorder: {
@@ -224,7 +224,7 @@ const styles = StyleSheet.create({
   button: {
     marginTop: 20,
     backgroundColor: "#14a10f",
-    paddingVertical: 14,
+    paddingVertical: 17,
     borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
@@ -237,7 +237,7 @@ const styles = StyleSheet.create({
 
   buttonText: {
     color: "#fff",
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: "600",
     letterSpacing: 0.1,
   },

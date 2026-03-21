@@ -1,17 +1,24 @@
 import React from "react";
-import { View, Text, Image, StyleSheet } from "react-native";
+import { View, Text, Image, StyleSheet, Pressable } from "react-native";
 import Colors from "@/constants/colors";
+import { animalsProps } from "@/ts/animalsProps";
 
-type CardProps = {
-  nombre: string;
-  edad: number;
-  estado: string;
-  imagen: string;
+type CardProps = Pick<animalsProps, "nombre" | "imagen" | "estado" | "edad"> & {
+  onPress?: () => void;
 };
 
-export default function Card({ nombre, edad, estado, imagen }: CardProps) {
+export default function Card({
+  nombre,
+  edad,
+  estado,
+  imagen,
+  onPress,
+}: CardProps) {
   return (
-    <View style={styles.card}>
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [styles.card, pressed && { opacity: 0.75 }]}
+    >
       <Image style={styles.image} source={{ uri: imagen }} />
 
       <View style={styles.content}>
@@ -26,7 +33,7 @@ export default function Card({ nombre, edad, estado, imagen }: CardProps) {
           </Text>
         </View>
       </View>
-    </View>
+    </Pressable>
   );
 }
 
@@ -46,7 +53,7 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     shadowOffset: { width: 0, height: 4 },
     elevation: 2,
-    marginTop:20
+    marginTop: 20,
   },
 
   image: {
@@ -86,5 +93,5 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 16,
     fontWeight: "700",
-  }
+  },
 });

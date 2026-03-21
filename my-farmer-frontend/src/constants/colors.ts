@@ -7,6 +7,13 @@ export const Colors = {
   PLACEHOLDER_GRAY: "#9CA3AF",
   LINK_GRAY: "#6B7280",
   SKELETON_BACKGROUND:"#d4d5d2",
+  BACKGROUND: "#F5F5F5",
+  CARD_DETAILS: "#FFFFFF",
+  TITLE: "#1A1A1A",
+  SUBTITLE: "#666666",
+  LABEL: "#888888",
+  VALUE: "#1A1A1A",
+  DIVIDER: "#EEEEEE",
 } as const;
 
 export default Colors;

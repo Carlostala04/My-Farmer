@@ -1,5 +1,6 @@
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, Pressable } from "react-native";
 import React from "react";
+import BackIcon from "./ui/back";
 
 type Action = {
   icon: React.ReactNode;
@@ -14,6 +15,7 @@ type ScreenHeaderProps = {
 const ScreenHeader = ({ title, actions = [] }: ScreenHeaderProps) => {
   return (
     <View style={styles.container}>
+      <BackIcon/>
       <Text style={styles.title}>{title}</Text>
       {actions.length > 0 && (
         <View style={styles.actionsContainer}>
@@ -45,6 +47,8 @@ const styles = StyleSheet.create({
     marginTop:20
   },
   title: {
+    position:"absolute",
+    left:50,
     fontSize: 22,
     fontWeight: "700",
     color: "#1A1A1A",

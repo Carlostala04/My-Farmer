@@ -9,6 +9,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Card from "@/components/card";
 import { useRouter } from "expo-router";
 import ScreenHeader from "@/components/header";
+import EyeIcon from "@/components/ui/eye";
+import FilterIcon from "@/components/ui/filterIcon";
 
 export default function AnimalsScreen() {
   const [buscar, setBuscar] = useState("");
@@ -93,7 +95,15 @@ export default function AnimalsScreen() {
 
   return (
     <>
-      <ScreenHeader title="Animales" />
+      <ScreenHeader
+        title="Animales"
+        actions={[
+          {
+            icon: <FilterIcon width={22} height={22} />,
+            onPress: () => console.log("filtrar"),
+          },
+        ]}
+      />
       <NavBar />
       <View style={styles.content}>
         <TextInput

@@ -4,6 +4,7 @@ import { Image } from "expo-image";
 import Colors from "@/constants/colors";
 import ScreenHeader from "@/components/header";
 import { useLocalSearchParams } from "expo-router";
+import DeleteIcon from "@/components/ui/deleteIcon";
 
 const AnimalsDetails = () => {
   const { nombre, raza, color, edad, peso, imagen } = useLocalSearchParams<{
@@ -27,7 +28,15 @@ const AnimalsDetails = () => {
 
   return (
     <>
-    <ScreenHeader title="Detalles Animal"/>
+      <ScreenHeader
+        title="Detalles Animal"
+        actions={[
+          {
+            icon: <DeleteIcon width={22} height={22} />,
+            onPress: () => console.log("eliminado"),
+          },
+        ]}
+      />
       <ScrollView
         style={styles.container}
         contentContainerStyle={styles.contentContainer}

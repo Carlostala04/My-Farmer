@@ -59,7 +59,7 @@ const AnimalsDetails = () => {
             </View>
             <View style={styles.details}>
               <Text style={styles.label}>Edad:</Text>
-              <Text style={styles.value}>{`${edad ?? "-"} años`}</Text>
+              <Text style={styles.value}>{`${edad} años`}</Text>
             </View>
           </View>
         </View>

@@ -8,8 +8,8 @@ import House from './ui/home_icon';
 import AnimalsIcon from './ui/animals_icon';
 import CultivosIcon from './ui/cultivos_icon';
 import RecordatoriosIcon from './ui/recordatorios_icon';
-
-type NavKey = 'home' | 'animales' | 'cultivos' | 'recordatorios';
+import UserIcon from './ui/user';
+type NavKey = 'home' | 'animales' | 'cultivos' | 'recordatorios' | 'perfil';
 
 export default function navBar() {
   const pathname = usePathname();
@@ -21,25 +21,31 @@ export default function navBar() {
           key: 'home' as const,
           label: 'Inicio',
           href: '/' as any,
-          renderIcon: (color: string) => <House color={color} size={28} />,
+          renderIcon: (color: string) => <House color={color} size={24} />,
         },
         {
           key: 'animales' as const,
           label: 'Animales',
           href: '/animals' as any,
-          renderIcon: (color: string) => <AnimalsIcon color={color} size={28} />,
+          renderIcon: (color: string) => <AnimalsIcon color={color} size={24} />,
         },
         {
           key: 'cultivos' as const,
           label: 'Cultivos',
           href: '/cultivos' as any,
-          renderIcon: (color: string) => <CultivosIcon color={color} size={28} />,
+          renderIcon: (color: string) => <CultivosIcon color={color} size={24} />,
         },
         {
           key: 'recordatorios' as const,
           label: 'Recordatorios',
           href: '/recordatorios' as any,
-          renderIcon: (color: string) => <RecordatoriosIcon color={color} size={28} />,
+          renderIcon: (color: string) => <RecordatoriosIcon color={color} size={24} />,
+        },
+        {
+          key: 'perfil' as const,
+          label: 'Perfil',
+          href: '/perfil' as any,
+          renderIcon: (color: string) => <UserIcon stroke={color} color={color} width={22} height={22} />,
         },
       ] as const,
     []
@@ -72,9 +78,9 @@ export default function navBar() {
 }
 
 const styles = StyleSheet.create({
-  navBar_container: {
+ navBar_container: {
     width: '100%',
-    height: 96,
+    height: 80,
     backgroundColor: '#fff',
     position: 'absolute',
     left: 0,
@@ -82,19 +88,20 @@ const styles = StyleSheet.create({
     bottom: 0,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-around',
-    paddingHorizontal: 8,
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
     zIndex: 20,
   },
   item: {
-    width: 90,
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
   label: {
-    marginTop: 4,
-    fontSize: 12,
+    marginTop: 2,
+    fontSize: 9,
     fontWeight: '600',
+    textAlign: 'center',
   },
   pressed: {
     opacity: 0.75,

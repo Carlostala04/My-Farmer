@@ -99,11 +99,11 @@ export default function AnimalsScreen() {
         title="Animales"
         actions={[
           {
-            icon: <FilterIcon width={22} height={22} />,
+            icon: <FilterIcon width={22} height={22} style={{position:'absolute', top:18, right:20}}/>,
             onPress: () => console.log("filtrar"),
           },
           {
-              icon: <Text style={{ fontSize: 28, color: Colors.PRIMARY_GREEN, fontWeight: "300" }}>+</Text>,
+              icon: <Text style={{ fontSize: 35, color: Colors.PRIMARY_GREEN, fontWeight: "600" }}>+</Text>,
       onPress: () => router.push("/(tabs)/registerAnimal"),
           },
         ]}

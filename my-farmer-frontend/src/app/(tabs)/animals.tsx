@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { FlatList, StyleSheet, TextInput, View } from "react-native";
+import { FlatList, StyleSheet, TextInput, View, Text} from "react-native";
 import Colors from "@/constants/colors";
 
 import { ThemedText } from "@/components/themed-text";
@@ -101,6 +101,10 @@ export default function AnimalsScreen() {
           {
             icon: <FilterIcon width={22} height={22} />,
             onPress: () => console.log("filtrar"),
+          },
+          {
+              icon: <Text style={{ fontSize: 28, color: Colors.PRIMARY_GREEN, fontWeight: "300" }}>+</Text>,
+      onPress: () => router.push("/(tabs)/registerAnimal"),
           },
         ]}
       />

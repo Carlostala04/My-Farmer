@@ -138,15 +138,15 @@ export default function PerfilScreen() {
 
         {/* Stats */}
         <View style={styles.statsRow}>
-          <View style={[styles.statCard, { backgroundColor: d ? "#1E3A5F" : "#EEF2FF" }]}>
-            <Text style={styles.statIcon}>🐄</Text>
-            <Text style={[styles.statNumber, { color: d ? "#93C5FD" : "#4F46E5" }]}>0</Text>
-            <Text style={[styles.statLabel, { color: d ? "#60A5FA" : "#6366F1" }]}>ANIMALES</Text>
+          <View style={[styles.statCard, { backgroundColor: d ? "#1E3A5F" : "#22C55E" }]}>
+            
+            <Text style={[styles.statNumber, { color: d ? "#93C5FD" : "#FFF" }]}>0</Text>
+            <Text style={[styles.statLabel, { color: d ? "#60A5FA" : "#FFF" }]}>ANIMALES</Text>
           </View>
-          <View style={[styles.statCard, { backgroundColor: d ? "#1E3A5F" : "#EEF2FF" }]}>
-            <Text style={styles.statIcon}>🌿</Text>
-            <Text style={[styles.statNumber, { color: d ? "#93C5FD" : "#4F46E5" }]}>0</Text>
-            <Text style={[styles.statLabel, { color: d ? "#60A5FA" : "#6366F1" }]}>CULTIVOS</Text>
+          <View style={[styles.statCard, { backgroundColor: d ? "#1E3A5F" : "#22C55E" }]}>
+            
+            <Text style={[styles.statNumber, { color: d ? "#93C5FD" : "#FFF" }]}>0</Text>
+            <Text style={[styles.statLabel, { color: d ? "#60A5FA" : "#FFF" }]}>CULTIVOS</Text>
           </View>
         </View>
 

@@ -90,7 +90,7 @@ export default function CultivosScreen() {
               estado={item.estado}
               onPress={() =>
                 router.push({
-                  pathname: "/(tabs)/cultivosDetail",
+                  pathname: "/(tabs)/cultivosDetails",
                   params: {
                     nombre: item.nombre,
                     fechaSiembra: item.fechaSiembra,

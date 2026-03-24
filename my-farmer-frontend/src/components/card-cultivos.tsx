@@ -11,7 +11,9 @@ import { cultivoProps } from "@/ts/cultivoProps";
 type CardCultivosProps = Pick<
   cultivoProps,
   "nombre" | "estado" | "fechaSiembra" | "ubicacion" | "imagen"
->;
+> & {
+  onPress?: () => void;
+};
 
 export default function CardCultivos({
   nombre,
@@ -19,10 +21,11 @@ export default function CardCultivos({
   fechaSiembra,
   ubicacion,
   imagen,
+  onPress,
 }: CardCultivosProps) {
   const estado_cultivo = estado ? "Activo" : "Inactivo";
   return (
-    <Pressable>
+    <Pressable onPress={onPress}>
       <ImageBackground
         source={{ uri: imagen }}
         style={styles.card}

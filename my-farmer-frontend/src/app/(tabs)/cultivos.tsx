@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { FlatList, StyleSheet, View,TextInput } from "react-native";
+import { useRouter } from "expo-router";
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
@@ -12,6 +13,7 @@ import Colors from "@/constants/colors";
 
 export default function CultivosScreen() {
   const [buscar, setBuscar] = useState("");
+  const router = useRouter();
 
   const data = useMemo(
     () => [
@@ -64,7 +66,7 @@ export default function CultivosScreen() {
         actions={[
           {
             icon: <FilterIcon width={22} height={22} />,
-            onPress: () => console.log("Cultvos"),
+            onPress: () => console.log("Cultivos"),
           },
         ]}
       />
@@ -86,6 +88,18 @@ export default function CultivosScreen() {
               ubicacion={item.ubicacion}
               imagen={item.imagen}
               estado={item.estado}
+              onPress={() =>
+                router.push({
+                  pathname: "/(tabs)/cultivosDetail",
+                  params: {
+                    nombre: item.nombre,
+                    fechaSiembra: item.fechaSiembra,
+                    ubicacion: item.ubicacion,
+                    estado: String(item.estado),
+                    imagen: item.imagen,
+                  },
+                })
+              }
             />
           )}
         />

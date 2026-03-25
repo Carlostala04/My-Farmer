@@ -17,12 +17,7 @@ export default function navBar() {
   const items = useMemo(
     () =>
       [
-        {
-          key: 'home' as const,
-          label: 'Inicio',
-          href: '/' as any,
-          renderIcon: (color: string) => <House color={color} size={24} />,
-        },
+
         {
           key: 'animales' as const,
           label: 'Animales',

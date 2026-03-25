@@ -8,9 +8,11 @@ import {
   TouchableOpacity,
   ScrollView,
   Alert,
+  Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
+import * as ImagePicker from "expo-image-picker";
 import Colors from "@/constants/colors";
 import { ThemedText } from "@/components/themed-text";
 import ScreenHeader from "@/components/header";
@@ -25,6 +27,48 @@ export default function RegisterAnimalScreen() {
   const [peso, setPeso] = useState("");
   const [altura, setAltura] = useState("");
   const [observaciones, setObservaciones] = useState("");
+  const [imagen, setImagen] = useState<string | null>(null);
+
+  const handleSeleccionarImagen = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert("Permiso requerido", "Se necesita acceso a la galería para seleccionar una imagen.");
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.7,
+    });
+    if (!result.canceled) {
+      setImagen(result.assets[0].uri);
+    }
+  };
+
+  const handleTomarFoto = async () => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert("Permiso requerido", "Se necesita acceso a la cámara para tomar una foto.");
+      return;
+    }
+    const result = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.7,
+    });
+    if (!result.canceled) {
+      setImagen(result.assets[0].uri);
+    }
+  };
+
+  const handleAgregarImagen = () => {
+    Alert.alert("Agregar imagen", "¿Cómo deseas agregar la imagen?", [
+      { text: "Galería", onPress: handleSeleccionarImagen },
+      { text: "Cámara", onPress: handleTomarFoto },
+      { text: "Cancelar", style: "cancel" },
+    ]);
+  };
 
   const handleGuardar = () => {
     if (!nombre.trim() || !tipo.trim()) {
@@ -44,6 +88,23 @@ export default function RegisterAnimalScreen() {
         contentContainerStyle={styles.container}
         showsVerticalScrollIndicator={false}
       >
+        {/* Imagen del Animal */}
+        <TouchableOpacity style={styles.imageContainer} onPress={handleAgregarImagen}>
+          {imagen ? (
+            <Image source={{ uri: imagen }} style={styles.imagePreview} />
+          ) : (
+            <View style={styles.imagePlaceholder}>
+              <ThemedText style={styles.imagePlaceholderIcon}>📷</ThemedText>
+              <ThemedText style={styles.imagePlaceholderText}>Agregar foto del animal</ThemedText>
+            </View>
+          )}
+        </TouchableOpacity>
+        {imagen && (
+          <TouchableOpacity onPress={() => setImagen(null)}>
+            <ThemedText style={styles.removeImageText}>Eliminar imagen</ThemedText>
+          </TouchableOpacity>
+        )}
+
         {/* Datos Básicos */}
         <ThemedText style={styles.sectionTitle}>Datos Básicos</ThemedText>
 
@@ -249,5 +310,44 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#fff",
     fontWeight: "600",
+  },
+  imageContainer: {
+    alignSelf: "center",
+    marginTop: 16,
+    marginBottom: 4,
+  },
+  imagePreview: {
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    borderWidth: 2,
+    borderColor: Colors.INPUT_BORDER,
+  },
+  imagePlaceholder: {
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    borderWidth: 2,
+    borderColor: Colors.INPUT_BORDER,
+    borderStyle: "dashed",
+    backgroundColor: Colors.CARD_DETAILS,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+  },
+  imagePlaceholderIcon: {
+    fontSize: 32,
+  },
+  imagePlaceholderText: {
+    fontSize: 12,
+    color: Colors.PLACEHOLDER_GRAY,
+    textAlign: "center",
+    paddingHorizontal: 12,
+  },
+  removeImageText: {
+    fontSize: 13,
+    color: "#e53935",
+    textAlign: "center",
+    marginBottom: 4,
   },
 });

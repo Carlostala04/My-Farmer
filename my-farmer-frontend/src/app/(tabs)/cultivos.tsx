@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { FlatList, StyleSheet, View,TextInput } from "react-native";
+import { FlatList, StyleSheet, View, TextInput, Text } from "react-native";
 import { useRouter } from "expo-router";
 
 import { ThemedText } from "@/components/themed-text";
@@ -65,8 +65,12 @@ export default function CultivosScreen() {
         title="Cultivos"
         actions={[
           {
-            icon: <FilterIcon width={22} height={22} />,
-            onPress: () => console.log("Cultivos"),
+            icon: <FilterIcon width={22} height={22} style={{ position: "absolute", top: 18, right: 20 }} />,
+            onPress: () => console.log("filtrar"),
+          },
+          {
+            icon: <Text style={{ fontSize: 35, color: Colors.PRIMARY_GREEN, fontWeight: "600" }}>+</Text>,
+            onPress: () => router.push("/(tabs)/registerCultivos"),
           },
         ]}
       />

@@ -231,7 +231,7 @@ export default function PerfilScreen() {
           <Text style={styles.logoutButtonText}>⎋  Cerrar Sesión</Text>
         </TouchableOpacity>
 
-        <Text style={[styles.version, { color: subtitle }]}>FincaDigital v2.4.0 — 2024</Text>
+        <Text style={[styles.version, { color: subtitle }]}>Myfarmer v2.4.0 — 2026</Text>
       </ScrollView>
     </View>
   );

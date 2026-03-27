@@ -27,7 +27,7 @@ export default function Card({
         </Text>
         <Text style={styles.subtitle}>{`${edad} años`}</Text>
 
-        <View style={styles.badge}>
+        <View style={[styles.badge, { backgroundColor: status[estado.toUpperCase() as keyof typeof status] ?? Colors.PRIMARY_GREEN }]}>
           <Text style={styles.badgeText} numberOfLines={1}>
             {estado}
           </Text>
@@ -36,7 +36,14 @@ export default function Card({
     </Pressable>
   );
 }
-
+const status={
+  SALUDABLE: Colors.PRIMARY_GREEN,
+  ENTRENANDO: 'rgba(5, 23, 26, 0.87)',
+  CRECIENDO:'rgba(27, 218, 129, 0.87)',
+  PRODUCIENDO: 'rgba(9, 129, 150, 0.87)',
+  ENFERMO:'rgba(32, 150, 9, 0.87)',
+  MUERTO:'rgba(150, 9, 9, 0.87)'
+}
 const styles = StyleSheet.create({
   card: {
     width: "100%",
@@ -86,7 +93,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 999,
-    backgroundColor: Colors.PRIMARY_GREEN,
   },
 
   badgeText: {

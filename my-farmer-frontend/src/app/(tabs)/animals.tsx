@@ -61,7 +61,7 @@ export default function AnimalsScreen() {
       {
         nombre: "turuleca",
         edad: 4,
-        estado: "morida",
+        estado: "muerto",
         raza: "Leghorn",
         color: "Blanco",
         peso: 2,

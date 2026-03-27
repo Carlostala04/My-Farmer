@@ -9,6 +9,10 @@ import {
   TextInput,
   Alert,
   Animated,
+  KeyboardAvoidingView,
+  Platform,
+  TouchableWithoutFeedback,
+  Keyboard,
 } from "react-native";
 import { GestureHandlerRootView, Swipeable } from "react-native-gesture-handler";
 import NavBar from "@/components/navBar";
@@ -40,6 +44,25 @@ export default function RecordatoriosScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [nuevoTitulo, setNuevoTitulo] = useState("");
   const [nuevaCategoria, setNuevaCategoria] = useState<"Animales" | "Cultivos">("Animales");
+  const [modalExpandido, setModalExpandido] = useState(false);
+  const modalFadeAnim = useState(new Animated.Value(0))[0];
+
+  const toggleModalExpandir = () => {
+    if (modalExpandido) {
+      Animated.timing(modalFadeAnim, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }).start(() => setModalExpandido(false));
+    } else {
+      setModalExpandido(true);
+      Animated.timing(modalFadeAnim, {
+        toValue: 1,
+        duration: 200,
+        useNativeDriver: true,
+      }).start();
+    }
+  };
 
   const filtrados = categoriaActiva === "Todos"
     ? recordatorios
@@ -53,6 +76,17 @@ export default function RecordatoriosScreen() {
 
   const eliminar = (id: string) => {
     setRecordatorios((prev) => prev.filter((r) => r.id !== id));
+  };
+
+  const confirmarEliminar = (id: string) => {
+    Alert.alert(
+      "Eliminar Recordatorio",
+      "¿Estás seguro de que quieres eliminar este recordatorio?",
+      [
+        { text: "Cancelar", style: "cancel" },
+        { text: "Eliminar", style: "destructive", onPress: () => eliminar(id) },
+      ]
+    );
   };
 
   const agregar = () => {
@@ -121,27 +155,33 @@ export default function RecordatoriosScreen() {
               renderRightActions={() => renderDeleteAction(item.id)}
               overshootRight={false}
             >
-              <View style={styles.card}>
-                <TouchableOpacity
-                  style={[styles.checkbox, item.completado && styles.checkboxActivo]}
-                  onPress={() => toggleCompletado(item.id)}
-                >
-                  {item.completado && <Text style={styles.checkmark}>✓</Text>}
-                </TouchableOpacity>
+              <TouchableOpacity
+                activeOpacity={0.9}
+                onLongPress={() => confirmarEliminar(item.id)}
+                delayLongPress={500}
+              >
+                <View style={styles.card}>
+                  <TouchableOpacity
+                    style={[styles.checkbox, item.completado && styles.checkboxActivo]}
+                    onPress={() => toggleCompletado(item.id)}
+                  >
+                    {item.completado && <Text style={styles.checkmark}>✓</Text>}
+                  </TouchableOpacity>
 
-                <View style={styles.cardContent}>
-                  <Text style={[styles.cardTitulo, item.completado && styles.cardTituloTachado]}>
-                    {item.titulo}
-                  </Text>
-                  <Text style={styles.cardFecha}>{item.fecha}</Text>
-                </View>
+                  <View style={styles.cardContent}>
+                    <Text style={[styles.cardTitulo, item.completado && styles.cardTituloTachado]}>
+                      {item.titulo}
+                    </Text>
+                    <Text style={styles.cardFecha}>{item.fecha}</Text>
+                  </View>
 
-                <View style={[styles.badge, item.categoria === "Animales" ? styles.badgeAnimal : styles.badgeCultivo]}>
-                  <Text style={[styles.badgeText, item.categoria === "Animales" ? styles.badgeTextAnimal : styles.badgeTextCultivo]}>
-                    {item.categoria === "Animales" ? "Animal" : "Cultivo"}
-                  </Text>
+                  <View style={[styles.badge, item.categoria === "Animales" ? styles.badgeAnimal : styles.badgeCultivo]}>
+                    <Text style={[styles.badgeText, item.categoria === "Animales" ? styles.badgeTextAnimal : styles.badgeTextCultivo]}>
+                      {item.categoria === "Animales" ? "Animal" : "Cultivo"}
+                    </Text>
+                  </View>
                 </View>
-              </View>
+              </TouchableOpacity>
             </Swipeable>
           )}
         />
@@ -149,41 +189,65 @@ export default function RecordatoriosScreen() {
 
       {/* Modal agregar */}
       <Modal visible={modalVisible} transparent animationType="slide">
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
-            <Text style={styles.modalTitle}>Nuevo Recordatorio</Text>
-            <TextInput
-              style={styles.modalInput}
-              placeholder="Título del recordatorio"
-              placeholderTextColor={Colors.PLACEHOLDER_GRAY}
-              value={nuevoTitulo}
-              onChangeText={setNuevoTitulo}
-              multiline
-            />
-            <Text style={styles.modalLabel}>Categoría</Text>
-            <View style={styles.modalTabs}>
-              {(["Animales", "Cultivos"] as const).map((cat) => (
-                <TouchableOpacity
-                  key={cat}
-                  style={[styles.modalTab, nuevaCategoria === cat && styles.modalTabActivo]}
-                  onPress={() => setNuevaCategoria(cat)}
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <View style={styles.modalOverlay}>
+            <KeyboardAvoidingView 
+              behavior={Platform.OS === "ios" ? "padding" : "height"}
+              style={{ width: "100%" }}
+            >
+              <View style={styles.modalContainer}>
+                <Text style={styles.modalTitle}>Nuevo Recordatorio</Text>
+                
+                <Text style={styles.modalLabel}>Categoría</Text>
+                <TouchableOpacity 
+                  style={styles.modalCategoriaSelector} 
+                  onPress={toggleModalExpandir}
+                  activeOpacity={0.7}
                 >
-                  <Text style={[styles.modalTabText, nuevaCategoria === cat && styles.modalTabTextActivo]}>
-                    {cat}
-                  </Text>
+                  <Text style={styles.modalCategoriaSelectorText}>{nuevaCategoria}</Text>
+                  <Text style={[styles.arrow, modalExpandido && styles.arrowRotated]}>▼</Text>
                 </TouchableOpacity>
-              ))}
-            </View>
-            <View style={styles.modalButtons}>
-              <TouchableOpacity style={styles.cancelButton} onPress={() => setModalVisible(false)}>
-                <Text style={styles.cancelText}>Cancelar</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.saveButton} onPress={agregar}>
-                <Text style={styles.saveText}>Guardar</Text>
-              </TouchableOpacity>
-            </View>
+
+                {modalExpandido && (
+                  <Animated.View style={[styles.modalTabsDropdown, { opacity: modalFadeAnim }]}>
+                    {(["Animales", "Cultivos"] as const).map((cat) => (
+                      <TouchableOpacity
+                        key={cat}
+                        style={[styles.modalTabDropdownItem, nuevaCategoria === cat && styles.modalTabActivo]}
+                        onPress={() => {
+                          setNuevaCategoria(cat);
+                          toggleModalExpandir();
+                        }}
+                      >
+                        <Text style={[styles.modalTabText, nuevaCategoria === cat && styles.modalTabTextActivo]}>
+                          {cat}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </Animated.View>
+                )}
+
+                <TextInput
+                  style={styles.modalInput}
+                  placeholder="Título del recordatorio"
+                  placeholderTextColor={Colors.PLACEHOLDER_GRAY}
+                  value={nuevoTitulo}
+                  onChangeText={setNuevoTitulo}
+                  multiline
+                />
+                
+                <View style={styles.modalButtons}>
+                  <TouchableOpacity style={styles.cancelButton} onPress={() => setModalVisible(false)}>
+                    <Text style={styles.cancelText}>Cancelar</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.saveButton} onPress={agregar}>
+                    <Text style={styles.saveText}>Guardar</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </KeyboardAvoidingView>
           </View>
-        </View>
+        </TouchableWithoutFeedback>
       </Modal>
     </GestureHandlerRootView>
   );
@@ -191,6 +255,8 @@ export default function RecordatoriosScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.BACKGROUND, paddingHorizontal: 16, paddingTop: 16 },
+  arrow: { fontSize: 12, color: Colors.SUBTITLE, transitionDuration: "0.2s" },
+  arrowRotated: { transform: [{ rotate: "180deg" }] },
   tabs: { flexDirection: "row", backgroundColor: Colors.CARD_DETAILS, borderRadius: 12, padding: 4, marginBottom: 16, borderWidth: 1, borderColor: Colors.INPUT_BORDER },
   tab: { flex: 1, paddingVertical: 8, alignItems: "center", borderRadius: 10 },
   tabActivo: { backgroundColor: Colors.PRIMARY_GREEN },
@@ -218,7 +284,32 @@ const styles = StyleSheet.create({
   modalTitle: { fontSize: 18, fontWeight: "700", color: Colors.TITLE, marginBottom: 4 },
   modalInput: { backgroundColor: Colors.BACKGROUND, borderWidth: 1, borderColor: Colors.INPUT_BORDER, borderRadius: 12, paddingHorizontal: 16, paddingVertical: 12, fontSize: 15, color: Colors.TITLE, minHeight: 80, textAlignVertical: "top" },
   modalLabel: { fontSize: 14, fontWeight: "500", color: Colors.TITLE },
-  modalTabs: { flexDirection: "row", gap: 8 },
+  modalCategoriaSelector: { 
+    flexDirection: "row", 
+    justifyContent: "space-between", 
+    alignItems: "center", 
+    backgroundColor: Colors.BACKGROUND, 
+    borderWidth: 1, 
+    borderColor: Colors.INPUT_BORDER, 
+    borderRadius: 12, 
+    paddingHorizontal: 16, 
+    paddingVertical: 12 
+  },
+  modalCategoriaSelectorText: { fontSize: 15, color: Colors.TITLE },
+  modalTabsDropdown: { 
+    backgroundColor: Colors.BACKGROUND, 
+    borderWidth: 1, 
+    borderColor: Colors.INPUT_BORDER, 
+    borderRadius: 12, 
+    marginTop: -8, 
+    overflow: "hidden" 
+  },
+  modalTabDropdownItem: { 
+    paddingVertical: 12, 
+    alignItems: "center", 
+    borderBottomWidth: 1, 
+    borderBottomColor: Colors.INPUT_BORDER 
+  },
   modalTab: { flex: 1, paddingVertical: 10, alignItems: "center", borderRadius: 10, borderWidth: 1, borderColor: Colors.INPUT_BORDER, backgroundColor: Colors.BACKGROUND },
   modalTabActivo: { backgroundColor: Colors.PRIMARY_GREEN, borderColor: Colors.PRIMARY_GREEN },
   modalTabText: { fontSize: 14, color: Colors.SUBTITLE, fontWeight: "500" },

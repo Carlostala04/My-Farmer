@@ -112,7 +112,7 @@ const statusColors: Record<string, string> = {
   PRENADA: "rgba(180, 80, 200, 0.87)",
 };
 
-export default function HomeScreen() {
+export default function Home() {
   const router = useRouter();
 
   const totalAnimales = animales.length;

@@ -1,4 +1,4 @@
-export type SexoAnimal = 'Macho' | 'Hembra';
+export type SexoAnimal = 'macho' | 'hembra';
 
 export interface CreateAnimalDto {
   Nombre: string;
@@ -73,7 +73,7 @@ export interface ResponseCategoriaAnimalDto {
   Registro: string;
 }
 
-export type TipoEvento = 'Vacuna' | 'Enfermedad' | 'Reproduccion' | 'Otro';
+export type TipoEvento = 'vacuna' | 'revision' | 'tratamiento' | 'alimentacion'|"otros";
 
 export interface CreateEventoAnimalDto {
   Animal_id: number;

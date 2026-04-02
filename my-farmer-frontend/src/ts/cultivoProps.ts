@@ -1,4 +1,4 @@
-export type EstadoCultivo = 'Plantado' | 'Creciendo' | 'Cosechado' | 'Perdido';
+export type EstadoCultivo = 'en_crecimiento'|'cosechado';
 
 export interface CreateCultivoDto {
   Nombre: string;

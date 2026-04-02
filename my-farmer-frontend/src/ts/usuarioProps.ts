@@ -1,6 +1,6 @@
-export type PlanSuscripcion = 'Gratis' | 'Premium' | 'Empresarial';
-export type CicloFacturacion = 'Mensual' | 'Anual';
-export type EstadoSuscripcion = 'Activa' | 'Cancelada' | 'Expirada';
+export type PlanSuscripcion = 'gratuito' | 'premium';
+export type CicloFacturacion = 'mensual' | 'anual';
+export type EstadoSuscripcion = 'activa' | 'vencida' | 'cancelada';
 
 export interface ResponseUsuarioDto {
   Usuario_id: number;

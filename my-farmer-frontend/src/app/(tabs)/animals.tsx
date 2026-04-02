@@ -20,62 +20,62 @@ export default function AnimalsScreen() {
     () => [
       {
         nombre: "lola",
-        edad: 3,
+        fecha_nacimiento: new Date("2023-03-15"),
         estado: "saludable",
         raza: "Holstein",
         color: "Blanco y negro",
         peso: 480,
-        imagen:
+        foto:
           "https://a.storyblok.com/f/160385/4bf112f0cd/datos_curiosos.jpg/m/filters:quality(70)/",
       },
       {
         nombre: "juan",
-        edad: 5,
+        fecha_nacimiento: new Date("2021-07-20"),
         estado: "Entrenando",
         raza: "Angus",
         color: "Negro",
         peso: 620,
-        imagen:
+        foto:
           "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSQN7ZS1iWhsLxfW9-ZdiGiWERqKNvO7ApcYfhaGPT9faQLSw-3TdRiLkGp4aKol8PmTdj-y6N5hdiRSerhzCfJgVSFj_YYYtgUcnTQsA&s=10",
       },
       {
         nombre: "pepe",
-        edad: 1,
+        fecha_nacimiento: new Date("2025-01-10"),
         estado: "creciendo",
         raza: "Hereford",
         color: "Café",
         peso: 150,
-        imagen:
+        foto:
           "https://imagenes.elpais.com/resizer/v2/OPHSOSNE2O673X77I7JAPNANV4.jpg?auth=e31b607f28c9844d1f9552df6f643d319102aba87dc69ca60e3c4dffdab20344&width=1960&height=1470&smart=true",
       },
       {
         nombre: "RedBull",
-        edad: 2,
+        fecha_nacimiento: new Date("2024-05-08"),
         estado: "produciendo",
         raza: "Brahman",
         color: "Gris",
         peso: 700,
-        imagen:
+        foto:
           "https://lasventastour.com/wp-content/uploads/2023/12/Toro-Bravo-Las-Ventas-Tour-2.webp",
       },
       {
         nombre: "turuleca",
-        edad: 4,
+        fecha_nacimiento: new Date("2022-09-30"),
         estado: "muerto",
         raza: "Leghorn",
         color: "Blanco",
         peso: 2,
-        imagen:
+        foto:
           "https://www.intagri.com/assets/images/articulos/categoria1/ganaderia/art102-razas-de-gallinas/gallina-raza.jpg",
       },
       {
         nombre: "raul",
-        edad: 7,
+        fecha_nacimiento: new Date("2019-11-05"),
         estado: "enfermo",
         raza: "Mestizo",
         color: "Marrón",
         peso: 30,
-        imagen:
+        foto:
           "https://thumbs.dreamstime.com/b/retrato-de-perros-en-un-traje-negocios-132770085.jpg",
       },
     ],
@@ -123,20 +123,20 @@ export default function AnimalsScreen() {
           renderItem={({ item }) => (
             <Card
               nombre={item.nombre}
-              edad={item.edad}
+              fecha_nacimiento={item.fecha_nacimiento}
               estado={item.estado}
-              imagen={item.imagen}
+              foto={item.foto}
               onPress={() =>
                 router.push({
                   pathname: "/(tabs)/animailsDetails",
                   params: {
                     nombre: item.nombre,
-                    edad: item.edad,
+                    fecha_nacimiento: item.fecha_nacimiento?.toISOString(),
                     estado: item.estado,
                     raza: item.raza,
                     color: item.color,
                     peso: item.peso,
-                    imagen: item.imagen,
+                    foto: item.foto,
                   },
                 })
               }

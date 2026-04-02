@@ -20,7 +20,7 @@ export default function AnimalsScreen() {
     () => [
       {
         nombre: "lola",
-        fecha_nacimiento: new Date("2023-03-15"),
+        fecha_nacimiento: "2023-03-15",
         estado: "saludable",
         raza: "Holstein",
         color: "Blanco y negro",
@@ -30,7 +30,7 @@ export default function AnimalsScreen() {
       },
       {
         nombre: "juan",
-        fecha_nacimiento: new Date("2021-07-20"),
+        fecha_nacimiento: "2021-07-20",
         estado: "Entrenando",
         raza: "Angus",
         color: "Negro",
@@ -40,7 +40,7 @@ export default function AnimalsScreen() {
       },
       {
         nombre: "pepe",
-        fecha_nacimiento: new Date("2025-01-10"),
+        fecha_nacimiento: "2025-01-10",
         estado: "creciendo",
         raza: "Hereford",
         color: "Café",
@@ -50,7 +50,7 @@ export default function AnimalsScreen() {
       },
       {
         nombre: "RedBull",
-        fecha_nacimiento: new Date("2024-05-08"),
+        fecha_nacimiento: "2024-05-08",
         estado: "produciendo",
         raza: "Brahman",
         color: "Gris",
@@ -60,7 +60,7 @@ export default function AnimalsScreen() {
       },
       {
         nombre: "turuleca",
-        fecha_nacimiento: new Date("2022-09-30"),
+        fecha_nacimiento: "2022-09-30",
         estado: "muerto",
         raza: "Leghorn",
         color: "Blanco",
@@ -70,7 +70,7 @@ export default function AnimalsScreen() {
       },
       {
         nombre: "raul",
-        fecha_nacimiento: new Date("2019-11-05"),
+        fecha_nacimiento: "2019-11-05",
         estado: "enfermo",
         raza: "Mestizo",
         color: "Marrón",
@@ -122,16 +122,16 @@ export default function AnimalsScreen() {
           contentContainerStyle={{ paddingBottom: 140 }}
           renderItem={({ item }) => (
             <Card
-              nombre={item.nombre}
-              fecha_nacimiento={item.fecha_nacimiento}
-              estado={item.estado}
-              foto={item.foto}
+              Nombre={item.nombre}
+              Fecha_Nacimiento={item.fecha_nacimiento}
+              Estado_Label={item.estado}
+              Foto={item.foto}
               onPress={() =>
                 router.push({
                   pathname: "/(tabs)/animailsDetails",
                   params: {
                     nombre: item.nombre,
-                    fecha_nacimiento: item.fecha_nacimiento?.toISOString(),
+                    fecha_nacimiento: item.fecha_nacimiento?.toString(),
                     estado: item.estado,
                     raza: item.raza,
                     color: item.color,

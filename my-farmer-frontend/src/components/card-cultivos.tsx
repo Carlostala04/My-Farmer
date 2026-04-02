@@ -6,28 +6,28 @@ import {
   Pressable,
 } from "react-native";
 import React from "react";
-import { cultivoProps } from "@/ts/cultivoProps";
+import { ResponseCultivoDto } from "@/ts/cultivoProps";
 
 type CardCultivosProps = Pick<
-  cultivoProps,
-  "nombre" | "estado" | "fechaSiembra" | "ubicacion" | "imagen"
+  ResponseCultivoDto,
+  "Nombre" | "Activo" | "Fecha_Siembra" | "Parcela" | "Foto"
 > & {
   onPress?: () => void;
 };
 
 export default function CardCultivos({
-  nombre,
-  estado = true,
-  fechaSiembra,
-  ubicacion,
-  imagen,
+  Nombre,
+  Activo = true,
+  Fecha_Siembra,
+  Parcela,
+  Foto,
   onPress,
 }: CardCultivosProps) {
-  const estado_cultivo = estado ? "Activo" : "Inactivo";
+  const estado_cultivo = Activo ? "Activo" : "Inactivo";
   return (
     <Pressable onPress={onPress}>
       <ImageBackground
-        source={{ uri: imagen }}
+        source={{ uri: Foto ?? undefined }}
         style={styles.card}
         imageStyle={styles.imageBackground}
       >
@@ -38,11 +38,11 @@ export default function CardCultivos({
         <View
           style={[
             styles.estadoBadge,
-            { backgroundColor: estado ? "#2b972148" : "#e60d0da1" },
+            { backgroundColor: Activo ? "#2b972148" : "#e60d0da1" },
           ]}
         >
           <Text
-            style={[styles.estadoText, { color: estado ? "#4ADE80" : "#fff" }]}
+            style={[styles.estadoText, { color: Activo ? "#4ADE80" : "#fff" }]}
           >
             {estado_cultivo}
           </Text>
@@ -50,16 +50,16 @@ export default function CardCultivos({
 
         {/* Contenido inferior */}
         <View style={styles.content}>
-          <Text style={styles.nombre}>{nombre}</Text>
+          <Text style={styles.nombre}>{Nombre}</Text>
 
           <Text style={styles.infoText}>
             <Text style={styles.infoLabel}>Fecha de Siembra: </Text>
-            {fechaSiembra}
+            {Fecha_Siembra}
           </Text>
 
           <Text style={styles.infoText}>
             <Text style={styles.infoLabel}>Ubicación: </Text>
-            {ubicacion ?? "Parcela Sur"}
+            {Parcela ?? "Sin parcela"}
           </Text>
         </View>
       </ImageBackground>

@@ -1,43 +1,43 @@
 import React from "react";
 import { View, Text, Image, StyleSheet, Pressable } from "react-native";
 import Colors from "@/constants/colors";
-import { animalsProps } from "@/ts/animalsProps";
+import { ResponseAnimalDto } from "@/ts/animalsProps";
 
-type CardProps = Pick<animalsProps, "nombre" | "estado" | "foto" | "fecha_nacimiento"> & {
+type CardProps = Pick<ResponseAnimalDto, "Nombre" | "Estado_Label" | "Foto" | "Fecha_Nacimiento"> & {
   onPress?: () => void;
 };
 
-function calcularEdad(fecha_nacimiento?: Date): string {
-  if (!fecha_nacimiento) return "Desconocida";
+function calcularEdad(Fecha_Nacimiento?: string | null): string {
+  if (!Fecha_Nacimiento) return "Desconocida";
   const hoy = new Date();
-  const años = hoy.getFullYear() - new Date(fecha_nacimiento).getFullYear();
+  const años = hoy.getFullYear() - new Date(Fecha_Nacimiento).getFullYear();
   return `${años}`;
 }
 
 export default function Card({
-  nombre,
-  estado,
-  foto,
-  fecha_nacimiento,
+  Nombre,
+  Estado_Label,
+  Foto,
+  Fecha_Nacimiento,
   onPress,
 }: CardProps) {
-  const edad = calcularEdad(fecha_nacimiento);
+  const edad = calcularEdad(Fecha_Nacimiento);
   return (
     <Pressable
       onPress={onPress}
       style={({ pressed }) => [styles.card, pressed && { opacity: 0.75 }]}
     >
-      <Image style={styles.image} source={{ uri: foto }} />
+      <Image style={styles.image} source={{ uri: Foto ?? undefined }} />
 
       <View style={styles.content}>
         <Text style={styles.title} numberOfLines={1}>
-          {nombre}
+          {Nombre}
         </Text>
         <Text style={styles.subtitle}>{`${edad} años`}</Text>
 
-        <View style={[styles.badge, { backgroundColor: status[(estado ?? "").toUpperCase() as keyof typeof status] ?? Colors.PRIMARY_GREEN }]}>
+        <View style={[styles.badge, { backgroundColor: status[(Estado_Label ?? "").toUpperCase() as keyof typeof status] ?? Colors.PRIMARY_GREEN }]}>
           <Text style={styles.badgeText} numberOfLines={1}>
-            {estado}
+            {Estado_Label}
           </Text>
         </View>
       </View>

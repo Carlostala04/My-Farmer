@@ -87,11 +87,11 @@ export default function CultivosScreen() {
           contentContainerStyle={{ paddingBottom: 140 }}
           renderItem={({ item }) => (
             <CardCultivos
-              nombre={item.nombre}
-              fechaSiembra={item.fechaSiembra}
-              ubicacion={item.ubicacion}
-              imagen={item.imagen}
-              estado={item.estado}
+              Nombre={item.nombre}
+              Fecha_Siembra={item.fechaSiembra}
+              Parcela={item.ubicacion}
+              Foto={item.imagen}
+              Activo={item.estado}
               onPress={() =>
                 router.push({
                   pathname: "/(tabs)/cultivosDetails",

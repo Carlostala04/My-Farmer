@@ -126,7 +126,7 @@ export default function LoginScreen() {
               Iniciar sesión con Google
             </Text>
           </Pressable>
-          <Link href="/recover" asChild>
+          <Link href={"/(tabs)/recuperar-correo" as any} asChild>
             <Pressable
               style={styles.forgotLink}
               onPressIn={() => setPressedButton(true)}

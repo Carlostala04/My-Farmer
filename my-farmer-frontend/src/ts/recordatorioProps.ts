@@ -1,4 +1,4 @@
-export type EntidadTipo = 'Animal' | 'Cultivo' | 'Parcela';
+export type EntidadTipo = 'cultivo'|'animal';
 
 export interface CreateRecordatorioDto {
   Entidad_Tipo: EntidadTipo;

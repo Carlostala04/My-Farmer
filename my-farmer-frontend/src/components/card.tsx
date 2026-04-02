@@ -3,23 +3,31 @@ import { View, Text, Image, StyleSheet, Pressable } from "react-native";
 import Colors from "@/constants/colors";
 import { animalsProps } from "@/ts/animalsProps";
 
-type CardProps = Pick<animalsProps, "nombre" | "imagen" | "estado" | "edad"> & {
+type CardProps = Pick<animalsProps, "nombre" | "estado" | "foto" | "fecha_nacimiento"> & {
   onPress?: () => void;
 };
 
+function calcularEdad(fecha_nacimiento?: Date): string {
+  if (!fecha_nacimiento) return "Desconocida";
+  const hoy = new Date();
+  const años = hoy.getFullYear() - new Date(fecha_nacimiento).getFullYear();
+  return `${años}`;
+}
+
 export default function Card({
   nombre,
-  edad,
   estado,
-  imagen,
+  foto,
+  fecha_nacimiento,
   onPress,
 }: CardProps) {
+  const edad = calcularEdad(fecha_nacimiento);
   return (
     <Pressable
       onPress={onPress}
       style={({ pressed }) => [styles.card, pressed && { opacity: 0.75 }]}
     >
-      <Image style={styles.image} source={{ uri: imagen }} />
+      <Image style={styles.image} source={{ uri: foto }} />
 
       <View style={styles.content}>
         <Text style={styles.title} numberOfLines={1}>
@@ -27,7 +35,7 @@ export default function Card({
         </Text>
         <Text style={styles.subtitle}>{`${edad} años`}</Text>
 
-        <View style={[styles.badge, { backgroundColor: status[estado.toUpperCase() as keyof typeof status] ?? Colors.PRIMARY_GREEN }]}>
+        <View style={[styles.badge, { backgroundColor: status[(estado ?? "").toUpperCase() as keyof typeof status] ?? Colors.PRIMARY_GREEN }]}>
           <Text style={styles.badgeText} numberOfLines={1}>
             {estado}
           </Text>

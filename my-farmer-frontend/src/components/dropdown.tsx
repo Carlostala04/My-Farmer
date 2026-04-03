@@ -8,12 +8,13 @@ type DataItem = {
 };
 
 type DropdownProps = {
-  data: DataItem[];
+  data: DataItem[],
+  placeholder: string
 };
 
 //data = representa cualquier entidad de la base de datos
-export default function Dropdown({ data }: DropdownProps) {
-  const [selectedValue, setSelectedValue] = useState("Seleccione una opcion");
+export default function Dropdown({ data, placeholder }: DropdownProps) {
+  const [selectedValue, setSelectedValue] = useState("");
   return (
     <View style={styles.container}>
       <Picker
@@ -22,7 +23,7 @@ export default function Dropdown({ data }: DropdownProps) {
         style={styles.picker}
         dropdownIconColor="#4CAF50"
       >
-        <Picker.Item label="Seleccione una opción" value="" />
+        <Picker.Item label={placeholder} value="" />
         {data.map((item) => (
           <Picker.Item key={item.id} label={item.nombre} value={item.id} />
         ))}

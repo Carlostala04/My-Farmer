@@ -27,8 +27,16 @@ export default function RegisterAnimalScreen() {
     { id: 1, nombre: "Kg" },
     { id: 2, nombre: "Lb" },
   ];
+  const estadoOpciones = [
+    { id: 1, nombre: "Saludable" },
+    { id: 2, nombre: "Enfermo" },
+    { id: 3, nombre: "En tratamiento" },
+    { id: 4, nombre: "En cuarentena" },
+    { id: 5, nombre: "Muerto" },
+  ];
 
   const [nombre, setNombre] = useState("");
+  const [estado, setEstado] = useState("");
   const [sexo, setSexo] = useState<SexoAnimal | "">("");
   const [categoriaAnimal, setCategoriaAnimal] = useState<number>(0);
   const [raza, setRaza] = useState("");
@@ -168,6 +176,16 @@ export default function RegisterAnimalScreen() {
           placeholder="Seleccione una categoria para el animal"
           value={categoriaAnimal || ""}
           onValueChange={(val) => setCategoriaAnimal(Number(val))}
+        />
+        <ThemedText style={styles.label}>Estado</ThemedText>
+        <Dropdown
+          data={estadoOpciones}
+          placeholder="Seleccione el estado del animal"
+          value={estado}
+          onValueChange={(val) => {
+            const encontrado = estadoOpciones.find((o) => o.id === Number(val));
+            if (encontrado) setEstado(encontrado.nombre);
+          }}
         />
         <ThemedText style={styles.label}>Raza</ThemedText>
         <TextInput

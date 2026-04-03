@@ -1,5 +1,3 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useFocusEffect } from "expo-router";
 import React, { useState } from "react";
 import {
   View,
@@ -10,29 +8,46 @@ import {
   Alert,
   Image,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import Colors from "@/constants/colors";
 import { ThemedText } from "@/components/themed-text";
 import ScreenHeader from "@/components/header";
+import Dropdown from "@/components/dropdown";
+import { SexoAnimal } from "@/ts/animalsProps";
 
 export default function RegisterAnimalScreen() {
   const router = useRouter();
 
+  const sexoOpciones = [
+    { id: 1, nombre: "Macho", value: "macho" as SexoAnimal },
+    { id: 2, nombre: "Hembra", value: "hembra" as SexoAnimal },
+  ];
+  const pesosOpciones = [
+    { id: 1, nombre: "Kg" },
+    { id: 2, nombre: "Lb" },
+  ];
+
   const [nombre, setNombre] = useState("");
-  const [tipo, setTipo] = useState("");
-  const [edad, setEdad] = useState("");
+  const [sexo, setSexo] = useState<SexoAnimal | "">("");
+  const [categoriaAnimal, setCategoriaAnimal] = useState<number>(0);
+  const [raza, setRaza] = useState("");
   const [color, setColor] = useState("");
   const [peso, setPeso] = useState("");
+  const [pesoUnidad, setPesoUnidad] = useState("");
   const [altura, setAltura] = useState("");
   const [observaciones, setObservaciones] = useState("");
+  const [parcela, setParcela] = useState<number>(0);
+  const [fechaNacimiento, setFechaNacimiento] = useState("");
   const [imagen, setImagen] = useState<string | null>(null);
 
   const handleSeleccionarImagen = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") {
-      Alert.alert("Permiso requerido", "Se necesita acceso a la galería para seleccionar una imagen.");
+      Alert.alert(
+        "Permiso requerido",
+        "Se necesita acceso a la galería para seleccionar una imagen.",
+      );
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -49,7 +64,10 @@ export default function RegisterAnimalScreen() {
   const handleTomarFoto = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== "granted") {
-      Alert.alert("Permiso requerido", "Se necesita acceso a la cámara para tomar una foto.");
+      Alert.alert(
+        "Permiso requerido",
+        "Se necesita acceso a la cámara para tomar una foto.",
+      );
       return;
     }
     const result = await ImagePicker.launchCameraAsync({
@@ -71,8 +89,16 @@ export default function RegisterAnimalScreen() {
   };
 
   const handleGuardar = () => {
-    if (!nombre.trim() || !tipo.trim()) {
-      Alert.alert("Error", "El nombre y tipo de animal son obligatorios.");
+    if (!nombre.trim()) {
+      Alert.alert("Error", "El nombre del animal es obligatorio.");
+      return;
+    }
+    if (!sexo) {
+      Alert.alert("Error", "El sexo del animal es obligatorio.");
+      return;
+    }
+    if (!categoriaAnimal) {
+      Alert.alert("Error", "La categoría del animal es obligatoria.");
       return;
     }
     // Aquí después conectas con tu backend
@@ -89,25 +115,41 @@ export default function RegisterAnimalScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* Imagen del Animal */}
-        <TouchableOpacity style={styles.imageContainer} onPress={handleAgregarImagen}>
+        <TouchableOpacity
+          style={styles.imageContainer}
+          onPress={handleAgregarImagen}
+        >
           {imagen ? (
             <Image source={{ uri: imagen }} style={styles.imagePreview} />
           ) : (
             <View style={styles.imagePlaceholder}>
               <ThemedText style={styles.imagePlaceholderIcon}>📷</ThemedText>
-              <ThemedText style={styles.imagePlaceholderText}>Agregar foto del animal</ThemedText>
+              <ThemedText style={styles.imagePlaceholderText}>
+                Agregar foto del animal
+              </ThemedText>
             </View>
           )}
         </TouchableOpacity>
         {imagen && (
           <TouchableOpacity onPress={() => setImagen(null)}>
-            <ThemedText style={styles.removeImageText}>Eliminar imagen</ThemedText>
+            <ThemedText style={styles.removeImageText}>
+              Eliminar imagen
+            </ThemedText>
           </TouchableOpacity>
         )}
 
         {/* Datos Básicos */}
         <ThemedText style={styles.sectionTitle}>Datos Básicos</ThemedText>
-
+        <ThemedText style={styles.label}>Sexo</ThemedText>
+        <Dropdown
+          data={sexoOpciones}
+          placeholder="Ingrese el sexo del animal"
+          value={sexo}
+          onValueChange={(val) => {
+            const encontrado = sexoOpciones.find((o) => o.id === Number(val));
+            if (encontrado) setSexo(encontrado.value);
+          }}
+        />
         <ThemedText style={styles.label}>Nombre del Animal</ThemedText>
         <TextInput
           style={styles.input}
@@ -120,18 +162,21 @@ export default function RegisterAnimalScreen() {
           Nombre único para identificar al animal dentro de tu rebaño o grupo.
         </ThemedText>
 
-        <ThemedText style={styles.label}>Tipo de Animal</ThemedText>
-        <TextInput
-          style={styles.input}
-          placeholder="Ej: Vaca, Cerdo, Gallina"
-          placeholderTextColor={Colors.PLACEHOLDER_GRAY}
-          value={tipo}
-          onChangeText={setTipo}
+        <ThemedText style={styles.label}>Categoria animal</ThemedText>
+        <Dropdown
+          data={[]}
+          placeholder="Seleccione una categoria para el animal"
+          value={categoriaAnimal || ""}
+          onValueChange={(val) => setCategoriaAnimal(Number(val))}
         />
-        <ThemedText style={styles.hint}>
-          Especifica la especie o raza del animal.
-        </ThemedText>
-
+        <ThemedText style={styles.label}>Raza</ThemedText>
+        <TextInput
+          placeholder="Ingrese la raza del animal"
+          placeholderTextColor={Colors.PLACEHOLDER_GRAY}
+          value={raza}
+          onChangeText={setRaza}
+          style={styles.input}
+        />
         {/* Características Físicas */}
         <ThemedText style={styles.sectionTitle}>
           Características Físicas
@@ -139,13 +184,13 @@ export default function RegisterAnimalScreen() {
 
         <View style={styles.row}>
           <View style={styles.rowItem}>
-            <ThemedText style={styles.label}>Edad</ThemedText>
+            <ThemedText style={styles.label}>Fecha de nacimiento</ThemedText>
             <TextInput
               style={styles.input}
-              placeholder="Ej: 2 años"
+              placeholder="DD/MM/YYYY"
               placeholderTextColor={Colors.PLACEHOLDER_GRAY}
-              value={edad}
-              onChangeText={setEdad}
+              value={fechaNacimiento}
+              onChangeText={setFechaNacimiento}
             />
           </View>
           <View style={styles.rowItem}>
@@ -160,19 +205,25 @@ export default function RegisterAnimalScreen() {
           </View>
         </View>
 
-        <ThemedText style={styles.label}>Peso (kg)</ThemedText>
+        <ThemedText style={styles.label}>Unidad de peso</ThemedText>
+        <Dropdown
+          data={pesosOpciones}
+          placeholder="Ingrese la unidad de peso"
+          value={pesoUnidad}
+          onValueChange={(val) => {
+            const encontrado = pesosOpciones.find((o) => o.id === Number(val));
+            if (encontrado) setPesoUnidad(encontrado.nombre);
+          }}
+        />
+        <ThemedText style={styles.hint}>Ingrese el peso del animal</ThemedText>
         <TextInput
-          style={styles.input}
-          placeholder="Ej: 500"
+          placeholder="Ingrese el peso del animal"
           placeholderTextColor={Colors.PLACEHOLDER_GRAY}
-          keyboardType="numeric"
           value={peso}
           onChangeText={setPeso}
+          keyboardType="numeric"
+          style={styles.input}
         />
-        <ThemedText style={styles.hint}>
-          Peso actual del animal en kilogramos.
-        </ThemedText>
-
         <ThemedText style={styles.label}>Altura (cm)</ThemedText>
         <TextInput
           style={styles.input}
@@ -185,6 +236,13 @@ export default function RegisterAnimalScreen() {
         <ThemedText style={styles.hint}>
           Altura desde el suelo hasta el lomo del animal.
         </ThemedText>
+        <ThemedText style={styles.label}>Parcela</ThemedText>
+        <Dropdown
+          data={[]}
+          placeholder="Seleccione una parcela"
+          value={parcela || ""}
+          onValueChange={(val) => setParcela(Number(val))}
+        />
 
         {/* Notas Adicionales */}
         <ThemedText style={styles.sectionTitle}>Notas Adicionales</ThemedText>

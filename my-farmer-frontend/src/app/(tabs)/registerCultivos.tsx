@@ -13,23 +13,44 @@ import * as ImagePicker from "expo-image-picker";
 import Colors from "@/constants/colors";
 import { ThemedText } from "@/components/themed-text";
 import ScreenHeader from "@/components/header";
+import Dropdown from "@/components/dropdown";
+import { EstadoCultivo } from "@/ts/cultivoProps";
 
 export default function RegisterCultivosScreen() {
   const router = useRouter();
 
+  const estadoOpciones = [
+    { id: 1, nombre: "En crecimiento", value: "en_crecimiento" as EstadoCultivo },
+    { id: 2, nombre: "Cosechado", value: "cosechado" as EstadoCultivo },
+  ];
+  const rendimientoUnidadOpciones = [
+    { id: 1, nombre: "kg" },
+    { id: 2, nombre: "ton" },
+    { id: 3, nombre: "lb" },
+    { id: 4, nombre: "qq" },
+    { id: 5, nombre: "unidades" },
+  ];
+
   const [nombre, setNombre] = useState("");
-  const [tipo, setTipo] = useState("");
+  const [tipo, setTipo] = useState(0);
   const [fechaSiembra, setFechaSiembra] = useState("");
-  const [ubicacion, setUbicacion] = useState("");
+  const [ubicacion, setUbicacion] = useState(0);
   const [area, setArea] = useState("");
-  const [estado, setEstado] = useState("");
+  const [estado, setEstado] = useState<EstadoCultivo>("en_crecimiento");
+  const [fechaCosechaEstimada, setFechaCosechaEstimada] = useState("");
+  const [fechaCosecha, setFechaCosecha] = useState("");
+  const [rendimientoEstimado, setRendimientoEstimado] = useState("");
+  const [rendimientoUnidad, setRendimientoUnidad] = useState("");
   const [observaciones, setObservaciones] = useState("");
   const [imagen, setImagen] = useState<string | null>(null);
 
   const handleSeleccionarImagen = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") {
-      Alert.alert("Permiso requerido", "Se necesita acceso a la galería para seleccionar una imagen.");
+      Alert.alert(
+        "Permiso requerido",
+        "Se necesita acceso a la galería para seleccionar una imagen.",
+      );
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -46,7 +67,10 @@ export default function RegisterCultivosScreen() {
   const handleTomarFoto = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== "granted") {
-      Alert.alert("Permiso requerido", "Se necesita acceso a la cámara para tomar una foto.");
+      Alert.alert(
+        "Permiso requerido",
+        "Se necesita acceso a la cámara para tomar una foto.",
+      );
       return;
     }
     const result = await ImagePicker.launchCameraAsync({
@@ -68,8 +92,12 @@ export default function RegisterCultivosScreen() {
   };
 
   const handleGuardar = () => {
-    if (!nombre.trim() || !tipo.trim()) {
-      Alert.alert("Error", "El nombre y tipo de cultivo son obligatorios.");
+    if (!nombre.trim()) {
+      Alert.alert("Error", "El nombre del cultivo es obligatorio.");
+      return;
+    }
+    if (!tipo) {
+      Alert.alert("Error", "El tipo de cultivo es obligatorio.");
       return;
     }
     // Aquí después conectas con tu backend
@@ -86,19 +114,26 @@ export default function RegisterCultivosScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* Imagen del Cultivo */}
-        <TouchableOpacity style={styles.imageContainer} onPress={handleAgregarImagen}>
+        <TouchableOpacity
+          style={styles.imageContainer}
+          onPress={handleAgregarImagen}
+        >
           {imagen ? (
             <Image source={{ uri: imagen }} style={styles.imagePreview} />
           ) : (
             <View style={styles.imagePlaceholder}>
               <ThemedText style={styles.imagePlaceholderIcon}>🌱</ThemedText>
-              <ThemedText style={styles.imagePlaceholderText}>Agregar foto del cultivo</ThemedText>
+              <ThemedText style={styles.imagePlaceholderText}>
+                Agregar foto del cultivo
+              </ThemedText>
             </View>
           )}
         </TouchableOpacity>
         {imagen && (
           <TouchableOpacity onPress={() => setImagen(null)}>
-            <ThemedText style={styles.removeImageText}>Eliminar imagen</ThemedText>
+            <ThemedText style={styles.removeImageText}>
+              Eliminar imagen
+            </ThemedText>
           </TouchableOpacity>
         )}
 
@@ -118,12 +153,11 @@ export default function RegisterCultivosScreen() {
         </ThemedText>
 
         <ThemedText style={styles.label}>Tipo de Cultivo</ThemedText>
-        <TextInput
-          style={styles.input}
-          placeholder="Ej: Maíz, Frijol, Tomate"
-          placeholderTextColor={Colors.PLACEHOLDER_GRAY}
+        <Dropdown
+          data={[]}
+          placeholder="Ingrese el tipo de cultivo"
           value={tipo}
-          onChangeText={setTipo}
+          onValueChange={(val)=>setTipo(Number(val))}
         />
         <ThemedText style={styles.hint}>
           Especifica la especie o variedad del cultivo.
@@ -145,23 +179,24 @@ export default function RegisterCultivosScreen() {
           </View>
           <View style={styles.rowItem}>
             <ThemedText style={styles.label}>Estado</ThemedText>
-            <TextInput
-              style={styles.input}
-              placeholder="Ej: En crecimiento"
-              placeholderTextColor={Colors.PLACEHOLDER_GRAY}
+            <Dropdown
+              data={estadoOpciones}
+              placeholder="Seleccione un estado"
               value={estado}
-              onChangeText={setEstado}
+              onValueChange={(val) => {
+                const encontrado = estadoOpciones.find((o) => o.id === Number(val));
+                if (encontrado) setEstado(encontrado.value);
+              }}
             />
           </View>
         </View>
 
         <ThemedText style={styles.label}>Ubicación / Parcela</ThemedText>
-        <TextInput
-          style={styles.input}
-          placeholder="Ej: Parcela A, Lote 3"
-          placeholderTextColor={Colors.PLACEHOLDER_GRAY}
+        <Dropdown
+          data={[]}
+          placeholder="Seleccione una parcela"
           value={ubicacion}
-          onChangeText={setUbicacion}
+          onValueChange={(val) => setUbicacion(Number(val))}
         />
         <ThemedText style={styles.hint}>
           Indica en qué zona o parcela de la finca se encuentra el cultivo.
@@ -179,6 +214,53 @@ export default function RegisterCultivosScreen() {
         <ThemedText style={styles.hint}>
           Superficie total sembrada en hectáreas.
         </ThemedText>
+
+        {/* Cosecha */}
+        <ThemedText style={styles.sectionTitle}>Cosecha</ThemedText>
+
+        <View style={styles.row}>
+          <View style={styles.rowItem}>
+            <ThemedText style={styles.label}>Fecha cosecha estimada</ThemedText>
+            <TextInput
+              style={styles.input}
+              placeholder="Ej: 2024-06-15"
+              placeholderTextColor={Colors.PLACEHOLDER_GRAY}
+              value={fechaCosechaEstimada}
+              onChangeText={setFechaCosechaEstimada}
+            />
+          </View>
+          <View style={styles.rowItem}>
+            <ThemedText style={styles.label}>Fecha de cosecha</ThemedText>
+            <TextInput
+              style={[styles.input, styles.inputReadonly]}
+              placeholder="Sin registrar"
+              placeholderTextColor={Colors.PLACEHOLDER_GRAY}
+              value={fechaCosecha}
+              editable={false}
+            />
+          </View>
+        </View>
+
+        <ThemedText style={styles.label}>Rendimiento estimado</ThemedText>
+        <TextInput
+          style={styles.input}
+          placeholder="Ej: 500"
+          placeholderTextColor={Colors.PLACEHOLDER_GRAY}
+          keyboardType="numeric"
+          value={rendimientoEstimado}
+          onChangeText={setRendimientoEstimado}
+        />
+
+        <ThemedText style={styles.label}>Unidad de rendimiento</ThemedText>
+        <Dropdown
+          data={rendimientoUnidadOpciones}
+          placeholder="Seleccione una unidad"
+          value={rendimientoUnidad}
+          onValueChange={(val) => {
+            const encontrado = rendimientoUnidadOpciones.find((o) => o.id === Number(val));
+            if (encontrado) setRendimientoUnidad(encontrado.nombre);
+          }}
+        />
 
         {/* Notas Adicionales */}
         <ThemedText style={styles.sectionTitle}>Notas Adicionales</ThemedText>
@@ -251,6 +333,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     fontSize: 15,
     color: Colors.TITLE,
+  },
+  inputReadonly: {
+    opacity: 0.5,
   },
   textArea: {
     width: "100%",

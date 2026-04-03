@@ -8,18 +8,31 @@ type DataItem = {
 };
 
 type DropdownProps = {
-  data: DataItem[],
-  placeholder: string
+  data: DataItem[];
+  placeholder: string;
+  value?: string | number;
+  onValueChange?: (value: string | number) => void;
 };
 
 //data = representa cualquier entidad de la base de datos
-export default function Dropdown({ data, placeholder }: DropdownProps) {
-  const [selectedValue, setSelectedValue] = useState("");
+export default function Dropdown({ data, placeholder, value, onValueChange }: DropdownProps) {
+  const [internalValue, setInternalValue] = useState<string | number>("");
+
+  const selectedValue = value !== undefined ? value : internalValue;
+
+  const handleChange = (itemValue: string | number) => {
+    if (onValueChange) {
+      onValueChange(itemValue);
+    } else {
+      setInternalValue(itemValue);
+    }
+  };
+
   return (
     <View style={styles.container}>
       <Picker
         selectedValue={selectedValue}
-        onValueChange={(itemValue) => setSelectedValue(itemValue)}
+        onValueChange={handleChange}
         style={styles.picker}
         dropdownIconColor="#4CAF50"
       >

@@ -8,7 +8,6 @@ import {
   Modal,
   TextInput,
   Alert,
-  Animated,
   KeyboardAvoidingView,
   Platform,
   TouchableWithoutFeedback,
@@ -19,54 +18,67 @@ import NavBar from "@/components/navBar";
 import ScreenHeader from "@/components/header";
 import FilterIcon from "@/components/ui/filterIcon";
 import Colors from "@/constants/colors";
+import Dropdown from "@/components/dropdown";
+import { EntidadTipo } from "@/ts/recordatorioProps";
 
-type Categoria = "Todos" | "Animales" | "Cultivos";
+type CategoriaFiltro = "Todos" | "Animales" | "Cultivos";
 
 type Recordatorio = {
   id: string;
   titulo: string;
   fecha: string;
-  categoria: "Animales" | "Cultivos";
+  entidad_tipo: EntidadTipo;
+  entidad_id: number;
+  descripcion: string | null;
+  recordar: string;
   completado: boolean;
 };
 
 const recordatoriosIniciales: Recordatorio[] = [
-  { id: "1", titulo: "Vacunar al ganado contra la fiebre aftosa.", fecha: "15 de Mayo de 2024", categoria: "Animales", completado: false },
-  { id: "2", titulo: "Revisar riego en parcela de maíz.", fecha: "16 de Mayo de 2024", categoria: "Cultivos", completado: false },
-  { id: "3", titulo: "Alimentar a los cerdos con pienso especial.", fecha: "17 de Mayo de 2024", categoria: "Animales", completado: true },
-  { id: "4", titulo: "Aplicar fertilizante orgánico a la plantación de tomate.", fecha: "18 de Mayo de 2024", categoria: "Cultivos", completado: false },
-  { id: "5", titulo: "Control de plagas en invernadero de pimientos.", fecha: "19 de Mayo de 2024", categoria: "Cultivos", completado: false },
+  { id: "1", titulo: "Vacunar al ganado contra la fiebre aftosa.", fecha: "15 de Mayo de 2024", entidad_tipo: "animal", entidad_id: 1, descripcion: null, recordar: "2024-05-15 08:00", completado: false },
+  { id: "2", titulo: "Revisar riego en parcela de maíz.", fecha: "16 de Mayo de 2024", entidad_tipo: "cultivo", entidad_id: 1, descripcion: null, recordar: "2024-05-16 09:00", completado: false },
+  { id: "3", titulo: "Alimentar a los cerdos con pienso especial.", fecha: "17 de Mayo de 2024", entidad_tipo: "animal", entidad_id: 2, descripcion: null, recordar: "2024-05-17 07:00", completado: true },
+  { id: "4", titulo: "Aplicar fertilizante orgánico a la plantación de tomate.", fecha: "18 de Mayo de 2024", entidad_tipo: "cultivo", entidad_id: 2, descripcion: null, recordar: "2024-05-18 10:00", completado: false },
+  { id: "5", titulo: "Control de plagas en invernadero de pimientos.", fecha: "19 de Mayo de 2024", entidad_tipo: "cultivo", entidad_id: 3, descripcion: null, recordar: "2024-05-19 08:30", completado: false },
+];
+
+// Mock data — reemplazar con datos del backend
+const animalesMock = [
+  { id: 1, nombre: "Lola" },
+  { id: 2, nombre: "Juan" },
+  { id: 3, nombre: "Pepe" },
+  { id: 4, nombre: "RedBull" },
+];
+
+const cultivosMock = [
+  { id: 1, nombre: "Maíz del norte" },
+  { id: 2, nombre: "Tomate invernadero" },
+  { id: 3, nombre: "Pimientos" },
+];
+
+const entidadTipoOpciones = [
+  { id: 1, nombre: "Animal", value: "animal" as EntidadTipo },
+  { id: 2, nombre: "Cultivo", value: "cultivo" as EntidadTipo },
 ];
 
 export default function RecordatoriosScreen() {
-  const [categoriaActiva, setCategoriaActiva] = useState<Categoria>("Todos");
+  const [categoriaActiva, setCategoriaActiva] = useState<CategoriaFiltro>("Todos");
   const [recordatorios, setRecordatorios] = useState(recordatoriosIniciales);
   const [modalVisible, setModalVisible] = useState(false);
+
+  // Estados del formulario del modal
   const [nuevoTitulo, setNuevoTitulo] = useState("");
-  const [nuevaCategoria, setNuevaCategoria] = useState<"Animales" | "Cultivos">("Animales");
-  const [modalExpandido, setModalExpandido] = useState(false);
-  const modalFadeAnim = useState(new Animated.Value(0))[0];
+  const [nuevaEntidadTipo, setNuevaEntidadTipo] = useState<EntidadTipo | "">("");
+  const [nuevaEntidadId, setNuevaEntidadId] = useState<number>(0);
+  const [nuevaDescripcion, setNuevaDescripcion] = useState("");
+  const [nuevoRecordar, setNuevoRecordar] = useState("");
 
-  const toggleModalExpandir = () => {
-    if (modalExpandido) {
-      Animated.timing(modalFadeAnim, {
-        toValue: 0,
-        duration: 200,
-        useNativeDriver: true,
-      }).start(() => setModalExpandido(false));
-    } else {
-      setModalExpandido(true);
-      Animated.timing(modalFadeAnim, {
-        toValue: 1,
-        duration: 200,
-        useNativeDriver: true,
-      }).start();
-    }
-  };
-
-  const filtrados = categoriaActiva === "Todos"
-    ? recordatorios
-    : recordatorios.filter((r) => r.categoria === categoriaActiva);
+  const filtrados =
+    categoriaActiva === "Todos"
+      ? recordatorios
+      : recordatorios.filter((r) =>
+          r.entidad_tipo === (categoriaActiva === "Animales" ? "animal" : "cultivo")
+        );
 
   const toggleCompletado = (id: string) => {
     setRecordatorios((prev) =>
@@ -89,25 +101,49 @@ export default function RecordatoriosScreen() {
     );
   };
 
+  const resetModal = () => {
+    setNuevoTitulo("");
+    setNuevaEntidadTipo("");
+    setNuevaEntidadId(0);
+    setNuevaDescripcion("");
+    setNuevoRecordar("");
+  };
+
   const agregar = () => {
     if (!nuevoTitulo.trim()) {
       Alert.alert("Error", "El título no puede estar vacío.");
+      return;
+    }
+    if (!nuevaEntidadTipo) {
+      Alert.alert("Error", "Debes seleccionar una categoría.");
+      return;
+    }
+    if (!nuevaEntidadId) {
+      Alert.alert("Error", "Debes seleccionar un animal o cultivo relacionado.");
+      return;
+    }
+    if (!nuevoRecordar.trim()) {
+      Alert.alert("Error", "El campo 'Recordar el' no puede estar vacío.");
       return;
     }
     const nuevo: Recordatorio = {
       id: Date.now().toString(),
       titulo: nuevoTitulo.trim(),
       fecha: new Date().toLocaleDateString("es-ES", { day: "numeric", month: "long", year: "numeric" }),
-      categoria: nuevaCategoria,
+      entidad_tipo: nuevaEntidadTipo as EntidadTipo,
+      entidad_id: nuevaEntidadId,
+      descripcion: nuevaDescripcion.trim() || null,
+      recordar: nuevoRecordar.trim(),
       completado: false,
     };
     setRecordatorios((prev) => [nuevo, ...prev]);
-    setNuevoTitulo("");
-    setNuevaCategoria("Animales");
+    resetModal();
     setModalVisible(false);
   };
 
-  const categorias: Categoria[] = ["Todos", "Animales", "Cultivos"];
+  const categoriasFiltro: CategoriaFiltro[] = ["Todos", "Animales", "Cultivos"];
+
+  const entidadData = nuevaEntidadTipo === "animal" ? animalesMock : nuevaEntidadTipo === "cultivo" ? cultivosMock : [];
 
   const renderDeleteAction = (id: string) => (
     <TouchableOpacity style={styles.deleteAction} onPress={() => eliminar(id)}>
@@ -132,7 +168,7 @@ export default function RecordatoriosScreen() {
       <View style={styles.container}>
         {/* Tabs */}
         <View style={styles.tabs}>
-          {categorias.map((cat) => (
+          {categoriasFiltro.map((cat) => (
             <TouchableOpacity
               key={cat}
               style={[styles.tab, categoriaActiva === cat && styles.tabActivo]}
@@ -172,12 +208,12 @@ export default function RecordatoriosScreen() {
                     <Text style={[styles.cardTitulo, item.completado && styles.cardTituloTachado]}>
                       {item.titulo}
                     </Text>
-                    <Text style={styles.cardFecha}>{item.fecha}</Text>
+                    <Text style={styles.cardFecha}>{item.recordar}</Text>
                   </View>
 
-                  <View style={[styles.badge, item.categoria === "Animales" ? styles.badgeAnimal : styles.badgeCultivo]}>
-                    <Text style={[styles.badgeText, item.categoria === "Animales" ? styles.badgeTextAnimal : styles.badgeTextCultivo]}>
-                      {item.categoria === "Animales" ? "Animal" : "Cultivo"}
+                  <View style={[styles.badge, item.entidad_tipo === "animal" ? styles.badgeAnimal : styles.badgeCultivo]}>
+                    <Text style={[styles.badgeText, item.entidad_tipo === "animal" ? styles.badgeTextAnimal : styles.badgeTextCultivo]}>
+                      {item.entidad_tipo === "animal" ? "Animal" : "Cultivo"}
                     </Text>
                   </View>
                 </View>
@@ -191,53 +227,78 @@ export default function RecordatoriosScreen() {
       <Modal visible={modalVisible} transparent animationType="slide">
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <View style={styles.modalOverlay}>
-            <KeyboardAvoidingView 
+            <KeyboardAvoidingView
               behavior={Platform.OS === "ios" ? "padding" : "height"}
               style={{ width: "100%" }}
             >
               <View style={styles.modalContainer}>
                 <Text style={styles.modalTitle}>Nuevo Recordatorio</Text>
-                
-                <Text style={styles.modalLabel}>Categoría</Text>
-                <TouchableOpacity 
-                  style={styles.modalCategoriaSelector} 
-                  onPress={toggleModalExpandir}
-                  activeOpacity={0.7}
-                >
-                  <Text style={styles.modalCategoriaSelectorText}>{nuevaCategoria}</Text>
-                  <Text style={[styles.arrow, modalExpandido && styles.arrowRotated]}>▼</Text>
-                </TouchableOpacity>
 
-                {modalExpandido && (
-                  <Animated.View style={[styles.modalTabsDropdown, { opacity: modalFadeAnim }]}>
-                    {(["Animales", "Cultivos"] as const).map((cat) => (
-                      <TouchableOpacity
-                        key={cat}
-                        style={[styles.modalTabDropdownItem, nuevaCategoria === cat && styles.modalTabActivo]}
-                        onPress={() => {
-                          setNuevaCategoria(cat);
-                          toggleModalExpandir();
-                        }}
-                      >
-                        <Text style={[styles.modalTabText, nuevaCategoria === cat && styles.modalTabTextActivo]}>
-                          {cat}
-                        </Text>
-                      </TouchableOpacity>
-                    ))}
-                  </Animated.View>
-                )}
-
+                <Text style={styles.modalLabel}>Título</Text>
                 <TextInput
                   style={styles.modalInput}
                   placeholder="Título del recordatorio"
                   placeholderTextColor={Colors.PLACEHOLDER_GRAY}
                   value={nuevoTitulo}
                   onChangeText={setNuevoTitulo}
-                  multiline
                 />
-                
+
+                <Text style={styles.modalLabel}>Categoría</Text>
+                <Dropdown
+                  data={entidadTipoOpciones}
+                  placeholder="Seleccione una categoría"
+                  value={nuevaEntidadTipo}
+                  onValueChange={(val) => {
+                    const encontrado = entidadTipoOpciones.find((o) => o.id === Number(val));
+                    if (encontrado) {
+                      setNuevaEntidadTipo(encontrado.value);
+                      setNuevaEntidadId(0);
+                    }
+                  }}
+                />
+
+                {nuevaEntidadTipo !== "" && (
+                  <>
+                    <Text style={styles.modalLabel}>
+                      {nuevaEntidadTipo === "animal" ? "Animal relacionado" : "Cultivo relacionado"}
+                    </Text>
+                    <Dropdown
+                      data={entidadData}
+                      placeholder={nuevaEntidadTipo === "animal" ? "Seleccione un animal" : "Seleccione un cultivo"}
+                      value={nuevaEntidadId || ""}
+                      onValueChange={(val) => setNuevaEntidadId(Number(val))}
+                    />
+                  </>
+                )}
+
+                <Text style={styles.modalLabel}>Descripción</Text>
+                <TextInput
+                  style={styles.modalTextArea}
+                  placeholder="Descripción del recordatorio (opcional)"
+                  placeholderTextColor={Colors.PLACEHOLDER_GRAY}
+                  value={nuevaDescripcion}
+                  onChangeText={setNuevaDescripcion}
+                  multiline
+                  numberOfLines={3}
+                />
+
+                <Text style={styles.modalLabel}>Recordar el</Text>
+                <TextInput
+                  style={styles.modalInput}
+                  placeholder="YYYY-MM-DD HH:MM"
+                  placeholderTextColor={Colors.PLACEHOLDER_GRAY}
+                  value={nuevoRecordar}
+                  onChangeText={setNuevoRecordar}
+                />
+
                 <View style={styles.modalButtons}>
-                  <TouchableOpacity style={styles.cancelButton} onPress={() => setModalVisible(false)}>
+                  <TouchableOpacity
+                    style={styles.cancelButton}
+                    onPress={() => {
+                      resetModal();
+                      setModalVisible(false);
+                    }}
+                  >
                     <Text style={styles.cancelText}>Cancelar</Text>
                   </TouchableOpacity>
                   <TouchableOpacity style={styles.saveButton} onPress={agregar}>
@@ -255,8 +316,6 @@ export default function RecordatoriosScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.BACKGROUND, paddingHorizontal: 16, paddingTop: 16 },
-  arrow: { fontSize: 12, color: Colors.SUBTITLE, transitionDuration: "0.2s" },
-  arrowRotated: { transform: [{ rotate: "180deg" }] },
   tabs: { flexDirection: "row", backgroundColor: Colors.CARD_DETAILS, borderRadius: 12, padding: 4, marginBottom: 16, borderWidth: 1, borderColor: Colors.INPUT_BORDER },
   tab: { flex: 1, paddingVertical: 8, alignItems: "center", borderRadius: 10 },
   tabActivo: { backgroundColor: Colors.PRIMARY_GREEN },
@@ -280,41 +339,12 @@ const styles = StyleSheet.create({
   deleteActionText: { fontSize: 20 },
   deleteActionLabel: { fontSize: 12, color: "#fff", fontWeight: "600", marginTop: 2 },
   modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.4)", justifyContent: "flex-end" },
-  modalContainer: { backgroundColor: Colors.CARD_DETAILS, borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 24, gap: 12 },
+  modalContainer: { backgroundColor: Colors.CARD_DETAILS, borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 24, gap: 8 },
   modalTitle: { fontSize: 18, fontWeight: "700", color: Colors.TITLE, marginBottom: 4 },
-  modalInput: { backgroundColor: Colors.BACKGROUND, borderWidth: 1, borderColor: Colors.INPUT_BORDER, borderRadius: 12, paddingHorizontal: 16, paddingVertical: 12, fontSize: 15, color: Colors.TITLE, minHeight: 80, textAlignVertical: "top" },
-  modalLabel: { fontSize: 14, fontWeight: "500", color: Colors.TITLE },
-  modalCategoriaSelector: { 
-    flexDirection: "row", 
-    justifyContent: "space-between", 
-    alignItems: "center", 
-    backgroundColor: Colors.BACKGROUND, 
-    borderWidth: 1, 
-    borderColor: Colors.INPUT_BORDER, 
-    borderRadius: 12, 
-    paddingHorizontal: 16, 
-    paddingVertical: 12 
-  },
-  modalCategoriaSelectorText: { fontSize: 15, color: Colors.TITLE },
-  modalTabsDropdown: { 
-    backgroundColor: Colors.BACKGROUND, 
-    borderWidth: 1, 
-    borderColor: Colors.INPUT_BORDER, 
-    borderRadius: 12, 
-    marginTop: -8, 
-    overflow: "hidden" 
-  },
-  modalTabDropdownItem: { 
-    paddingVertical: 12, 
-    alignItems: "center", 
-    borderBottomWidth: 1, 
-    borderBottomColor: Colors.INPUT_BORDER 
-  },
-  modalTab: { flex: 1, paddingVertical: 10, alignItems: "center", borderRadius: 10, borderWidth: 1, borderColor: Colors.INPUT_BORDER, backgroundColor: Colors.BACKGROUND },
-  modalTabActivo: { backgroundColor: Colors.PRIMARY_GREEN, borderColor: Colors.PRIMARY_GREEN },
-  modalTabText: { fontSize: 14, color: Colors.SUBTITLE, fontWeight: "500" },
-  modalTabTextActivo: { color: "#fff", fontWeight: "600" },
-  modalButtons: { flexDirection: "row", gap: 12, marginTop: 8 },
+  modalLabel: { fontSize: 14, fontWeight: "500", color: Colors.TITLE, marginTop: 4 },
+  modalInput: { backgroundColor: Colors.BACKGROUND, borderWidth: 1, borderColor: Colors.INPUT_BORDER, borderRadius: 12, paddingHorizontal: 16, paddingVertical: 12, fontSize: 15, color: Colors.TITLE },
+  modalTextArea: { backgroundColor: Colors.BACKGROUND, borderWidth: 1, borderColor: Colors.INPUT_BORDER, borderRadius: 12, paddingHorizontal: 16, paddingVertical: 12, fontSize: 15, color: Colors.TITLE, minHeight: 80, textAlignVertical: "top" },
+  modalButtons: { flexDirection: "row", gap: 12, marginTop: 12 },
   cancelButton: { flex: 1, height: 50, borderRadius: 12, borderWidth: 1, borderColor: Colors.INPUT_BORDER, alignItems: "center", justifyContent: "center", backgroundColor: Colors.CARD_DETAILS },
   cancelText: { fontSize: 16, color: Colors.TITLE, fontWeight: "500" },
   saveButton: { flex: 1, height: 50, borderRadius: 12, backgroundColor: Colors.PRIMARY_GREEN, alignItems: "center", justifyContent: "center" },

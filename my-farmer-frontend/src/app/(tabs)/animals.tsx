@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { FlatList, StyleSheet, TextInput, View, Text} from "react-native";
 import Colors from "@/constants/colors";
+import { useTheme } from "@/contexts/ThemeContext";
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
@@ -15,6 +16,7 @@ import FilterIcon from "@/components/ui/filterIcon";
 export default function AnimalsScreen() {
   const [buscar, setBuscar] = useState("");
   const router = useRouter();
+  const { t } = useTheme();
 
   const data = useMemo(
     () => [
@@ -109,12 +111,12 @@ export default function AnimalsScreen() {
         ]}
       />
       <NavBar />
-      <View style={styles.content}>
+      <View style={[styles.content, { backgroundColor: t.bg, flex: 1 }]}>
         <TextInput
-          style={styles.input}
+          style={[styles.input, { backgroundColor: t.input, borderColor: t.border, color: t.title }]}
           value={buscar}
           placeholder="Buscar animales..."
-          placeholderTextColor={Colors.PLACEHOLDER_GRAY}
+          placeholderTextColor={t.placeholder}
           onChangeText={setBuscar}
         />
         <FlatList

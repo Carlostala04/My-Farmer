@@ -13,6 +13,7 @@ import Svg, { Path, Circle, Line } from "react-native-svg";
 import * as ImagePicker from "expo-image-picker";
 import Colors from "@/constants/colors";
 import NavBar from "@/components/navBar";
+import { useTheme } from "@/contexts/ThemeContext";
 
 const IconSettings = ({ dark }: { dark: boolean }) => (
   <Svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke={dark ? "#fff" : "#1A1A1A"} strokeWidth={2} strokeLinecap="round">
@@ -57,19 +58,19 @@ const IconSync = ({ dark }: { dark: boolean }) => (
 );
 
 export default function PerfilScreen() {
+  const { darkMode, toggleDarkMode, t } = useTheme();
   const [notificaciones, setNotificaciones] = useState(true);
-  const [modoOscuro, setModoOscuro] = useState(false);
   const [preferenciasOpen, setPreferenciasOpen] = useState(true);
   const [seguridadOpen, setSeguridadOpen] = useState(false);
   const [sincronizacionOpen, setSincronizacionOpen] = useState(false);
   const [foto, setFoto] = useState("");
 
-  const d = modoOscuro;
-  const bg = d ? "#111827" : Colors.BACKGROUND;
-  const card = d ? "#1F2937" : Colors.CARD_DETAILS;
-  const title = d ? "#F9FAFB" : Colors.TITLE;
-  const subtitle = d ? "#9CA3AF" : Colors.SUBTITLE;
-  const border = d ? "#374151" : Colors.INPUT_BORDER;
+  const d = darkMode;
+  const bg = t.bg;
+  const card = t.card;
+  const title = t.title;
+  const subtitle = t.subtitle;
+  const border = t.border;
 
   const cambiarFoto = async () => {
     const permiso = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -177,7 +178,7 @@ export default function PerfilScreen() {
               <View style={styles.settingRow}>
                 <IconMoon dark={d} />
                 <Text style={[styles.settingLabel, { color: title }]}>Modo Oscuro</Text>
-                <Switch value={modoOscuro} onValueChange={setModoOscuro} trackColor={{ false: "#D1D5DB", true: Colors.PRIMARY_GREEN }} thumbColor="#fff" />
+                <Switch value={darkMode} onValueChange={toggleDarkMode} trackColor={{ false: "#D1D5DB", true: Colors.PRIMARY_GREEN }} thumbColor="#fff" />
               </View>
             </View>
           )}

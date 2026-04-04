@@ -10,10 +10,12 @@ import FilterIcon from "@/components/ui/filterIcon";
 import CardCultivos from "@/components/card-cultivos";
 
 import Colors from "@/constants/colors";
+import { useTheme } from "@/contexts/ThemeContext";
 
 export default function CultivosScreen() {
   const [buscar, setBuscar] = useState("");
   const router = useRouter();
+  const { t } = useTheme();
 
   const data = useMemo(
     () => [
@@ -74,12 +76,13 @@ export default function CultivosScreen() {
           },
         ]}
       />
-      <View style={styles.content}>
+      <View style={[styles.content, { backgroundColor: t.bg, flex: 1 }]}>
         <TextInput
           placeholder="Buscar cultivo..."
           value={buscar}
           onChangeText={setBuscar}
-          style={styles.input}
+          placeholderTextColor={t.placeholder}
+          style={[styles.input, { backgroundColor: t.input, borderColor: t.border, color: t.title }]}
         />
         <FlatList
           data={filteredData}

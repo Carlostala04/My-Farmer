@@ -273,7 +273,7 @@ export default function RegisterAnimalScreen() {
             <ThemedText style={styles.label}>Fecha de nacimiento</ThemedText>
             <TextInput
               style={styles.input}
-              placeholder="DD/MM/YYYY"
+              placeholder="YYYY/MM/DD"
               placeholderTextColor={Colors.PLACEHOLDER_GRAY}
               value={fechaNacimiento}
               onChangeText={setFechaNacimiento}

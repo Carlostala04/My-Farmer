@@ -1,4 +1,14 @@
-import { Link } from "expo-router";
+/**
+ * Pantalla de Registro (register.tsx)
+ *
+ * Permite crear una nueva cuenta de usuario usando Supabase Auth.
+ * Después del registro exitoso, sincroniza el usuario con el backend
+ * (que crea automáticamente el registro en DB mediante getOrCreateFromToken)
+ * y redirige a la pantalla principal.
+ *
+ * También incluye inicio de sesión con Google OAuth via WebBrowser.
+ */
+import { Link, useRouter } from "expo-router";
 import { useState } from "react";
 import {
   View,
@@ -9,8 +19,12 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  Alert,
+  ActivityIndicator,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import * as WebBrowser from "expo-web-browser";
+import * as Linking from "expo-linking";
 
 import EmailIcon from "@/components/ui/email";
 import LockIcon from "@/components/ui/lock";
@@ -20,9 +34,14 @@ import GoogleLogo from "@/components/ui/google";
 import UserIcon from "@/components/ui/user";
 import Colors from "@/constants/colors";
 import { Spacing } from "@/constants/theme";
+import { supabase } from "@/supabase/supabaseClient";
+
+const API_URL = process.env.EXPO_PUBLIC_API_URL || "http://10.40.224.63:3000";
+WebBrowser.maybeCompleteAuthSession();
 
 export default function RegisterScreen() {
   const insets = useSafeAreaInsets();
+  const router = useRouter();
   const [nombre, setNombre] = useState("");
   const [apellido, setApellido] = useState("");
   const [nombreDeUsuario, setNombreDeUsuario] = useState("");
@@ -31,6 +50,131 @@ export default function RegisterScreen() {
   const [confirmContrasena, setConfirmContrasena] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  /** Registra al usuario con email/contraseña en Supabase y sincroniza con el backend. */
+  async function signUpWithEmail() {
+    if (!nombre.trim() || !apellido.trim()) {
+      return Alert.alert("Error", "Por favor ingresa tu nombre y apellido.");
+    }
+    if (!correo.trim()) {
+      return Alert.alert("Error", "Por favor ingresa tu correo electrónico.");
+    }
+    if (contrasena.length < 6) {
+      return Alert.alert("Error", "La contraseña debe tener al menos 6 caracteres.");
+    }
+    if (contrasena !== confirmContrasena) {
+      return Alert.alert("Error", "Las contraseñas no coinciden.");
+    }
+
+    setLoading(true);
+    try {
+      const {
+        data: { session },
+        error,
+      } = await supabase.auth.signUp({
+        email: correo.trim(),
+        password: contrasena,
+        options: {
+          data: {
+            nombre: nombre.trim(),
+            apellido: apellido.trim(),
+            username: nombreDeUsuario.trim() || undefined,
+          },
+        },
+      });
+
+      if (error) {
+        Alert.alert("Error", error.message);
+        return;
+      }
+
+      if (!session) {
+        // Supabase envía correo de confirmación cuando está habilitada la verificación
+        Alert.alert(
+          "Verifica tu correo",
+          "Te enviamos un enlace de confirmación. Revisa tu bandeja de entrada.",
+        );
+        return;
+      }
+
+      // Sincronizar con el backend: el backend crea el usuario en DB si no existe
+      try {
+        await fetch(`${API_URL}/usuarios/me`, {
+          headers: { Authorization: `Bearer ${session.access_token}` },
+        });
+      } catch (e) {
+        console.log("Error al sincronizar usuario con backend:", e);
+      }
+
+      router.replace("/(tabs)/home");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  /** Inicia sesión con Google OAuth mediante WebBrowser (compatible con Expo Go). */
+  async function handleGoogleLogin() {
+    try {
+      setLoading(true);
+      const redirectUri = Linking.createURL("/");
+
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: redirectUri,
+          skipBrowserRedirect: true,
+          queryParams: { prompt: "select_account" },
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.url) {
+        const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUri);
+
+        if (result.type === "success" && result.url) {
+          let access_token: string | null = null;
+          let refresh_token: string | null = null;
+
+          if (result.url.includes("#")) {
+            const params = new URLSearchParams(result.url.split("#")[1]);
+            access_token = params.get("access_token");
+            refresh_token = params.get("refresh_token");
+          } else if (result.url.includes("?")) {
+            const params = new URLSearchParams(result.url.split("?")[1]);
+            access_token = params.get("access_token");
+            refresh_token = params.get("refresh_token");
+          }
+
+          if (access_token && refresh_token) {
+            const { data: sessionData, error: sessionError } =
+              await supabase.auth.setSession({ access_token, refresh_token });
+
+            if (sessionError) throw sessionError;
+
+            if (sessionData.session) {
+              try {
+                await fetch(`${API_URL}/usuarios/me`, {
+                  headers: { Authorization: `Bearer ${sessionData.session.access_token}` },
+                });
+              } catch (e) {
+                console.log("Error al sincronizar usuario con backend:", e);
+              }
+              router.replace("/(tabs)/home");
+            }
+          } else {
+            Alert.alert("Error", "La respuesta de Google no fue válida.");
+          }
+        }
+      }
+    } catch (err) {
+      console.log("Error Google Login:", err);
+      Alert.alert("Error", "No se pudo iniciar sesión con Google");
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
     <KeyboardAvoidingView
@@ -155,10 +299,16 @@ export default function RegisterScreen() {
             style={({ pressed }) => [
               styles.registerButton,
               pressed && styles.buttonPressed,
+              loading && { opacity: 0.7 },
             ]}
-            onPress={() => {}}
+            onPress={signUpWithEmail}
+            disabled={loading}
           >
-            <Text style={styles.registerButtonText}>Crear cuenta</Text>
+            {loading ? (
+              <ActivityIndicator color="#FFFFFF" />
+            ) : (
+              <Text style={styles.registerButtonText}>Crear cuenta</Text>
+            )}
           </Pressable>
 
           <View style={styles.divider}>
@@ -167,10 +317,14 @@ export default function RegisterScreen() {
             <View style={styles.dividerLine} />
           </View>
 
-          <Pressable style={styles.googleButton}>
+          <Pressable
+            style={[styles.googleButton, loading && { opacity: 0.7 }]}
+            onPress={handleGoogleLogin}
+            disabled={loading}
+          >
             <GoogleLogo style={styles.googleButtonIcon} />
             <Text style={styles.googleButtonText}>
-              Iniciar sesión con Google
+              Registrarse con Google
             </Text>
           </Pressable>
 

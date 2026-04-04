@@ -1,3 +1,20 @@
+/**
+ * Pantalla de Inicio / Dashboard (home.tsx)
+ *
+ * Muestra un resumen del estado de la granja del usuario: animales recientes,
+ * cultivos activos y próximos recordatorios.
+ *
+ * Cambios respecto a la versión anterior:
+ *  - Se eliminaron todos los datos hardcodeados (usuario, animales, cultivos, recordatorios).
+ *  - Se integraron los hooks `useUsuario`, `useAnimales` y `useCultivos` para mostrar
+ *    datos reales del backend.
+ *  - El nombre en el saludo ahora muestra el nombre real del usuario autenticado.
+ *  - Los contadores de estadísticas usan las listas reales del backend.
+ *  - Las secciones de "Animales Recientes" y "Cultivos Recientes" muestran los
+ *    últimos 5 registros del backend.
+ *  - Los recordatorios se muestran vacíos (pendiente: integrar hook de recordatorios).
+ */
+
 import React from "react";
 import {
   View,
@@ -7,6 +24,7 @@ import {
   TouchableOpacity,
   Image,
   ImageBackground,
+  ActivityIndicator,
 } from "react-native";
 import { useRouter } from "expo-router";
 import NavBar from "@/components/navBar";
@@ -14,94 +32,9 @@ import Colors from "@/constants/colors";
 import { useTheme } from "@/contexts/ThemeContext";
 import LivestockIcon from "@/components/ui/livestock_icon";
 import WheatIcon from "@/components/ui/wheat_icon";
-
-const usuario = {
-  nombre: "Carlos",
-  apellido: "López",
-};
-
-const animales = [
-  {
-    nombre: "Boby",
-    raza: "Ternero",
-    edad: 0.5,
-    estado: "saludable",
-    color: "Café",
-    peso: 80,
-    imagen:
-      "https://a.storyblok.com/f/160385/4bf112f0cd/datos_curiosos.jpg/m/filters:quality(70)/",
-  },
-  {
-    nombre: "Luna",
-    raza: "Vaca",
-    edad: 3,
-    estado: "Prenada",
-    color: "Marrón",
-    peso: 480,
-    imagen:
-      "https://imagenes.elpais.com/resizer/v2/OPHSOSNE2O673X77I7JAPNANV4.jpg?auth=e31b607f28c9844d1f9552df6f643d319102aba87dc69ca60e3c4dffdab20344&width=1960&height=1470&smart=true",
-  },
-  {
-    nombre: "RedBull",
-    raza: "Brahman",
-    edad: 2,
-    estado: "produciendo",
-    color: "Gris",
-    peso: 700,
-    imagen:
-      "https://lasventastour.com/wp-content/uploads/2023/12/Toro-Bravo-Las-Ventas-Tour-2.webp",
-  },
-];
-
-const cultivos = [
-  {
-    id: 1,
-    nombre: "Maíz Híbrido",
-    fechaSiembra: "15 Mar 2024",
-    ubicacion: "Parcela Norte",
-    estado: true,
-    imagen: "https://mayasl.com/wp-content/uploads/2020/08/cultivo-maiz_3.jpg",
-  },
-  {
-    id: 2,
-    nombre: "Trigo Primavera",
-    fechaSiembra: "02 Abr 2024",
-    ubicacion: "Parcela Sur",
-    estado: false,
-    imagen:
-      "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Wheat_close-up.JPG/1200px-Wheat_close-up.JPG",
-  },
-  {
-    id: 3,
-    nombre: "Lechuga",
-    fechaSiembra: "10 Abr 2024",
-    ubicacion: "Invernadero",
-    estado: true,
-    imagen:
-      "https://cdn.wikifarmer.com/images/detailed/2019/07/Como-Cultivar-Lechuga-%E2%80%93-Guia-Completa-de-Cultivo-de-la-Lechuga-desde-la-Siembra-hasta-la-Cosecha.jpg",
-  },
-];
-
-const recordatorios = [
-  {
-    id: "1",
-    titulo: "Vacunar al ganado contra la fiebre aftosa.",
-    fecha: "15 de Mayo de 2024",
-    categoria: "Animales",
-  },
-  {
-    id: "2",
-    titulo: "Revisar riego en parcela de maíz.",
-    fecha: "16 de Mayo de 2024",
-    categoria: "Cultivos",
-  },
-  {
-    id: "3",
-    titulo: "Aplicar fertilizante orgánico a la plantación de tomate.",
-    fecha: "18 de Mayo de 2024",
-    categoria: "Cultivos",
-  },
-];
+import { useAnimales } from "@/hooks/useAnimales";
+import { useCultivos } from "@/hooks/useCultivos";
+import { useUsuario } from "@/hooks/useUsuario";
 
 const statusColors: Record<string, string> = {
   SALUDABLE: Colors.PRIMARY_GREEN,
@@ -117,8 +50,14 @@ export default function Home() {
   const router = useRouter();
   const { t } = useTheme();
 
-  const totalAnimales = animales.length;
-  const totalCultivos = cultivos.length;
+  // Datos reales del backend
+  const { usuario, loading: loadingUsuario } = useUsuario();
+  const { animales, loading: loadingAnimales } = useAnimales();
+  const { cultivos, loading: loadingCultivos } = useCultivos();
+
+  // Se muestran solo los 5 más recientes en el carrusel del home
+  const animalesRecientes = animales.slice(0, 5);
+  const cultivosRecientes = cultivos.slice(0, 5);
 
   return (
     <>
@@ -128,35 +67,77 @@ export default function Home() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Bienvenida */}
-        <View style={[styles.welcomeCard, { backgroundColor: t.card, borderColor: t.border }]}>
-          <Text style={[styles.welcomeTitle, { color: t.title }]}>¡Hola, {usuario.nombre}!</Text>
+        {/* Bienvenida con nombre real del usuario */}
+        <View
+          style={[
+            styles.welcomeCard,
+            { backgroundColor: t.card, borderColor: t.border },
+          ]}
+        >
+          <Text style={[styles.welcomeTitle, { color: t.title }]}>
+            {loadingUsuario
+              ? "¡Hola!"
+              : `¡Hola, ${usuario?.Nombre ?? "Agricultor"}!`}
+          </Text>
           <Text style={[styles.welcomeSubtitle, { color: t.subtitle }]}>
             Hoy es un buen día para la siembra.
           </Text>
         </View>
 
-        {/* Widgets de estadísticas */}
+        {/* Widgets de estadísticas con conteos reales */}
         <View style={styles.statsRow}>
-          <View style={[styles.statCard, { backgroundColor: t.card, borderColor: t.border }]}>
+          <View
+            style={[
+              styles.statCard,
+              { backgroundColor: t.card, borderColor: t.border },
+            ]}
+          >
             <View style={styles.statIconWrapper}>
               <LivestockIcon size={30} color={Colors.PRIMARY_GREEN} />
             </View>
-            <Text style={[styles.statValue, { color: t.title }]}>{totalAnimales}</Text>
-            <Text style={[styles.statLabel, { color: t.subtitle }]}>Total Ganado</Text>
+            {loadingAnimales ? (
+              <ActivityIndicator size="small" color={Colors.PRIMARY_GREEN} />
+            ) : (
+              <Text style={[styles.statValue, { color: t.title }]}>
+                {animales.length}
+              </Text>
+            )}
+            <Text style={[styles.statLabel, { color: t.subtitle }]}>
+              Total Ganado
+            </Text>
           </View>
-          <View style={[styles.statCard, { backgroundColor: t.card, borderColor: t.border }]}>
+          <View
+            style={[
+              styles.statCard,
+              { backgroundColor: t.card, borderColor: t.border },
+            ]}
+          >
             <View style={styles.statIconWrapper}>
               <WheatIcon size={30} color={Colors.PRIMARY_GREEN} />
             </View>
-            <Text style={[styles.statValue, { color: t.title }]}>{totalCultivos}</Text>
-            <Text style={[styles.statLabel, { color: t.subtitle }]}>Cultivos Activos</Text>
+            {loadingCultivos ? (
+              <ActivityIndicator size="small" color={Colors.PRIMARY_GREEN} />
+            ) : (
+              <Text style={[styles.statValue, { color: t.title }]}>
+                {cultivos.length}
+              </Text>
+            )}
+            <Text style={[styles.statLabel, { color: t.subtitle }]}>
+              Cultivos Activos
+            </Text>
           </View>
         </View>
 
         {/* Accesos Rápidos */}
-        <Text style={[styles.sectionTitle, { color: t.title }]}>Accesos Rápidos</Text>
-        <View style={[styles.quickAccessCard, { backgroundColor: t.card, borderColor: t.border }]}>
+        <Text style={[styles.sectionTitle, { color: t.title }]}>
+          Accesos Rápidos
+        </Text>
+        <View
+          style={[
+            styles.quickAccessCard,
+            { backgroundColor: t.card, borderColor: t.border },
+          ]}
+        >
           <TouchableOpacity
             style={styles.quickAccessItem}
             onPress={() => router.push("/(tabs)/animals" as any)}
@@ -165,7 +146,9 @@ export default function Home() {
             <View style={[styles.quickIcon, { backgroundColor: "#E8F5E9" }]}>
               <LivestockIcon size={22} color={Colors.PRIMARY_GREEN} />
             </View>
-            <Text style={[styles.quickLabel, { color: t.title }]}>Ver lista de animales</Text>
+            <Text style={[styles.quickLabel, { color: t.title }]}>
+              Ver lista de animales
+            </Text>
             <Text style={styles.quickArrow}>›</Text>
           </TouchableOpacity>
 
@@ -179,14 +162,18 @@ export default function Home() {
             <View style={[styles.quickIcon, { backgroundColor: "#FFF8E1" }]}>
               <WheatIcon size={22} color="#CA8A04" />
             </View>
-            <Text style={[styles.quickLabel, { color: t.title }]}>Ver lista de cultivos</Text>
+            <Text style={[styles.quickLabel, { color: t.title }]}>
+              Ver lista de cultivos
+            </Text>
             <Text style={styles.quickArrow}>›</Text>
           </TouchableOpacity>
         </View>
 
-        {/* Animales Recientes */}
+        {/* Animales Recientes (últimos 5 del backend) */}
         <View style={styles.sectionHeader}>
-          <Text style={[styles.sectionTitle, { color: t.title }]}>Animales Recientes</Text>
+          <Text style={[styles.sectionTitle, { color: t.title }]}>
+            Animales Recientes
+          </Text>
           <TouchableOpacity
             onPress={() => router.push("/(tabs)/animals" as any)}
           >
@@ -194,66 +181,86 @@ export default function Home() {
           </TouchableOpacity>
         </View>
 
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.horizontalContent}
-          style={styles.horizontalScroll}
-        >
-          {animales.map((animal, index) => (
-            <TouchableOpacity
-              key={index}
-              style={[styles.animalCard, { backgroundColor: t.card, borderColor: t.border }]}
-              activeOpacity={0.8}
-              onPress={() =>
-                router.push({
-                  pathname: "/(tabs)/animailsDetails" as any,
-                  params: {
-                    nombre: animal.nombre,
-                    edad: animal.edad,
-                    estado: animal.estado,
-                    raza: animal.raza,
-                    color: animal.color,
-                    peso: animal.peso,
-                    imagen: animal.imagen,
-                  },
-                })
-              }
-            >
-              <Image
-                source={{ uri: animal.imagen }}
-                style={styles.animalImage}
-              />
-              <View
+        {loadingAnimales ? (
+          <ActivityIndicator
+            size="small"
+            color={Colors.PRIMARY_GREEN}
+            style={{ marginBottom: 24 }}
+          />
+        ) : animalesRecientes.length === 0 ? (
+          <Text style={[styles.emptyText, { color: t.subtitle }]}>
+            No hay animales registrados.
+          </Text>
+        ) : (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.horizontalContent}
+            style={styles.horizontalScroll}
+          >
+            {animalesRecientes.map((animal) => (
+              <TouchableOpacity
+                key={animal.Animal_id}
                 style={[
-                  styles.animalBadge,
-                  {
-                    backgroundColor:
-                      statusColors[animal.estado.toUpperCase()] ??
-                      Colors.PRIMARY_GREEN,
-                  },
+                  styles.animalCard,
+                  { backgroundColor: t.card, borderColor: t.border },
                 ]}
+                activeOpacity={0.8}
+                onPress={() =>
+                  router.push({
+                    pathname: "/(tabs)/animailsDetails" as any,
+                    params: {
+                      animal_id: animal.Animal_id,
+                      nombre: animal.Nombre,
+                      raza: animal.Raza ?? "",
+                      color: animal.Color ?? "",
+                      peso: animal.Peso ?? "",
+                      foto: animal.Foto ?? "",
+                      estado: animal.Estado_Label ?? "",
+                    },
+                  })
+                }
               >
-                <Text style={styles.animalBadgeText}>{animal.estado}</Text>
-              </View>
-              <View style={styles.animalInfo}>
-                <Text style={[styles.animalName, { color: t.title }]} numberOfLines={1}>
-                  {animal.nombre} ({animal.raza})
-                </Text>
-                <Text style={[styles.animalAge, { color: t.subtitle }]}>
-                  🐾{" "}
-                  {animal.edad < 1
-                    ? `${animal.edad * 12} meses`
-                    : `${animal.edad} años`}
-                </Text>
-              </View>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
+                <Image
+                  source={{ uri: animal.Foto ?? undefined }}
+                  style={styles.animalImage}
+                />
+                <View
+                  style={[
+                    styles.animalBadge,
+                    {
+                      backgroundColor:
+                        statusColors[
+                          (animal.Estado_Label ?? "").toUpperCase()
+                        ] ?? Colors.PRIMARY_GREEN,
+                    },
+                  ]}
+                >
+                  <Text style={styles.animalBadgeText}>
+                    {animal.Estado_Label ?? "—"}
+                  </Text>
+                </View>
+                <View style={styles.animalInfo}>
+                  <Text
+                    style={[styles.animalName, { color: t.title }]}
+                    numberOfLines={1}
+                  >
+                    {animal.Nombre} {animal.Raza ? `(${animal.Raza})` : ""}
+                  </Text>
+                  <Text style={[styles.animalAge, { color: t.subtitle }]}>
+                    🐾 {animal.Categoria ?? "Animal"}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        )}
 
-        {/* Cultivos Recientes */}
+        {/* Cultivos Recientes (últimos 5 del backend) */}
         <View style={styles.sectionHeader}>
-          <Text style={[styles.sectionTitle, { color: t.title }]}>Cultivos Recientes</Text>
+          <Text style={[styles.sectionTitle, { color: t.title }]}>
+            Cultivos Recientes
+          </Text>
           <TouchableOpacity
             onPress={() => router.push("/(tabs)/cultivos" as any)}
           >
@@ -261,110 +268,88 @@ export default function Home() {
           </TouchableOpacity>
         </View>
 
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.horizontalContent}
-          style={styles.horizontalScroll}
-        >
-          {cultivos.map((cultivo, index) => (
-            <TouchableOpacity
-              key={index}
-              style={styles.cultivoCardWrapper}
-              activeOpacity={0.8}
-              onPress={() =>
-                router.push({
-                  pathname: "/(tabs)/cultivosDetails" as any,
-                  params: {
-                    nombre: cultivo.nombre,
-                    fechaSiembra: cultivo.fechaSiembra,
-                    ubicacion: cultivo.ubicacion,
-                    estado: String(cultivo.estado),
-                    imagen: cultivo.imagen,
-                  },
-                })
-              }
-            >
-              <ImageBackground
-                source={{ uri: cultivo.imagen }}
-                style={styles.cultivoCard}
-                imageStyle={styles.cultivoImageStyle}
-              >
-                <View style={styles.cultivoOverlay} />
-                <View
-                  style={[
-                    styles.cultivoBadge,
-                    {
-                      backgroundColor: cultivo.estado
-                        ? "#2b972148"
-                        : "#e60d0da1",
+        {loadingCultivos ? (
+          <ActivityIndicator
+            size="small"
+            color={Colors.PRIMARY_GREEN}
+            style={{ marginBottom: 24 }}
+          />
+        ) : cultivosRecientes.length === 0 ? (
+          <Text style={[styles.emptyText, { color: t.subtitle }]}>
+            No hay cultivos activos registrados.
+          </Text>
+        ) : (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.horizontalContent}
+            style={styles.horizontalScroll}
+          >
+            {cultivosRecientes.map((cultivo) => (
+              <TouchableOpacity
+                key={cultivo.Cultivo_id}
+                style={styles.cultivoCardWrapper}
+                activeOpacity={0.8}
+                onPress={() =>
+                  router.push({
+                    pathname: "/(tabs)/cultivosDetails" as any,
+                    params: {
+                      cultivo_id: cultivo.Cultivo_id,
+                      nombre: cultivo.Nombre,
+                      fechaSiembra: cultivo.Fecha_Siembra ?? "",
+                      ubicacion: cultivo.Parcela ?? "",
+                      estado: String(cultivo.Activo),
+                      imagen: cultivo.Foto ?? "",
                     },
-                  ]}
+                  })
+                }
+              >
+                <ImageBackground
+                  source={{ uri: cultivo.Foto ?? undefined }}
+                  style={styles.cultivoCard}
+                  imageStyle={styles.cultivoImageStyle}
                 >
-                  <Text
+                  <View style={styles.cultivoOverlay} />
+                  <View
                     style={[
-                      styles.cultivoBadgeText,
-                      { color: cultivo.estado ? "#4ADE80" : "#fff" },
+                      styles.cultivoBadge,
+                      {
+                        backgroundColor: cultivo.Activo
+                          ? "#2b972148"
+                          : "#e60d0da1",
+                      },
                     ]}
                   >
-                    {cultivo.estado ? "En Crecimiento" : "Recién Sembrado"}
-                  </Text>
-                </View>
-                <View style={styles.cultivoContent}>
-                  <Text style={styles.cultivoName} numberOfLines={1}>
-                    {cultivo.nombre}
-                  </Text>
-                  <Text style={styles.cultivoDate}>
-                    📅 {cultivo.fechaSiembra}
-                  </Text>
-                </View>
-              </ImageBackground>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
+                    <Text
+                      style={[
+                        styles.cultivoBadgeText,
+                        { color: cultivo.Activo ? "#4ADE80" : "#fff" },
+                      ]}
+                    >
+                      {cultivo.Activo ? "En Crecimiento" : "Cosechado"}
+                    </Text>
+                  </View>
+                  <View style={styles.cultivoContent}>
+                    <Text style={styles.cultivoName} numberOfLines={1}>
+                      {cultivo.Nombre}
+                    </Text>
+                    <Text style={styles.cultivoDate}>
+                      📅 {cultivo.Fecha_Siembra ?? "Sin fecha"}
+                    </Text>
+                  </View>
+                </ImageBackground>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        )}
 
-        {/* Próximos Recordatorios */}
-        <Text style={[styles.sectionTitle, { color: t.title }]}>Próximos Recordatorios</Text>
-        {recordatorios.map((rec) => (
-          <View key={rec.id} style={[styles.reminderCard, { backgroundColor: t.card, borderColor: t.border }]}>
-            <View
-              style={[
-                styles.reminderDot,
-                {
-                  backgroundColor:
-                    rec.categoria === "Animales"
-                      ? Colors.PRIMARY_GREEN
-                      : "#3B82F6",
-                },
-              ]}
-            />
-            <View style={styles.reminderContent}>
-              <Text style={[styles.reminderTitle, { color: t.title }]} numberOfLines={2}>
-                {rec.titulo}
-              </Text>
-              <Text style={styles.reminderDate}>{rec.fecha}</Text>
-            </View>
-            <View
-              style={[
-                styles.reminderBadge,
-                rec.categoria === "Animales"
-                  ? styles.badgeAnimal
-                  : styles.badgeCultivo,
-              ]}
-            >
-              <Text
-                style={[
-                  styles.reminderBadgeText,
-                  rec.categoria === "Animales"
-                    ? styles.badgeTextAnimal
-                    : styles.badgeTextCultivo,
-                ]}
-              >
-                {rec.categoria}
-              </Text>
-            </View>
-          </View>
-        ))}
+        {/* Próximos Recordatorios — pendiente de integración con el backend */}
+        <Text style={[styles.sectionTitle, { color: t.title }]}>
+          Próximos Recordatorios
+        </Text>
+        <Text style={[styles.emptyText, { color: t.subtitle }]}>
+          No hay recordatorios próximos.
+        </Text>
 
         <View style={{ height: 16 }} />
       </ScrollView>
@@ -376,7 +361,6 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.BACKGROUND },
   scrollContent: { padding: 16, paddingBottom: 100 },
 
-  // Bienvenida
   welcomeCard: {
     backgroundColor: Colors.CARD_DETAILS,
     borderRadius: 16,
@@ -393,7 +377,6 @@ const styles = StyleSheet.create({
   },
   welcomeSubtitle: { fontSize: 14, color: Colors.SUBTITLE },
 
-  // Stats
   statsRow: { flexDirection: "row", gap: 12, marginBottom: 24 },
   statCard: {
     flex: 1,
@@ -416,7 +399,6 @@ const styles = StyleSheet.create({
   statValue: { fontSize: 28, fontWeight: "700", color: Colors.TITLE },
   statLabel: { fontSize: 12, color: Colors.SUBTITLE, textAlign: "center" },
 
-  // Section
   sectionHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -430,8 +412,13 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   verTodo: { fontSize: 14, color: Colors.PRIMARY_GREEN, fontWeight: "600" },
+  emptyText: {
+    fontSize: 13,
+    color: Colors.SUBTITLE,
+    marginBottom: 24,
+    marginTop: -8,
+  },
 
-  // Quick Access
   quickAccessCard: {
     backgroundColor: Colors.CARD_DETAILS,
     borderRadius: 16,
@@ -453,7 +440,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  quickEmoji: { fontSize: 20 },
   quickLabel: {
     flex: 1,
     fontSize: 15,
@@ -471,11 +457,9 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
   },
 
-  // Horizontal scroll
   horizontalScroll: { marginBottom: 24 },
   horizontalContent: { paddingRight: 4 },
 
-  // Animal card
   animalCard: {
     width: 150,
     backgroundColor: Colors.CARD_DETAILS,
@@ -503,7 +487,6 @@ const styles = StyleSheet.create({
   animalName: { fontSize: 13, fontWeight: "700", color: Colors.TITLE },
   animalAge: { fontSize: 11, color: Colors.SUBTITLE },
 
-  // Cultivo card
   cultivoCardWrapper: { width: 175, marginRight: 12 },
   cultivoCard: {
     width: 175,
@@ -537,31 +520,4 @@ const styles = StyleSheet.create({
     textShadowRadius: 4,
   },
   cultivoDate: { color: "rgba(255,255,255,0.85)", fontSize: 11 },
-
-  // Reminders
-  reminderCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: Colors.CARD_DETAILS,
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 10,
-    borderWidth: 1,
-    borderColor: Colors.INPUT_BORDER,
-    gap: 12,
-  },
-  reminderDot: { width: 10, height: 10, borderRadius: 5, flexShrink: 0 },
-  reminderContent: { flex: 1, gap: 3 },
-  reminderTitle: { fontSize: 13, color: Colors.TITLE, fontWeight: "500" },
-  reminderDate: { fontSize: 11, color: Colors.PLACEHOLDER_GRAY },
-  reminderBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 20,
-  },
-  badgeAnimal: { backgroundColor: "#F3F4F6" },
-  badgeCultivo: { backgroundColor: "#DCFCE7" },
-  reminderBadgeText: { fontSize: 11, fontWeight: "500" },
-  badgeTextAnimal: { color: Colors.SUBTITLE },
-  badgeTextCultivo: { color: Colors.PRIMARY_GREEN },
 });

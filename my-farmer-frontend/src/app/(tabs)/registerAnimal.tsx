@@ -1,3 +1,19 @@
+/**
+ * Formulario de Registro de Animal (registerAnimal.tsx)
+ *
+ * Permite al usuario crear un nuevo animal en el backend.
+ *
+ * Cambios respecto a la versión anterior:
+ *  - Se conectó el botón "Guardar" al backend usando el hook `useAnimales`.
+ *  - El dropdown de "Categoría animal" se pobla dinámicamente desde el backend
+ *    mediante el hook `useCategorias` (antes estaba vacío con `data={[]}`).
+ *  - El dropdown de "Parcela" se pobla dinámicamente desde el backend
+ *    mediante el hook `useParcelas` (antes estaba vacío con `data={[]}`).
+ *  - Se agregó un indicador de carga en el botón "Guardar" mientras se envía la petición.
+ *  - Se manejan los errores del backend mostrando un Alert con el mensaje del servidor.
+ *  - La imagen seleccionada se adjunta al request como archivo multipart.
+ */
+
 import React, { useState } from "react";
 import {
   View,
@@ -7,6 +23,7 @@ import {
   ScrollView,
   Alert,
   Image,
+  ActivityIndicator,
 } from "react-native";
 import { useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
@@ -15,9 +32,19 @@ import { ThemedText } from "@/components/themed-text";
 import ScreenHeader from "@/components/header";
 import Dropdown from "@/components/dropdown";
 import { SexoAnimal } from "@/ts/animalsProps";
+import { useAnimales } from "@/hooks/useAnimales";
+import { useCategorias } from "@/hooks/useCategorias";
+import { useParcelas } from "@/hooks/useParcelas";
 
 export default function RegisterAnimalScreen() {
   const router = useRouter();
+
+  // Hook para crear animales en el backend
+  const { crearAnimal, loading } = useAnimales();
+
+  // Opciones dinámicas desde el backend
+  const { categorias } = useCategorias();
+  const { parcelas } = useParcelas();
 
   const sexoOpciones = [
     { id: 1, nombre: "Macho", value: "macho" as SexoAnimal },
@@ -34,6 +61,18 @@ export default function RegisterAnimalScreen() {
     { id: 4, nombre: "En cuarentena" },
     { id: 5, nombre: "Muerto" },
   ];
+
+  // Opciones de categorías mapeadas para el componente Dropdown
+  const categoriasOpciones = categorias.map((c) => ({
+    id: c.Categoria_Animal_id,
+    nombre: c.Nombre,
+  }));
+
+  // Opciones de parcelas mapeadas para el componente Dropdown
+  const parcelasOpciones = parcelas.map((p) => ({
+    id: p.Parcela_id,
+    nombre: p.Nombre,
+  }));
 
   const [nombre, setNombre] = useState("");
   const [estado, setEstado] = useState("");
@@ -59,7 +98,7 @@ export default function RegisterAnimalScreen() {
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ["images"],
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.7,
@@ -96,7 +135,11 @@ export default function RegisterAnimalScreen() {
     ]);
   };
 
-  const handleGuardar = () => {
+  /**
+   * Valida los campos obligatorios y envía el animal al backend.
+   * Si la petición falla, muestra el mensaje de error del servidor.
+   */
+  const handleGuardar = async () => {
     if (!nombre.trim()) {
       Alert.alert("Error", "El nombre del animal es obligatorio.");
       return;
@@ -109,9 +152,31 @@ export default function RegisterAnimalScreen() {
       Alert.alert("Error", "La categoría del animal es obligatoria.");
       return;
     }
-    // Aquí después conectas con tu backend
-    Alert.alert("Éxito", "Animal registrado correctamente.");
-    router.back();
+
+    const ok = await crearAnimal(
+      {
+        Nombre: nombre.trim(),
+        Sexo: sexo as SexoAnimal,
+        Categoria_Animal_id: categoriaAnimal,
+        Raza: raza.trim() || null,
+        Color: color.trim() || null,
+        Fecha_Nacimiento: fechaNacimiento.trim() || null,
+        Peso: peso ? parseFloat(peso) : null,
+        Peso_Unidad: pesoUnidad || null,
+        Altura: altura ? parseFloat(altura) : null,
+        Estado_Label: estado || null,
+        Notas: observaciones.trim() || null,
+        Parcela_id: parcela || null,
+      },
+      imagen ?? undefined,
+    );
+
+    if (ok) {
+      Alert.alert("Éxito", "Animal registrado correctamente.");
+      router.back();
+    } else {
+      Alert.alert("Error", "No se pudo registrar el animal. Intenta de nuevo.");
+    }
   };
 
   return (
@@ -170,13 +235,15 @@ export default function RegisterAnimalScreen() {
           Nombre único para identificar al animal dentro de tu rebaño o grupo.
         </ThemedText>
 
+        {/* Categoría cargada dinámicamente desde el backend */}
         <ThemedText style={styles.label}>Categoria animal</ThemedText>
         <Dropdown
-          data={[]}
+          data={categoriasOpciones}
           placeholder="Seleccione una categoria para el animal"
           value={categoriaAnimal || ""}
           onValueChange={(val) => setCategoriaAnimal(Number(val))}
         />
+
         <ThemedText style={styles.label}>Estado</ThemedText>
         <Dropdown
           data={estadoOpciones}
@@ -195,6 +262,7 @@ export default function RegisterAnimalScreen() {
           onChangeText={setRaza}
           style={styles.input}
         />
+
         {/* Características Físicas */}
         <ThemedText style={styles.sectionTitle}>
           Características Físicas
@@ -254,9 +322,11 @@ export default function RegisterAnimalScreen() {
         <ThemedText style={styles.hint}>
           Altura desde el suelo hasta el lomo del animal.
         </ThemedText>
+
+        {/* Parcela cargada dinámicamente desde el backend */}
         <ThemedText style={styles.label}>Parcela</ThemedText>
         <Dropdown
-          data={[]}
+          data={parcelasOpciones}
           placeholder="Seleccione una parcela"
           value={parcela || ""}
           onValueChange={(val) => setParcela(Number(val))}
@@ -281,11 +351,20 @@ export default function RegisterAnimalScreen() {
           <TouchableOpacity
             style={styles.cancelButton}
             onPress={() => router.back()}
+            disabled={loading}
           >
             <ThemedText style={styles.cancelText}>Cancelar</ThemedText>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.saveButton} onPress={handleGuardar}>
-            <ThemedText style={styles.saveText}>Guardar</ThemedText>
+          <TouchableOpacity
+            style={[styles.saveButton, loading && { opacity: 0.7 }]}
+            onPress={handleGuardar}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <ThemedText style={styles.saveText}>Guardar</ThemedText>
+            )}
           </TouchableOpacity>
         </View>
       </ScrollView>

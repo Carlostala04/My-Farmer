@@ -11,6 +11,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import * as WebBrowser from "expo-web-browser";
 import * as Linking from "expo-linking";
@@ -27,17 +28,12 @@ const API_URL = process.env.EXPO_PUBLIC_API_URL || "http://10.40.224.63:3000";
 WebBrowser.maybeCompleteAuthSession();
 export default function LoginScreen() {
   // Estados para el formulario y el estado de carga
-
-  const [nombre, setNombre] = useState("");
-  const [apellido, setApellido] = useState("");
-  const [isRegistering, setIsRegistering] = useState(false); // Alternar entre Login y Registro
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [showError, setShowError] = useState(false);
   const [pressedButton, setPressedButton] = useState(false);
   // Función para iniciar sesión
   async function signInWithEmail() {
@@ -68,47 +64,6 @@ export default function LoginScreen() {
       Alert.alert("Éxito", "Has iniciado sesión correctamente");
       router.replace("/(tabs)/home"); // Redirigir a la pantalla principal
     }
-  }
-
-  // Función para registrarse
-  async function signUpWithEmail() {
-    if (!nombre.trim() || !apellido.trim()) {
-      return Alert.alert("Error", "Por favor ingresa tu nombre y apellido");
-    }
-
-    setLoading(true);
-    const {
-      data: { session },
-      error,
-    } = await supabase.auth.signUp({
-      email: email,
-      password: password,
-      options: {
-        data: {
-          nombre: nombre.trim(),
-          apellido: apellido.trim(),
-        },
-      },
-    });
-
-    if (error) {
-      Alert.alert("Error", error.message);
-    } else if (!session) {
-      // Supabase suele enviar un correo de confirmación por defecto
-      Alert.alert("Éxito", "¡Revisa tu correo para confirmar tu cuenta!");
-    } else {
-      // 🟢 Sincronizar usuario con el backend si hay sesión inmediata
-      try {
-        await fetch(`${API_URL}/usuarios/me`, {
-          headers: { Authorization: `Bearer ${session.access_token}` },
-        });
-      } catch (e) {
-        console.log("Error al sincronizar usuario con backend:", e);
-      }
-      Alert.alert("Éxito", "Registro completado");
-      router.replace("/(tabs)/home");
-    }
-    setLoading(false);
   }
 
   // 🔥 GOOGLE LOGIN (PARA EXPO GO)
@@ -248,14 +203,6 @@ export default function LoginScreen() {
           <Text style={styles.titleText}>MyFarmer</Text>
         </View>
 
-        {showError && (
-          <View style={styles.errorBox}>
-            <Text style={styles.errorText}>
-              Error de autenticación: El correo o la contraseña son incorrectos.
-            </Text>
-          </View>
-        )}
-
         <View style={styles.form}>
           <View style={styles.inputWrapper}>
             <EmailIcon
@@ -305,13 +252,23 @@ export default function LoginScreen() {
             style={({ pressed }) => [
               styles.loginButton,
               pressed && styles.loginButtonPressed,
+              loading && { opacity: 0.7 },
             ]}
-            onPress={() => {}}
+            onPress={signInWithEmail}
+            disabled={loading}
           >
-            <Text style={styles.loginButtonText}>Iniciar Sesión</Text>
+            {loading ? (
+              <ActivityIndicator color="#FFFFFF" />
+            ) : (
+              <Text style={styles.loginButtonText}>Iniciar Sesión</Text>
+            )}
           </Pressable>
 
-          <Pressable style={styles.googleButton}>
+          <Pressable
+            style={[styles.googleButton, loading && { opacity: 0.7 }]}
+            onPress={handleGoogleLogin}
+            disabled={loading}
+          >
             <GoogleLogo style={styles.googleButtonIcon} />
             <Text style={styles.googleButtonText}>
               Iniciar sesión con Google
@@ -389,21 +346,6 @@ const styles = StyleSheet.create({
     fontSize: 24,
     color: "#000000",
     fontWeight: "700",
-  },
-  errorBox: {
-    width: "100%",
-    backgroundColor: colors.ERROR_BG,
-    borderWidth: 1,
-    borderColor: colors.ERROR_BORDER,
-    borderRadius: 8,
-    padding: Spacing.three,
-    marginBottom: Spacing.four,
-    display: "none",
-  },
-  errorText: {
-    fontSize: 14,
-    color: colors.ERROR_TEXT,
-    textAlign: "center",
   },
   form: {
     width: "100%",

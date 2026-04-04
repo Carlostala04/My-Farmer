@@ -1,3 +1,16 @@
+/**
+ * Pantalla de Perfil (perfil.tsx)
+ *
+ * Cambios respecto a la versión anterior:
+ *  - Se reemplazaron los datos hardcodeados (nombre, correo) por datos reales del backend
+ *    usando el hook `useUsuario`, que llama a GET /usuarios/me.
+ *  - Los contadores de "ANIMALES" y "CULTIVOS" ahora muestran los totales reales
+ *    usando los hooks `useAnimales` y `useCultivos`.
+ *  - Se agregó funcionalidad real al botón "Cerrar Sesión": llama a supabase.auth.signOut()
+ *    y redirige al usuario a la pantalla de login.
+ *  - Se muestra un skeleton/placeholder mientras los datos del perfil cargan.
+ */
+
 import React, { useState } from "react";
 import {
   View,
@@ -8,6 +21,7 @@ import {
   Switch,
   Image,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import Svg, { Path, Circle, Line } from "react-native-svg";
 import * as ImagePicker from "expo-image-picker";
@@ -15,6 +29,11 @@ import Colors from "@/constants/colors";
 import NavBar from "@/components/navBar";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useRouter } from "expo-router";
+import { useUsuario } from "@/hooks/useUsuario";
+import { useAnimales } from "@/hooks/useAnimales";
+import { useCultivos } from "@/hooks/useCultivos";
+import { supabase } from "@/supabase/supabaseClient";
+import { subirFotoPerfil, actualizarPerfil } from "@/services/usuariosService";
 
 const IconSettings = ({ dark }: { dark: boolean }) => (
   <Svg
@@ -121,6 +140,42 @@ export default function PerfilScreen() {
   const subtitle = t.subtitle;
   const border = t.border;
 
+  // Datos reales del backend
+  const {
+    usuario,
+    loading: loadingUsuario,
+    refetch: refetchUsuario,
+  } = useUsuario();
+  const { animales } = useAnimales();
+  const { cultivos } = useCultivos();
+
+  // Estado local de carga de foto (para mostrar spinner mientras se sube)
+  const [subiendoFoto, setSubiendoFoto] = useState(false);
+
+  /**
+   * Sube la imagen seleccionada a Supabase Storage y actualiza el perfil en el backend.
+   * Flujo: ImagePicker → Supabase Storage (bucket 'usuario') → PATCH /usuarios/:id
+   */
+  const procesarFoto = async (uri: string) => {
+    if (!usuario?.Usuario_id) return;
+    setSubiendoFoto(true);
+    try {
+      const publicUrl = await subirFotoPerfil(uri, usuario.Usuario_id);
+      await actualizarPerfil(
+        usuario.Usuario_id,
+        { Foto: publicUrl },
+        (await supabase.auth.getSession()).data.session?.access_token ?? "",
+      );
+      // Actualiza el estado local inmediato y recarga el perfil
+      setFoto(uri);
+      await refetchUsuario();
+    } catch (e: any) {
+      Alert.alert("Error", e.message ?? "No se pudo actualizar la foto.");
+    } finally {
+      setSubiendoFoto(false);
+    }
+  };
+
   const cambiarFoto = async () => {
     const permiso = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permiso.granted) {
@@ -128,12 +183,12 @@ export default function PerfilScreen() {
       return;
     }
     const resultado = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ["images"],
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.8,
     });
-    if (!resultado.canceled) setFoto(resultado.assets[0].uri);
+    if (!resultado.canceled) await procesarFoto(resultado.assets[0].uri);
   };
 
   const tomarFoto = async () => {
@@ -147,7 +202,7 @@ export default function PerfilScreen() {
       aspect: [1, 1],
       quality: 0.8,
     });
-    if (!resultado.canceled) setFoto(resultado.assets[0].uri);
+    if (!resultado.canceled) await procesarFoto(resultado.assets[0].uri);
   };
 
   const seleccionarFoto = () => {
@@ -163,6 +218,21 @@ export default function PerfilScreen() {
     ]);
   };
 
+  /** Cierra la sesión del usuario en Supabase y redirige al login. */
+  const handleCerrarSesion = async () => {
+    Alert.alert("Cerrar Sesión", "¿Estás seguro de que deseas cerrar sesión?", [
+      { text: "Cancelar", style: "cancel" },
+      {
+        text: "Cerrar Sesión",
+        style: "destructive",
+        onPress: async () => {
+          await supabase.auth.signOut();
+          router.replace("/(tabs)/login" as any);
+        },
+      },
+    ]);
+  };
+
   return (
     <View style={{ flex: 1, backgroundColor: bg }}>
       <NavBar />
@@ -175,9 +245,14 @@ export default function PerfilScreen() {
           <TouchableOpacity
             style={styles.avatarContainer}
             onPress={seleccionarFoto}
+            disabled={subiendoFoto}
           >
-            {foto ? (
-              <Image source={{ uri: foto }} style={styles.avatar} />
+            {/* Muestra la foto local recién seleccionada, la del backend o el placeholder */}
+            {foto || usuario?.Foto ? (
+              <Image
+                source={{ uri: foto || usuario?.Foto || undefined }}
+                style={styles.avatar}
+              />
             ) : (
               <View
                 style={[
@@ -203,17 +278,32 @@ export default function PerfilScreen() {
                 </Svg>
               </View>
             )}
+            {/* Badge de edición o spinner de carga durante la subida */}
             <View style={styles.avatarBadge}>
-              <Text style={styles.avatarBadgeText}>✎</Text>
+              {subiendoFoto ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <Text style={styles.avatarBadgeText}>✎</Text>
+              )}
             </View>
           </TouchableOpacity>
-          <Text style={[styles.nombre, { color: title }]}>Carlos Mendoza</Text>
-          <Text style={[styles.infoText, { color: subtitle }]}>
-            ✉ c.myfarmer@gmail.com
-          </Text>
-          <Text style={[styles.infoText, { color: subtitle }]}>
-            📞 +506 6122 4534
-          </Text>
+          {loadingUsuario ? (
+            <ActivityIndicator
+              color={Colors.PRIMARY_GREEN}
+              style={{ marginTop: 8 }}
+            />
+          ) : (
+            <>
+              <Text style={[styles.nombre, { color: title }]}>
+                {usuario
+                  ? `${usuario.Nombre ?? ""} ${usuario.Apellido ?? ""}`.trim()
+                  : "—"}
+              </Text>
+              <Text style={[styles.infoText, { color: subtitle }]}>
+                ✉ {usuario?.Correo ?? "—"}
+              </Text>
+            </>
+          )}
         </View>
 
         {/* Stats */}
@@ -227,7 +317,7 @@ export default function PerfilScreen() {
             <Text
               style={[styles.statNumber, { color: d ? "#93C5FD" : "#FFF" }]}
             >
-              0
+              {animales.length}
             </Text>
             <Text style={[styles.statLabel, { color: d ? "#60A5FA" : "#FFF" }]}>
               ANIMALES
@@ -242,7 +332,7 @@ export default function PerfilScreen() {
             <Text
               style={[styles.statNumber, { color: d ? "#93C5FD" : "#FFF" }]}
             >
-              0
+              {cultivos.length}
             </Text>
             <Text style={[styles.statLabel, { color: d ? "#60A5FA" : "#FFF" }]}>
               CULTIVOS
@@ -426,7 +516,10 @@ export default function PerfilScreen() {
           <Text style={styles.editButtonText}>✎ Editar Perfil</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.logoutButton}>
+        <TouchableOpacity
+          style={styles.logoutButton}
+          onPress={handleCerrarSesion}
+        >
           <Text style={styles.logoutButtonText}>⎋ Cerrar Sesión</Text>
         </TouchableOpacity>
 

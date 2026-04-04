@@ -1,65 +1,56 @@
-import React, { useMemo, useState } from "react";
-import { FlatList, StyleSheet, View, TextInput, Text } from "react-native";
-import { useRouter } from "expo-router";
+/**
+ * Pantalla de Cultivos (cultivos.tsx)
+ *
+ * Muestra la lista de cultivos activos del usuario autenticado obtenida desde el backend.
+ * Se reemplazó el array de datos hardcodeados por el hook `useCultivos`, que
+ * maneja el fetch, el estado de carga y los errores de forma centralizada.
+ *
+ * Cambios respecto a la versión anterior:
+ *  - Se eliminaron los datos de prueba estáticos.
+ *  - Se integró `useCultivos` para cargar cultivos reales del usuario.
+ *  - Se agregó un indicador de carga (ActivityIndicator) mientras se obtienen los datos.
+ *  - Se muestra un mensaje de error si el backend falla.
+ *  - El filtrado de búsqueda ahora opera sobre los datos reales del servidor.
+ *  - Los parámetros de navegación al detalle se mapean desde ResponseCultivoDto.
+ */
 
-import { ThemedText } from "@/components/themed-text";
-import { ThemedView } from "@/components/themed-view";
+import React, { useMemo, useState } from "react";
+import {
+  FlatList,
+  StyleSheet,
+  View,
+  TextInput,
+  Text,
+  ActivityIndicator,
+} from "react-native";
+import { useRouter } from "expo-router";
 import NavBar from "@/components/navBar";
 import ScreenHeader from "@/components/header";
 import FilterIcon from "@/components/ui/filterIcon";
 import CardCultivos from "@/components/card-cultivos";
-
 import Colors from "@/constants/colors";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useCultivos } from "@/hooks/useCultivos";
 
 export default function CultivosScreen() {
   const [buscar, setBuscar] = useState("");
   const router = useRouter();
   const { t } = useTheme();
 
-  const data = useMemo(
-    () => [
-      {
-        id: 1,
-        nombre: "lechuga",
-        fechaSiembra: "2020-09-01",
-        ubicacion: "parceral noroeste",
-        estado: true,
-        imagen:
-          "https://cdn.wikifarmer.com/images/detailed/2019/07/Como-Cultivar-Lechuga-%E2%80%93-Guia-Completa-de-Cultivo-de-la-Lechuga-desde-la-Siembra-hasta-la-Cosecha.jpg",
-      },
+  // Hook que obtiene los cultivos activos del usuario desde el backend
+  const { cultivos, loading, error } = useCultivos();
 
-      {
-        id: 2,
-        nombre: "coliflor",
-        fechaSiembra: "2023-08-20",
-        ubicacion: "parcela suroeste",
-        estado: true,
-        imagen:
-          "https://www.novagromexico.com/wp-content/uploads/2025/01/cultivo-de-coliflor.jpg",
-      },
-
-      {
-        id: 3,
-        nombre: "maiz",
-        fechaSiembra: "2025-09-20",
-        ubicacion: "parcela oeste",
-        estado: false,
-        imagen:
-          "https://mayasl.com/wp-content/uploads/2020/08/cultivo-maiz_3.jpg",
-      },
-    ],
-    [],
-  );
+  // Filtrado local sobre los datos traídos del servidor
   const filteredData = useMemo(() => {
     const query = buscar.trim().toLowerCase();
-    if (!query) return data;
-    return data.filter(
+    if (!query) return cultivos;
+    return cultivos.filter(
       (cultivo) =>
-        cultivo.nombre.toLowerCase().includes(query) ||
-        cultivo.ubicacion.toLowerCase().includes(query),
+        cultivo.Nombre.toLowerCase().includes(query) ||
+        (cultivo.Parcela ?? "").toLowerCase().includes(query),
     );
-  }, [buscar, data]);
+  }, [buscar, cultivos]);
+
   return (
     <>
       <NavBar />
@@ -67,11 +58,27 @@ export default function CultivosScreen() {
         title="Cultivos"
         actions={[
           {
-            icon: <FilterIcon width={22} height={22} style={{ position: "absolute", top: 18, right: 20 }} />,
+            icon: (
+              <FilterIcon
+                width={22}
+                height={22}
+                style={{ position: "absolute", top: 18, right: 20 }}
+              />
+            ),
             onPress: () => console.log("filtrar"),
           },
           {
-            icon: <Text style={{ fontSize: 35, color: Colors.PRIMARY_GREEN, fontWeight: "600" }}>+</Text>,
+            icon: (
+              <Text
+                style={{
+                  fontSize: 35,
+                  color: Colors.PRIMARY_GREEN,
+                  fontWeight: "600",
+                }}
+              >
+                +
+              </Text>
+            ),
             onPress: () => router.push("/(tabs)/registerCultivos"),
           },
         ]}
@@ -82,48 +89,76 @@ export default function CultivosScreen() {
           value={buscar}
           onChangeText={setBuscar}
           placeholderTextColor={t.placeholder}
-          style={[styles.input, { backgroundColor: t.input, borderColor: t.border, color: t.title }]}
+          style={[
+            styles.input,
+            {
+              backgroundColor: t.input,
+              borderColor: t.border,
+              color: t.title,
+            },
+          ]}
         />
-        <FlatList
-          data={filteredData}
-          keyExtractor={(item) => item.id.toString()}
-          contentContainerStyle={{ paddingBottom: 140 }}
-          renderItem={({ item }) => (
-            <CardCultivos
-              Nombre={item.nombre}
-              Fecha_Siembra={item.fechaSiembra}
-              Parcela={item.ubicacion}
-              Foto={item.imagen}
-              Activo={item.estado}
-              onPress={() =>
-                router.push({
-                  pathname: "/(tabs)/cultivosDetails",
-                  params: {
-                    nombre: item.nombre,
-                    fechaSiembra: item.fechaSiembra,
-                    ubicacion: item.ubicacion,
-                    estado: String(item.estado),
-                    imagen: item.imagen,
-                  },
-                })
-              }
-            />
-          )}
-        />
+
+        {/* Indicador de carga mientras se obtienen los datos del servidor */}
+        {loading && (
+          <ActivityIndicator
+            size="large"
+            color={Colors.PRIMARY_GREEN}
+            style={{ marginTop: 32 }}
+          />
+        )}
+
+        {/* Mensaje de error si el backend no responde correctamente */}
+        {error && !loading && <Text style={styles.errorText}>{error}</Text>}
+
+        {!loading && (
+          <FlatList
+            data={filteredData}
+            keyExtractor={(item) => String(item.Cultivo_id)}
+            contentContainerStyle={{ paddingBottom: 140 }}
+            renderItem={({ item }) => (
+              <CardCultivos
+                Nombre={item.Nombre}
+                Fecha_Siembra={item.Fecha_Siembra}
+                Parcela={item.Parcela}
+                Foto={item.Foto}
+                Activo={item.Activo}
+                onPress={() =>
+                  router.push({
+                    pathname: "/(tabs)/cultivosDetails",
+                    params: {
+                      cultivo_id: item.Cultivo_id,
+                      nombre: item.Nombre,
+                      fechaSiembra: item.Fecha_Siembra ?? "",
+                      ubicacion: item.Parcela ?? "",
+                      estado: String(item.Activo),
+                      imagen: item.Foto ?? "",
+                    },
+                  })
+                }
+              />
+            )}
+            ListEmptyComponent={
+              !error ? (
+                <Text style={[styles.emptyText, { color: t.subtitle }]}>
+                  No hay cultivos activos registrados.
+                </Text>
+              ) : null
+            }
+          />
+        )}
       </View>
     </>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1 },
   content: {
     paddingHorizontal: 16,
     paddingTop: 24,
     paddingBottom: 120,
     gap: 8,
   },
-  hint: { opacity: 0.8 },
   input: {
     width: "100%",
     height: 50,
@@ -134,5 +169,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     fontSize: 15,
     color: Colors.TITLE,
+  },
+  errorText: {
+    color: "#EF4444",
+    textAlign: "center",
+    marginTop: 24,
+    fontSize: 14,
+  },
+  emptyText: {
+    textAlign: "center",
+    marginTop: 32,
+    fontSize: 14,
   },
 });

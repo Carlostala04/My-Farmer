@@ -1,6 +1,7 @@
 import { View, Text, TouchableOpacity, StyleSheet, Pressable } from "react-native";
 import React from "react";
 import BackIcon from "./ui/back";
+import { useTheme } from "@/contexts/ThemeContext";
 
 type Action = {
   icon: React.ReactNode;
@@ -13,10 +14,11 @@ type ScreenHeaderProps = {
 };
 
 const ScreenHeader = ({ title, actions = [] }: ScreenHeaderProps) => {
+  const { t } = useTheme();
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: t.card, borderBottomColor: t.border }]}>
       <BackIcon/>
-      <Text style={styles.title}>{title}</Text>
+      <Text style={[styles.title, { color: t.title }]}>{title}</Text>
       {actions.length > 0 && (
         <View style={styles.actionsContainer}>
           {actions.map((action, index) => (

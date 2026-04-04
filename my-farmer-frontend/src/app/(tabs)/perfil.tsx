@@ -13,23 +13,49 @@ import Svg, { Path, Circle, Line } from "react-native-svg";
 import * as ImagePicker from "expo-image-picker";
 import Colors from "@/constants/colors";
 import NavBar from "@/components/navBar";
+import { useTheme } from "@/contexts/ThemeContext";
+import { useRouter } from "expo-router";
 
 const IconSettings = ({ dark }: { dark: boolean }) => (
-  <Svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke={dark ? "#fff" : "#1A1A1A"} strokeWidth={2} strokeLinecap="round">
+  <Svg
+    width={18}
+    height={18}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke={dark ? "#fff" : "#1A1A1A"}
+    strokeWidth={2}
+    strokeLinecap="round"
+  >
     <Path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" />
     <Path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
   </Svg>
 );
 
 const IconBell = ({ dark }: { dark: boolean }) => (
-  <Svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke={dark ? "#fff" : "#1A1A1A"} strokeWidth={2} strokeLinecap="round">
+  <Svg
+    width={18}
+    height={18}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke={dark ? "#fff" : "#1A1A1A"}
+    strokeWidth={2}
+    strokeLinecap="round"
+  >
     <Path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
     <Path d="M13.73 21a2 2 0 0 1-3.46 0" />
   </Svg>
 );
 
 const IconGlobe = ({ dark }: { dark: boolean }) => (
-  <Svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke={dark ? "#fff" : "#1A1A1A"} strokeWidth={2} strokeLinecap="round">
+  <Svg
+    width={18}
+    height={18}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke={dark ? "#fff" : "#1A1A1A"}
+    strokeWidth={2}
+    strokeLinecap="round"
+  >
     <Circle cx={12} cy={12} r={10} />
     <Line x1={2} y1={12} x2={22} y2={12} />
     <Path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
@@ -37,19 +63,43 @@ const IconGlobe = ({ dark }: { dark: boolean }) => (
 );
 
 const IconMoon = ({ dark }: { dark: boolean }) => (
-  <Svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke={dark ? "#fff" : "#1A1A1A"} strokeWidth={2} strokeLinecap="round">
+  <Svg
+    width={18}
+    height={18}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke={dark ? "#fff" : "#1A1A1A"}
+    strokeWidth={2}
+    strokeLinecap="round"
+  >
     <Path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
   </Svg>
 );
 
 const IconShield = ({ dark }: { dark: boolean }) => (
-  <Svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke={dark ? "#fff" : "#1A1A1A"} strokeWidth={2} strokeLinecap="round">
+  <Svg
+    width={18}
+    height={18}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke={dark ? "#fff" : "#1A1A1A"}
+    strokeWidth={2}
+    strokeLinecap="round"
+  >
     <Path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
   </Svg>
 );
 
 const IconSync = ({ dark }: { dark: boolean }) => (
-  <Svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke={dark ? "#fff" : "#1A1A1A"} strokeWidth={2} strokeLinecap="round">
+  <Svg
+    width={18}
+    height={18}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke={dark ? "#fff" : "#1A1A1A"}
+    strokeWidth={2}
+    strokeLinecap="round"
+  >
     <Path d="M23 4v6h-6" />
     <Path d="M1 20v-6h6" />
     <Path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
@@ -57,19 +107,19 @@ const IconSync = ({ dark }: { dark: boolean }) => (
 );
 
 export default function PerfilScreen() {
+  const { darkMode, toggleDarkMode, t } = useTheme();
   const [notificaciones, setNotificaciones] = useState(true);
-  const [modoOscuro, setModoOscuro] = useState(false);
   const [preferenciasOpen, setPreferenciasOpen] = useState(true);
   const [seguridadOpen, setSeguridadOpen] = useState(false);
   const [sincronizacionOpen, setSincronizacionOpen] = useState(false);
   const [foto, setFoto] = useState("");
-
-  const d = modoOscuro;
-  const bg = d ? "#111827" : Colors.BACKGROUND;
-  const card = d ? "#1F2937" : Colors.CARD_DETAILS;
-  const title = d ? "#F9FAFB" : Colors.TITLE;
-  const subtitle = d ? "#9CA3AF" : Colors.SUBTITLE;
-  const border = d ? "#374151" : Colors.INPUT_BORDER;
+  const router = useRouter();
+  const d = darkMode;
+  const bg = t.bg;
+  const card = t.card;
+  const title = t.title;
+  const subtitle = t.subtitle;
+  const border = t.border;
 
   const cambiarFoto = async () => {
     const permiso = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -104,7 +154,11 @@ export default function PerfilScreen() {
     Alert.alert("Cambiar foto", "¿Cómo quieres cambiar tu foto?", [
       { text: "Cámara", onPress: tomarFoto },
       { text: "Galería", onPress: cambiarFoto },
-      { text: "Eliminar foto", style: "destructive", onPress: () => setFoto("") },
+      {
+        text: "Eliminar foto",
+        style: "destructive",
+        onPress: () => setFoto(""),
+      },
       { text: "Cancelar", style: "cancel" },
     ]);
   };
@@ -112,16 +166,38 @@ export default function PerfilScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: bg }}>
       <NavBar />
-      <ScrollView style={{ flex: 1, backgroundColor: bg }} contentContainerStyle={styles.container}>
-
+      <ScrollView
+        style={{ flex: 1, backgroundColor: bg }}
+        contentContainerStyle={styles.container}
+      >
         {/* Avatar y nombre */}
         <View style={styles.profileSection}>
-          <TouchableOpacity style={styles.avatarContainer} onPress={seleccionarFoto}>
+          <TouchableOpacity
+            style={styles.avatarContainer}
+            onPress={seleccionarFoto}
+          >
             {foto ? (
               <Image source={{ uri: foto }} style={styles.avatar} />
             ) : (
-              <View style={[styles.avatar, { backgroundColor: d ? "#374151" : "#E5E7EB", alignItems: "center", justifyContent: "center" }]}>
-                <Svg width={50} height={50} viewBox="0 0 24 24" fill="none" stroke={d ? "#9CA3AF" : "#6B7280"} strokeWidth={1.5} strokeLinecap="round">
+              <View
+                style={[
+                  styles.avatar,
+                  {
+                    backgroundColor: d ? "#374151" : "#E5E7EB",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  },
+                ]}
+              >
+                <Svg
+                  width={50}
+                  height={50}
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke={d ? "#9CA3AF" : "#6B7280"}
+                  strokeWidth={1.5}
+                  strokeLinecap="round"
+                >
                   <Circle cx={12} cy={8} r={4} />
                   <Path d="M4 20c0-4 4-6 8-6s8 2 8 6" />
                 </Svg>
@@ -132,91 +208,214 @@ export default function PerfilScreen() {
             </View>
           </TouchableOpacity>
           <Text style={[styles.nombre, { color: title }]}>Carlos Mendoza</Text>
-          <Text style={[styles.infoText, { color: subtitle }]}>✉ c.myfarmer@gmail.com</Text>
-          <Text style={[styles.infoText, { color: subtitle }]}>📞 +506 6122 4534</Text>
+          <Text style={[styles.infoText, { color: subtitle }]}>
+            ✉ c.myfarmer@gmail.com
+          </Text>
+          <Text style={[styles.infoText, { color: subtitle }]}>
+            📞 +506 6122 4534
+          </Text>
         </View>
 
         {/* Stats */}
         <View style={styles.statsRow}>
-          <View style={[styles.statCard, { backgroundColor: d ? "#1E3A5F" : "#22C55E" }]}>
-            
-            <Text style={[styles.statNumber, { color: d ? "#93C5FD" : "#FFF" }]}>0</Text>
-            <Text style={[styles.statLabel, { color: d ? "#60A5FA" : "#FFF" }]}>ANIMALES</Text>
+          <View
+            style={[
+              styles.statCard,
+              { backgroundColor: d ? "#1E3A5F" : "#22C55E" },
+            ]}
+          >
+            <Text
+              style={[styles.statNumber, { color: d ? "#93C5FD" : "#FFF" }]}
+            >
+              0
+            </Text>
+            <Text style={[styles.statLabel, { color: d ? "#60A5FA" : "#FFF" }]}>
+              ANIMALES
+            </Text>
           </View>
-          <View style={[styles.statCard, { backgroundColor: d ? "#1E3A5F" : "#22C55E" }]}>
-            
-            <Text style={[styles.statNumber, { color: d ? "#93C5FD" : "#FFF" }]}>0</Text>
-            <Text style={[styles.statLabel, { color: d ? "#60A5FA" : "#FFF" }]}>CULTIVOS</Text>
+          <View
+            style={[
+              styles.statCard,
+              { backgroundColor: d ? "#1E3A5F" : "#22C55E" },
+            ]}
+          >
+            <Text
+              style={[styles.statNumber, { color: d ? "#93C5FD" : "#FFF" }]}
+            >
+              0
+            </Text>
+            <Text style={[styles.statLabel, { color: d ? "#60A5FA" : "#FFF" }]}>
+              CULTIVOS
+            </Text>
           </View>
         </View>
 
         {/* Configuración */}
-        <Text style={[styles.sectionTitle, { color: subtitle }]}>CONFIGURACIÓN</Text>
+        <Text style={[styles.sectionTitle, { color: subtitle }]}>
+          CONFIGURACIÓN
+        </Text>
 
         {/* Preferencias */}
-        <View style={[styles.accordion, { backgroundColor: card, borderColor: border }]}>
-          <TouchableOpacity style={styles.accordionHeader} onPress={() => setPreferenciasOpen(!preferenciasOpen)}>
+        <View
+          style={[
+            styles.accordion,
+            { backgroundColor: card, borderColor: border },
+          ]}
+        >
+          <TouchableOpacity
+            style={styles.accordionHeader}
+            onPress={() => setPreferenciasOpen(!preferenciasOpen)}
+          >
             <IconSettings dark={d} />
-            <Text style={[styles.accordionTitle, { color: title }]}>Preferencias</Text>
-            <Text style={[styles.accordionChevron, { color: subtitle }]}>{preferenciasOpen ? "∧" : "∨"}</Text>
+            <Text style={[styles.accordionTitle, { color: title }]}>
+              Preferencias
+            </Text>
+            <Text style={[styles.accordionChevron, { color: subtitle }]}>
+              {preferenciasOpen ? "∧" : "∨"}
+            </Text>
           </TouchableOpacity>
           {preferenciasOpen && (
             <View style={styles.accordionContent}>
+              <TouchableOpacity
+                style={styles.premiumRow}
+                onPress={() => router.push("/(tabs)/suscripcion" as any)}
+              >
+                <View style={styles.premiumIconWrap}>
+                  <Svg
+                    width={16}
+                    height={16}
+                    viewBox="0 0 24 24"
+                    fill="#fff"
+                    stroke="#fff"
+                    strokeWidth={1.5}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <Path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                  </Svg>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.settingLabel, { color: title }]}>
+                    Suscripción Premium
+                  </Text>
+                  <Text style={[styles.premiumSubtitle, { color: subtitle }]}>
+                    Desbloquea todas las funciones
+                  </Text>
+                </View>
+                <View style={styles.premiumBadge}>
+                  <Text style={styles.premiumBadgeText}>Ver planes ›</Text>
+                </View>
+              </TouchableOpacity>
+              <View style={[styles.divider, { backgroundColor: border }]} />
               <View style={styles.settingRow}>
                 <IconBell dark={d} />
-                <Text style={[styles.settingLabel, { color: title }]}>Notificaciones</Text>
-                <Switch value={notificaciones} onValueChange={setNotificaciones} trackColor={{ false: "#D1D5DB", true: Colors.PRIMARY_GREEN }} thumbColor="#fff" />
+                <Text style={[styles.settingLabel, { color: title }]}>
+                  Notificaciones
+                </Text>
+                <Switch
+                  value={notificaciones}
+                  onValueChange={setNotificaciones}
+                  trackColor={{ false: "#D1D5DB", true: Colors.PRIMARY_GREEN }}
+                  thumbColor="#fff"
+                />
               </View>
               <View style={[styles.divider, { backgroundColor: border }]} />
               <TouchableOpacity style={styles.settingRow}>
                 <IconGlobe dark={d} />
-                <Text style={[styles.settingLabel, { color: title }]}>Idioma</Text>
-                <Text style={[styles.settingValue, { color: subtitle }]}>Español (ES) ›</Text>
+                <Text style={[styles.settingLabel, { color: title }]}>
+                  Idioma
+                </Text>
+                <Text style={[styles.settingValue, { color: subtitle }]}>
+                  Español (ES) ›
+                </Text>
               </TouchableOpacity>
               <View style={[styles.divider, { backgroundColor: border }]} />
               <View style={styles.settingRow}>
                 <IconMoon dark={d} />
-                <Text style={[styles.settingLabel, { color: title }]}>Modo Oscuro</Text>
-                <Switch value={modoOscuro} onValueChange={setModoOscuro} trackColor={{ false: "#D1D5DB", true: Colors.PRIMARY_GREEN }} thumbColor="#fff" />
+                <Text style={[styles.settingLabel, { color: title }]}>
+                  Modo Oscuro
+                </Text>
+                <Switch
+                  value={darkMode}
+                  onValueChange={toggleDarkMode}
+                  trackColor={{ false: "#D1D5DB", true: Colors.PRIMARY_GREEN }}
+                  thumbColor="#fff"
+                />
               </View>
             </View>
           )}
         </View>
 
         {/* Seguridad */}
-        <View style={[styles.accordion, { backgroundColor: card, borderColor: border }]}>
-          <TouchableOpacity style={styles.accordionHeader} onPress={() => setSeguridadOpen(!seguridadOpen)}>
+        <View
+          style={[
+            styles.accordion,
+            { backgroundColor: card, borderColor: border },
+          ]}
+        >
+          <TouchableOpacity
+            style={styles.accordionHeader}
+            onPress={() => setSeguridadOpen(!seguridadOpen)}
+          >
             <IconShield dark={d} />
-            <Text style={[styles.accordionTitle, { color: title }]}>Seguridad y Cuenta</Text>
-            <Text style={[styles.accordionChevron, { color: subtitle }]}>{seguridadOpen ? "∧" : "∨"}</Text>
+            <Text style={[styles.accordionTitle, { color: title }]}>
+              Seguridad y Cuenta
+            </Text>
+            <Text style={[styles.accordionChevron, { color: subtitle }]}>
+              {seguridadOpen ? "∧" : "∨"}
+            </Text>
           </TouchableOpacity>
           {seguridadOpen && (
             <View style={styles.accordionContent}>
               <TouchableOpacity style={styles.settingRow}>
-                <Text style={[styles.settingLabel, { color: title }]}>Cambiar contraseña</Text>
-                <Text style={[styles.settingValue, { color: subtitle }]}>›</Text>
+                <Text style={[styles.settingLabel, { color: title }]}>
+                  Cambiar contraseña
+                </Text>
+                <Text style={[styles.settingValue, { color: subtitle }]}>
+                  ›
+                </Text>
               </TouchableOpacity>
               <View style={[styles.divider, { backgroundColor: border }]} />
               <TouchableOpacity style={styles.settingRow}>
-                <Text style={[styles.settingLabel, { color: title }]}>Autenticación en dos pasos</Text>
-                <Text style={[styles.settingValue, { color: subtitle }]}>›</Text>
+                <Text style={[styles.settingLabel, { color: title }]}>
+                  Autenticación en dos pasos
+                </Text>
+                <Text style={[styles.settingValue, { color: subtitle }]}>
+                  ›
+                </Text>
               </TouchableOpacity>
             </View>
           )}
         </View>
 
         {/* Sincronización */}
-        <View style={[styles.accordion, { backgroundColor: card, borderColor: border }]}>
-          <TouchableOpacity style={styles.accordionHeader} onPress={() => setSincronizacionOpen(!sincronizacionOpen)}>
+        <View
+          style={[
+            styles.accordion,
+            { backgroundColor: card, borderColor: border },
+          ]}
+        >
+          <TouchableOpacity
+            style={styles.accordionHeader}
+            onPress={() => setSincronizacionOpen(!sincronizacionOpen)}
+          >
             <IconSync dark={d} />
-            <Text style={[styles.accordionTitle, { color: title }]}>Sincronización</Text>
-            <Text style={[styles.accordionChevron, { color: subtitle }]}>{sincronizacionOpen ? "∧" : "∨"}</Text>
+            <Text style={[styles.accordionTitle, { color: title }]}>
+              Sincronización
+            </Text>
+            <Text style={[styles.accordionChevron, { color: subtitle }]}>
+              {sincronizacionOpen ? "∧" : "∨"}
+            </Text>
           </TouchableOpacity>
           {sincronizacionOpen && (
             <View style={styles.accordionContent}>
               <TouchableOpacity style={styles.settingRow}>
-                <Text style={[styles.settingLabel, { color: title }]}>Sincronizar datos</Text>
-                <Text style={[styles.settingValue, { color: subtitle }]}>›</Text>
+                <Text style={[styles.settingLabel, { color: title }]}>
+                  Sincronizar datos
+                </Text>
+                <Text style={[styles.settingValue, { color: subtitle }]}>
+                  ›
+                </Text>
               </TouchableOpacity>
             </View>
           )}
@@ -224,14 +423,16 @@ export default function PerfilScreen() {
 
         {/* Botones */}
         <TouchableOpacity style={styles.editButton}>
-          <Text style={styles.editButtonText}>✎  Editar Perfil</Text>
+          <Text style={styles.editButtonText}>✎ Editar Perfil</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.logoutButton}>
-          <Text style={styles.logoutButtonText}>⎋  Cerrar Sesión</Text>
+          <Text style={styles.logoutButtonText}>⎋ Cerrar Sesión</Text>
         </TouchableOpacity>
 
-        <Text style={[styles.version, { color: subtitle }]}>Myfarmer v2.4.0 — 2026</Text>
+        <Text style={[styles.version, { color: subtitle }]}>
+          Myfarmer v2.4.0 — 2026
+        </Text>
       </ScrollView>
     </View>
   );
@@ -243,42 +444,105 @@ const styles = StyleSheet.create({
   avatarContainer: { position: "relative", marginBottom: 12 },
   avatar: { width: 90, height: 90, borderRadius: 45 },
   avatarBadge: {
-    position: "absolute", bottom: 0, right: 0,
-    width: 26, height: 26, borderRadius: 13,
+    position: "absolute",
+    bottom: 0,
+    right: 0,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
     backgroundColor: Colors.PRIMARY_GREEN,
-    alignItems: "center", justifyContent: "center",
-    borderWidth: 2, borderColor: "#fff",
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 2,
+    borderColor: "#fff",
   },
   avatarBadgeText: { color: "#fff", fontSize: 12 },
   nombre: { fontSize: 22, fontWeight: "700", marginBottom: 6 },
   infoText: { fontSize: 13, marginBottom: 2 },
   statsRow: { flexDirection: "row", gap: 12, marginBottom: 24 },
-  statCard: { flex: 1, borderRadius: 16, padding: 16, alignItems: "center", gap: 4 },
+  statCard: {
+    flex: 1,
+    borderRadius: 16,
+    padding: 16,
+    alignItems: "center",
+    gap: 4,
+  },
   statIcon: { fontSize: 22 },
   statNumber: { fontSize: 24, fontWeight: "700" },
   statLabel: { fontSize: 11, fontWeight: "600", letterSpacing: 0.5 },
-  sectionTitle: { fontSize: 12, fontWeight: "700", letterSpacing: 1, marginBottom: 12 },
-  accordion: { borderRadius: 12, borderWidth: 1, marginBottom: 10, overflow: "hidden" },
-  accordionHeader: { flexDirection: "row", alignItems: "center", padding: 16, gap: 10 },
+  sectionTitle: {
+    fontSize: 12,
+    fontWeight: "700",
+    letterSpacing: 1,
+    marginBottom: 12,
+  },
+  accordion: {
+    borderRadius: 12,
+    borderWidth: 1,
+    marginBottom: 10,
+    overflow: "hidden",
+  },
+  accordionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 16,
+    gap: 10,
+  },
   accordionTitle: { flex: 1, fontSize: 15, fontWeight: "600" },
   accordionChevron: { fontSize: 14 },
   accordionContent: { paddingHorizontal: 16, paddingBottom: 8 },
-  settingRow: { flexDirection: "row", alignItems: "center", paddingVertical: 12, gap: 10 },
+  settingRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 12,
+    gap: 10,
+  },
   settingLabel: { flex: 1, fontSize: 14 },
   settingValue: { fontSize: 14 },
   divider: { height: 0.5 },
   editButton: {
     backgroundColor: Colors.PRIMARY_GREEN,
-    borderRadius: 12, height: 50,
-    alignItems: "center", justifyContent: "center",
-    marginTop: 24, marginBottom: 10,
+    borderRadius: 12,
+    height: 50,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 24,
+    marginBottom: 10,
   },
   editButtonText: { color: "#fff", fontSize: 16, fontWeight: "600" },
   logoutButton: {
-    borderRadius: 12, height: 50,
-    alignItems: "center", justifyContent: "center",
-    borderWidth: 1, borderColor: "#EF4444",
+    borderRadius: 12,
+    height: 50,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "#EF4444",
   },
   logoutButtonText: { color: "#EF4444", fontSize: 16, fontWeight: "500" },
   version: { textAlign: "center", fontSize: 12, marginTop: 20 },
+  premiumRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 12,
+    gap: 10,
+  },
+  premiumIconWrap: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    backgroundColor: Colors.PRIMARY_GREEN,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  premiumSubtitle: { fontSize: 12, marginTop: 1 },
+  premiumBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: Colors.PRIMARY_GREEN,
+    borderRadius: 20,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  premiumBadgeText: { fontSize: 11, fontWeight: "700", color: "#fff" },
 });

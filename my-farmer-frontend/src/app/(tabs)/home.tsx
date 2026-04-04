@@ -11,6 +11,7 @@ import {
 import { useRouter } from "expo-router";
 import NavBar from "@/components/navBar";
 import Colors from "@/constants/colors";
+import { useTheme } from "@/contexts/ThemeContext";
 import LivestockIcon from "@/components/ui/livestock_icon";
 import WheatIcon from "@/components/ui/wheat_icon";
 
@@ -114,6 +115,7 @@ const statusColors: Record<string, string> = {
 
 export default function Home() {
   const router = useRouter();
+  const { t } = useTheme();
 
   const totalAnimales = animales.length;
   const totalCultivos = cultivos.length;
@@ -122,39 +124,39 @@ export default function Home() {
     <>
       <NavBar />
       <ScrollView
-        style={styles.container}
+        style={[styles.container, { backgroundColor: t.bg }]}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
         {/* Bienvenida */}
-        <View style={styles.welcomeCard}>
-          <Text style={styles.welcomeTitle}>¡Hola, {usuario.nombre}!</Text>
-          <Text style={styles.welcomeSubtitle}>
+        <View style={[styles.welcomeCard, { backgroundColor: t.card, borderColor: t.border }]}>
+          <Text style={[styles.welcomeTitle, { color: t.title }]}>¡Hola, {usuario.nombre}!</Text>
+          <Text style={[styles.welcomeSubtitle, { color: t.subtitle }]}>
             Hoy es un buen día para la siembra.
           </Text>
         </View>
 
         {/* Widgets de estadísticas */}
         <View style={styles.statsRow}>
-          <View style={styles.statCard}>
+          <View style={[styles.statCard, { backgroundColor: t.card, borderColor: t.border }]}>
             <View style={styles.statIconWrapper}>
               <LivestockIcon size={30} color={Colors.PRIMARY_GREEN} />
             </View>
-            <Text style={styles.statValue}>{totalAnimales}</Text>
-            <Text style={styles.statLabel}>Total Ganado</Text>
+            <Text style={[styles.statValue, { color: t.title }]}>{totalAnimales}</Text>
+            <Text style={[styles.statLabel, { color: t.subtitle }]}>Total Ganado</Text>
           </View>
-          <View style={styles.statCard}>
+          <View style={[styles.statCard, { backgroundColor: t.card, borderColor: t.border }]}>
             <View style={styles.statIconWrapper}>
               <WheatIcon size={30} color={Colors.PRIMARY_GREEN} />
             </View>
-            <Text style={styles.statValue}>{totalCultivos}</Text>
-            <Text style={styles.statLabel}>Cultivos Activos</Text>
+            <Text style={[styles.statValue, { color: t.title }]}>{totalCultivos}</Text>
+            <Text style={[styles.statLabel, { color: t.subtitle }]}>Cultivos Activos</Text>
           </View>
         </View>
 
         {/* Accesos Rápidos */}
-        <Text style={styles.sectionTitle}>Accesos Rápidos</Text>
-        <View style={styles.quickAccessCard}>
+        <Text style={[styles.sectionTitle, { color: t.title }]}>Accesos Rápidos</Text>
+        <View style={[styles.quickAccessCard, { backgroundColor: t.card, borderColor: t.border }]}>
           <TouchableOpacity
             style={styles.quickAccessItem}
             onPress={() => router.push("/(tabs)/animals" as any)}
@@ -163,11 +165,11 @@ export default function Home() {
             <View style={[styles.quickIcon, { backgroundColor: "#E8F5E9" }]}>
               <LivestockIcon size={22} color={Colors.PRIMARY_GREEN} />
             </View>
-            <Text style={styles.quickLabel}>Ver lista de animales</Text>
+            <Text style={[styles.quickLabel, { color: t.title }]}>Ver lista de animales</Text>
             <Text style={styles.quickArrow}>›</Text>
           </TouchableOpacity>
 
-          <View style={styles.divider} />
+          <View style={[styles.divider, { backgroundColor: t.border }]} />
 
           <TouchableOpacity
             style={styles.quickAccessItem}
@@ -177,14 +179,14 @@ export default function Home() {
             <View style={[styles.quickIcon, { backgroundColor: "#FFF8E1" }]}>
               <WheatIcon size={22} color="#CA8A04" />
             </View>
-            <Text style={styles.quickLabel}>Ver lista de cultivos</Text>
+            <Text style={[styles.quickLabel, { color: t.title }]}>Ver lista de cultivos</Text>
             <Text style={styles.quickArrow}>›</Text>
           </TouchableOpacity>
         </View>
 
         {/* Animales Recientes */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Animales Recientes</Text>
+          <Text style={[styles.sectionTitle, { color: t.title }]}>Animales Recientes</Text>
           <TouchableOpacity
             onPress={() => router.push("/(tabs)/animals" as any)}
           >
@@ -201,7 +203,7 @@ export default function Home() {
           {animales.map((animal, index) => (
             <TouchableOpacity
               key={index}
-              style={styles.animalCard}
+              style={[styles.animalCard, { backgroundColor: t.card, borderColor: t.border }]}
               activeOpacity={0.8}
               onPress={() =>
                 router.push({
@@ -235,10 +237,10 @@ export default function Home() {
                 <Text style={styles.animalBadgeText}>{animal.estado}</Text>
               </View>
               <View style={styles.animalInfo}>
-                <Text style={styles.animalName} numberOfLines={1}>
+                <Text style={[styles.animalName, { color: t.title }]} numberOfLines={1}>
                   {animal.nombre} ({animal.raza})
                 </Text>
-                <Text style={styles.animalAge}>
+                <Text style={[styles.animalAge, { color: t.subtitle }]}>
                   🐾{" "}
                   {animal.edad < 1
                     ? `${animal.edad * 12} meses`
@@ -251,7 +253,7 @@ export default function Home() {
 
         {/* Cultivos Recientes */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Cultivos Recientes</Text>
+          <Text style={[styles.sectionTitle, { color: t.title }]}>Cultivos Recientes</Text>
           <TouchableOpacity
             onPress={() => router.push("/(tabs)/cultivos" as any)}
           >
@@ -322,9 +324,9 @@ export default function Home() {
         </ScrollView>
 
         {/* Próximos Recordatorios */}
-        <Text style={styles.sectionTitle}>Próximos Recordatorios</Text>
+        <Text style={[styles.sectionTitle, { color: t.title }]}>Próximos Recordatorios</Text>
         {recordatorios.map((rec) => (
-          <View key={rec.id} style={styles.reminderCard}>
+          <View key={rec.id} style={[styles.reminderCard, { backgroundColor: t.card, borderColor: t.border }]}>
             <View
               style={[
                 styles.reminderDot,
@@ -337,7 +339,7 @@ export default function Home() {
               ]}
             />
             <View style={styles.reminderContent}>
-              <Text style={styles.reminderTitle} numberOfLines={2}>
+              <Text style={[styles.reminderTitle, { color: t.title }]} numberOfLines={2}>
                 {rec.titulo}
               </Text>
               <Text style={styles.reminderDate}>{rec.fecha}</Text>

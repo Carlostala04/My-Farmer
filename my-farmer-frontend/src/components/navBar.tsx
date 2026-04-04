@@ -3,6 +3,7 @@ import React, { useMemo } from 'react';
 import { Link, usePathname } from 'expo-router';
 
 import colors from '@/constants/colors';
+import { useTheme } from '@/contexts/ThemeContext';
 
 import House from './ui/home_icon';
 import AnimalsIcon from './ui/animals_icon';
@@ -13,6 +14,7 @@ type NavKey = 'home' | 'animales' | 'cultivos' | 'recordatorios' | 'perfil';
 
 export default function navBar() {
   const pathname = usePathname();
+  const { t } = useTheme();
 
   const items = useMemo(
     () =>
@@ -53,7 +55,7 @@ export default function navBar() {
   );
 
   return (
-    <View style={styles.navBar_container}>
+    <View style={[styles.navBar_container, { backgroundColor: t.navBar }]}>
       {items.map((item) => {
         const isSelected =
           item.href === '/'

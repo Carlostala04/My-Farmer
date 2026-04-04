@@ -20,6 +20,7 @@ import FilterIcon from "@/components/ui/filterIcon";
 import Colors from "@/constants/colors";
 import Dropdown from "@/components/dropdown";
 import { EntidadTipo } from "@/ts/recordatorioProps";
+import { useTheme } from "@/contexts/ThemeContext";
 
 type CategoriaFiltro = "Todos" | "Animales" | "Cultivos";
 
@@ -62,6 +63,7 @@ const entidadTipoOpciones = [
 ];
 
 export default function RecordatoriosScreen() {
+  const { t } = useTheme();
   const [categoriaActiva, setCategoriaActiva] = useState<CategoriaFiltro>("Todos");
   const [recordatorios, setRecordatorios] = useState(recordatoriosIniciales);
   const [modalVisible, setModalVisible] = useState(false);
@@ -165,9 +167,9 @@ export default function RecordatoriosScreen() {
         ]}
       />
       <NavBar />
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: t.bg }]}>
         {/* Tabs */}
-        <View style={styles.tabs}>
+        <View style={[styles.tabs, { backgroundColor: t.card, borderColor: t.border }]}>
           {categoriasFiltro.map((cat) => (
             <TouchableOpacity
               key={cat}
@@ -196,7 +198,7 @@ export default function RecordatoriosScreen() {
                 onLongPress={() => confirmarEliminar(item.id)}
                 delayLongPress={500}
               >
-                <View style={styles.card}>
+                <View style={[styles.card, { backgroundColor: t.card, borderColor: t.border }]}>
                   <TouchableOpacity
                     style={[styles.checkbox, item.completado && styles.checkboxActivo]}
                     onPress={() => toggleCompletado(item.id)}
@@ -205,10 +207,10 @@ export default function RecordatoriosScreen() {
                   </TouchableOpacity>
 
                   <View style={styles.cardContent}>
-                    <Text style={[styles.cardTitulo, item.completado && styles.cardTituloTachado]}>
+                    <Text style={[styles.cardTitulo, { color: t.title }, item.completado && styles.cardTituloTachado]}>
                       {item.titulo}
                     </Text>
-                    <Text style={styles.cardFecha}>{item.recordar}</Text>
+                    <Text style={[styles.cardFecha, { color: t.subtitle }]}>{item.recordar}</Text>
                   </View>
 
                   <View style={[styles.badge, item.entidad_tipo === "animal" ? styles.badgeAnimal : styles.badgeCultivo]}>

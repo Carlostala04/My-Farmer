@@ -25,6 +25,7 @@ import {
   Image,
   ImageBackground,
   ActivityIndicator,
+  Pressable,
 } from "react-native";
 import { useRouter } from "expo-router";
 import NavBar from "@/components/navBar";
@@ -352,6 +353,9 @@ export default function Home() {
         </Text>
 
         <View style={{ height: 16 }} />
+        <Pressable onPress={()=>router.replace("/(tabs)/Mapa")}>
+          <Text>Ir a mapa</Text>
+        </Pressable>
       </ScrollView>
     </>
   );

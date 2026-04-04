@@ -1,4 +1,4 @@
-import { Link } from "expo-router";
+import { Link, useRouter } from "expo-router";
 import { useState } from "react";
 import {
   View,
@@ -10,9 +10,10 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  Alert,
 } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-
+import * as WebBrowser from "expo-web-browser";
+import * as Linking from "expo-linking";
 import EmailIcon from "@/components/ui/email";
 import LockIcon from "@/components/ui/lock";
 import EyeIcon from "@/components/ui/eye";
@@ -20,14 +21,204 @@ import EyeOffIcon from "@/components/ui/eye-off";
 import { Spacing } from "@/constants/theme";
 import GoogleLogo from "@/components/ui/google";
 import colors from "@/constants/colors";
-
+import { supabase } from "@/supabase/supabaseClient";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+const API_URL = process.env.EXPO_PUBLIC_API_URL || "http://10.40.224.63:3000";
+WebBrowser.maybeCompleteAuthSession();
 export default function LoginScreen() {
+  // Estados para el formulario y el estado de carga
+
+  const [nombre, setNombre] = useState("");
+  const [apellido, setApellido] = useState("");
+  const [isRegistering, setIsRegistering] = useState(false); // Alternar entre Login y Registro
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
   const insets = useSafeAreaInsets();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showError, setShowError] = useState(false);
   const [pressedButton, setPressedButton] = useState(false);
+  // Función para iniciar sesión
+  async function signInWithEmail() {
+    setLoading(true);
+    const { error } = await supabase.auth.signInWithPassword({
+      email: email,
+      password: password,
+    });
+
+    if (error) {
+      Alert.alert("Error", error.message);
+      setLoading(false); // Solo quitamos carga si hay error, si no, navegamos
+    } else {
+      // 🟢 Sincronizar usuario con el backend
+      try {
+        const {
+          data: { session: currentSession },
+        } = await supabase.auth.getSession();
+        if (currentSession) {
+          await fetch(`${API_URL}/usuarios/me`, {
+            headers: { Authorization: `Bearer ${currentSession.access_token}` },
+          });
+        }
+      } catch (e) {
+        console.log("Error al sincronizar usuario con backend:", e);
+      }
+
+      Alert.alert("Éxito", "Has iniciado sesión correctamente");
+      router.replace("/(tabs)/home"); // Redirigir a la pantalla principal
+    }
+  }
+
+  // Función para registrarse
+  async function signUpWithEmail() {
+    if (!nombre.trim() || !apellido.trim()) {
+      return Alert.alert("Error", "Por favor ingresa tu nombre y apellido");
+    }
+
+    setLoading(true);
+    const {
+      data: { session },
+      error,
+    } = await supabase.auth.signUp({
+      email: email,
+      password: password,
+      options: {
+        data: {
+          nombre: nombre.trim(),
+          apellido: apellido.trim(),
+        },
+      },
+    });
+
+    if (error) {
+      Alert.alert("Error", error.message);
+    } else if (!session) {
+      // Supabase suele enviar un correo de confirmación por defecto
+      Alert.alert("Éxito", "¡Revisa tu correo para confirmar tu cuenta!");
+    } else {
+      // 🟢 Sincronizar usuario con el backend si hay sesión inmediata
+      try {
+        await fetch(`${API_URL}/usuarios/me`, {
+          headers: { Authorization: `Bearer ${session.access_token}` },
+        });
+      } catch (e) {
+        console.log("Error al sincronizar usuario con backend:", e);
+      }
+      Alert.alert("Éxito", "Registro completado");
+      router.replace("/(tabs)/home");
+    }
+    setLoading(false);
+  }
+
+  // 🔥 GOOGLE LOGIN (PARA EXPO GO)
+  async function handleGoogleLogin() {
+    try {
+      setLoading(true);
+
+      // ✅ Usamos Linking.createURL que es más preciso para el path /--/ en Expo Go
+      const redirectUri = Linking.createURL("/");
+      console.log("1. URL que debes tener en Supabase:", redirectUri);
+
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: redirectUri,
+          skipBrowserRedirect: true,
+          queryParams: { prompt: "select_account" },
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.url) {
+        console.log("2. Abriendo navegador...");
+        // openAuthSessionAsync es el método correcto para esperar la redirección
+        const result = await WebBrowser.openAuthSessionAsync(
+          data.url,
+          redirectUri,
+        );
+
+        console.log("3. Resultado del navegador:", result.type);
+
+        if (result.type === "success" && result.url) {
+          console.log("4. URL de retorno recibida:");
+
+          // 🔥 Extraer tokens de forma más segura
+          let access_token = null;
+          let refresh_token = null;
+
+          if (result.url.includes("#")) {
+            const hash = result.url.split("#")[1];
+            const params = new URLSearchParams(hash);
+            access_token = params.get("access_token");
+            console.log("access token: ", access_token);
+            refresh_token = params.get("refresh_token");
+          } else if (result.url.includes("?")) {
+            const query = result.url.split("?")[1];
+            const params = new URLSearchParams(query);
+            access_token = params.get("access_token");
+            refresh_token = params.get("refresh_token");
+          }
+
+          console.log("5. Tokens encontrados:", {
+            hasAccess: !!access_token,
+            hasRefresh: !!refresh_token,
+          });
+
+          if (access_token && refresh_token) {
+            const { data: sessionData, error: sessionError } =
+              await supabase.auth.setSession({
+                access_token,
+                refresh_token,
+              });
+
+            if (sessionError) {
+              console.log("Error setSession:", sessionError.message);
+              throw sessionError;
+            }
+
+            const session = sessionData.session;
+            console.log("6. Sesión de Supabase:", session ? "OK" : "NULL");
+
+            if (session && session.user) {
+              const user = session.user;
+              console.log("7. Usuario obtenido:", user.email);
+
+              // 🟢 Sincronizar usuario con el backend
+              try {
+                await fetch(`${API_URL}/usuarios/me`, {
+                  headers: { Authorization: `Bearer ${session.access_token}` },
+                });
+              } catch (e) {
+                console.log("Error al sincronizar usuario con backend:", e);
+              }
+
+              console.log("8. Redirigiendo a Mapa...");
+              Alert.alert("Éxito", "Bienvenido");
+              router.replace("/home");
+            } else {
+              console.log("Error: No hay sesión o usuario tras setSession");
+              Alert.alert(
+                "Error",
+                "No se pudo iniciar la sesión correctamente.",
+              );
+            }
+          } else {
+            console.log("Error: No se encontraron tokens en la URL");
+            Alert.alert("Error", "La respuesta de Google no fue válida.");
+          }
+        } else {
+          console.log("El flujo terminó sin éxito:", result.type);
+        }
+      }
+    } catch (err) {
+      console.log("Error Google Login:", err);
+      Alert.alert("Error", "No se pudo iniciar sesión con Google");
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
     <KeyboardAvoidingView
@@ -76,7 +267,7 @@ export default function LoginScreen() {
               placeholder="Correo electrónico o Teléfono"
               placeholderTextColor={colors.PLACEHOLDER_GRAY}
               value={email}
-              onChangeText={setEmail}
+              onChangeText={(text) => setEmail(text)}
               autoCapitalize="none"
               keyboardType="email-address"
               autoComplete="email"
@@ -93,7 +284,7 @@ export default function LoginScreen() {
               placeholder="Contraseña"
               placeholderTextColor={colors.PLACEHOLDER_GRAY}
               value={password}
-              onChangeText={setPassword}
+              onChangeText={(text) => setPassword(text)}
               secureTextEntry={!showPassword}
               autoComplete="password"
             />

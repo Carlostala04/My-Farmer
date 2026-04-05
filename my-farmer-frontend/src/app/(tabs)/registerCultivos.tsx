@@ -1,20 +1,14 @@
 /**
- * Formulario de Registro de Cultivo (registerCultivos.tsx)
+ * Formulario de Registro/Edición de Cultivo (registerCultivos.tsx)
  *
- * Permite al usuario crear un nuevo cultivo en el backend.
- *
- * Cambios respecto a la versión anterior:
- *  - Se conectó el botón "Guardar" al backend usando el hook `useCultivos`.
- *  - El dropdown de "Tipo de Cultivo" se pobla dinámicamente desde el backend
- *    mediante el hook `useTiposCultivo` (antes estaba vacío con `data={[]}`).
- *  - El dropdown de "Ubicación / Parcela" se pobla dinámicamente desde el backend
- *    mediante el hook `useParcelas` (antes estaba vacío con `data={[]}`).
- *  - Se agregó un indicador de carga en el botón "Guardar" mientras se envía la petición.
- *  - Se manejan los errores del backend mostrando un Alert con el mensaje del servidor.
- *  - La imagen seleccionada se adjunta al request como archivo multipart.
+ * Permite al usuario crear un nuevo cultivo o editar uno existente.
+ * - En modo creación: no recibe parámetros, guarda con crearCultivo.
+ * - En modo edición: recibe `cultivo_id` como parámetro de navegación,
+ *   carga los datos del cultivo y pre-rellena el formulario. Al guardar
+ *   llama a actualizarCultivo con los campos modificados.
  */
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   StyleSheet,
@@ -25,22 +19,33 @@ import {
   Image,
   ActivityIndicator,
 } from "react-native";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import Colors from "@/constants/colors";
 import { ThemedText } from "@/components/themed-text";
 import ScreenHeader from "@/components/header";
 import Dropdown from "@/components/dropdown";
-import { EstadoCultivo } from "@/ts/cultivoProps";
+import { EstadoCultivo, ResponseCultivoDto } from "@/ts/cultivoProps";
 import { useCultivos } from "@/hooks/useCultivos";
 import { useTiposCultivo } from "@/hooks/useTiposCultivo";
 import { useParcelas } from "@/hooks/useParcelas";
+import { useAuth } from "@/supabase/useAuth";
+import { getCultivoById, actualizarCultivo } from "@/services/cultivosService";
 
 export default function RegisterCultivosScreen() {
   const router = useRouter();
+  const { session } = useAuth();
+
+  // Recibe cultivo_id cuando viene desde la pantalla de detalles (modo edición)
+  const { cultivo_id } = useLocalSearchParams<{ cultivo_id?: string }>();
+  const modoEdicion = !!cultivo_id;
 
   // Hook para crear cultivos en el backend
-  const { crearCultivo, loading } = useCultivos();
+  const { crearCultivo, loading: loadingCrear } = useCultivos();
+
+  // Estado de carga para modo edición
+  const [guardando, setGuardando] = useState(false);
+  const [cargandoCultivo, setCargandoCultivo] = useState(false);
 
   // Opciones dinámicas desde el backend
   const { tipos } = useTiposCultivo();
@@ -84,6 +89,45 @@ export default function RegisterCultivosScreen() {
   const [rendimientoUnidad, setRendimientoUnidad] = useState("");
   const [observaciones, setObservaciones] = useState("");
   const [imagen, setImagen] = useState<string | null>(null);
+
+  // Datos del cultivo cargado para edición
+  const [cultivoEditData, setCultivoEditData] = useState<ResponseCultivoDto | null>(null);
+
+  // En modo edición: cargar datos del cultivo desde el backend
+  useEffect(() => {
+    if (!modoEdicion || !session?.access_token || !cultivo_id) return;
+    setCargandoCultivo(true);
+    getCultivoById(Number(cultivo_id), session.access_token)
+      .then(setCultivoEditData)
+      .catch(() => Alert.alert("Error", "No se pudo cargar el cultivo."))
+      .finally(() => setCargandoCultivo(false));
+  }, [modoEdicion, cultivo_id, session?.access_token]);
+
+  // Pre-rellenar el formulario cuando los datos del cultivo Y las listas estén listas
+  useEffect(() => {
+    if (!cultivoEditData || tipos.length === 0) return;
+
+    setNombre(cultivoEditData.Nombre);
+    setEstado((cultivoEditData.Estado as EstadoCultivo) ?? "en_crecimiento");
+    setFechaSiembra(cultivoEditData.Fecha_Siembra ?? "");
+    setFechaCosechaEstimada(cultivoEditData.Fecha_Cosecha_Estimada ?? "");
+    setRendimientoEstimado(
+      cultivoEditData.Rendimiento_Estimado != null
+        ? String(cultivoEditData.Rendimiento_Estimado)
+        : "",
+    );
+    setRendimientoUnidad(cultivoEditData.Rendimiento_Unidad ?? "");
+    setObservaciones(cultivoEditData.Notas ?? "");
+    setImagen(cultivoEditData.Foto ?? null);
+
+    // Mapear nombre de tipo cultivo → ID
+    const tipoCultivo = tipos.find((t) => t.Nombre === cultivoEditData.Tipo_Cultivo);
+    if (tipoCultivo) setTipo(tipoCultivo.Tipo_Cultivo_id);
+
+    // Mapear nombre de parcela → ID
+    const parc = parcelas.find((p) => p.Nombre === cultivoEditData.Parcela);
+    if (parc) setUbicacion(parc.Parcela_id);
+  }, [cultivoEditData, tipos, parcelas]);
 
   const handleSeleccionarImagen = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -133,8 +177,7 @@ export default function RegisterCultivosScreen() {
   };
 
   /**
-   * Valida los campos obligatorios y envía el cultivo al backend.
-   * Si la petición falla, muestra el mensaje de error del servidor.
+   * Valida los campos obligatorios y guarda el cultivo (crea o actualiza).
    */
   const handleGuardar = async () => {
     if (!nombre.trim()) {
@@ -146,37 +189,82 @@ export default function RegisterCultivosScreen() {
       return;
     }
 
-    const ok = await crearCultivo(
-      {
-        Nombre: nombre.trim(),
-        Estado: estado,
-        Fecha_Siembra: fechaSiembra.trim() || null,
-        Fecha_Cosecha_Estimada: fechaCosechaEstimada.trim() || null,
-        Rendimiento_Estimado: rendimientoEstimado
-          ? parseFloat(rendimientoEstimado)
-          : null,
-        Rendimiento_Unidad: rendimientoUnidad || null,
-        Notas: observaciones.trim() || null,
-        Parcela_id: ubicacion || null,
-        Tipo_Cultivo_id: tipo || null,
-      },
-      imagen ?? undefined,
-    );
-
-    if (ok) {
-      Alert.alert("Éxito", "Cultivo registrado correctamente.");
-      router.back();
+    if (modoEdicion) {
+      // Modo edición: llamar al servicio directamente
+      if (!session?.access_token) return;
+      setGuardando(true);
+      try {
+        await actualizarCultivo(
+          Number(cultivo_id),
+          {
+            Nombre: nombre.trim(),
+            Estado: estado,
+            Fecha_Siembra: fechaSiembra.trim() || null,
+            Fecha_Cosecha_Estimada: fechaCosechaEstimada.trim() || null,
+            Rendimiento_Estimado: rendimientoEstimado
+              ? parseFloat(rendimientoEstimado)
+              : null,
+            Rendimiento_Unidad: rendimientoUnidad || null,
+            Notas: observaciones.trim() || null,
+            Parcela_id: ubicacion || null,
+            Tipo_Cultivo_id: tipo || null,
+          },
+          session.access_token,
+        );
+        Alert.alert("Éxito", "Cultivo actualizado correctamente.");
+        router.back();
+      } catch (e: any) {
+        Alert.alert("Error", e.message ?? "No se pudo actualizar el cultivo.");
+      } finally {
+        setGuardando(false);
+      }
     } else {
-      Alert.alert(
-        "Error",
-        "No se pudo registrar el cultivo. Intenta de nuevo.",
+      // Modo creación
+      const ok = await crearCultivo(
+        {
+          Nombre: nombre.trim(),
+          Estado: estado,
+          Fecha_Siembra: fechaSiembra.trim() || null,
+          Fecha_Cosecha_Estimada: fechaCosechaEstimada.trim() || null,
+          Rendimiento_Estimado: rendimientoEstimado
+            ? parseFloat(rendimientoEstimado)
+            : null,
+          Rendimiento_Unidad: rendimientoUnidad || null,
+          Notas: observaciones.trim() || null,
+          Parcela_id: ubicacion || null,
+          Tipo_Cultivo_id: tipo || null,
+        },
+        imagen ?? undefined,
       );
+
+      if (ok) {
+        Alert.alert("Éxito", "Cultivo registrado correctamente.");
+        router.back();
+      } else {
+        Alert.alert(
+          "Error",
+          "No se pudo registrar el cultivo. Intenta de nuevo.",
+        );
+      }
     }
   };
 
+  const loading = modoEdicion ? guardando : loadingCrear;
+
+  if (cargandoCultivo) {
+    return (
+      <>
+        <ScreenHeader title="Editar Cultivo" />
+        <View style={styles.centered}>
+          <ActivityIndicator size="large" color={Colors.PRIMARY_GREEN} />
+        </View>
+      </>
+    );
+  }
+
   return (
     <>
-      <ScreenHeader title="Registrar Cultivo" />
+      <ScreenHeader title={modoEdicion ? "Editar Cultivo" : "Registrar Cultivo"} />
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.container}
@@ -289,15 +377,6 @@ export default function RegisterCultivosScreen() {
               onChangeText={setFechaCosechaEstimada}
             />
           </View>
-          {/* <View style={styles.rowItem}>
-            <ThemedText style={styles.label}>Fecha de cosecha estimada</ThemedText>
-            <TextInput
-              style={[styles.input, styles.inputReadonly]}
-              placeholder="Sin registrar"
-              placeholderTextColor={Colors.PLACEHOLDER_GRAY}
-              editable={false}
-            />
-          </View> */}
         </View>
 
         <ThemedText style={styles.label}>Rendimiento estimado</ThemedText>
@@ -354,7 +433,9 @@ export default function RegisterCultivosScreen() {
             {loading ? (
               <ActivityIndicator color="#fff" />
             ) : (
-              <ThemedText style={styles.saveText}>Guardar</ThemedText>
+              <ThemedText style={styles.saveText}>
+                {modoEdicion ? "Actualizar" : "Guardar"}
+              </ThemedText>
             )}
           </TouchableOpacity>
         </View>
@@ -374,6 +455,7 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
     gap: 6,
   },
+  centered: { flex: 1, alignItems: "center", justifyContent: "center" },
   sectionTitle: {
     fontSize: 18,
     fontWeight: "700",

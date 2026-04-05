@@ -1,20 +1,14 @@
 /**
- * Formulario de Registro de Animal (registerAnimal.tsx)
+ * Formulario de Registro/Edición de Animal (registerAnimal.tsx)
  *
- * Permite al usuario crear un nuevo animal en el backend.
- *
- * Cambios respecto a la versión anterior:
- *  - Se conectó el botón "Guardar" al backend usando el hook `useAnimales`.
- *  - El dropdown de "Categoría animal" se pobla dinámicamente desde el backend
- *    mediante el hook `useCategorias` (antes estaba vacío con `data={[]}`).
- *  - El dropdown de "Parcela" se pobla dinámicamente desde el backend
- *    mediante el hook `useParcelas` (antes estaba vacío con `data={[]}`).
- *  - Se agregó un indicador de carga en el botón "Guardar" mientras se envía la petición.
- *  - Se manejan los errores del backend mostrando un Alert con el mensaje del servidor.
- *  - La imagen seleccionada se adjunta al request como archivo multipart.
+ * Permite al usuario crear un nuevo animal o editar uno existente.
+ * - En modo creación: no recibe parámetros, guarda con crearAnimal.
+ * - En modo edición: recibe `animal_id` como parámetro de navegación,
+ *   carga los datos del animal y pre-rellena el formulario. Al guardar
+ *   llama a actualizarAnimal con los campos modificados.
  */
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   StyleSheet,
@@ -25,22 +19,33 @@ import {
   Image,
   ActivityIndicator,
 } from "react-native";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import Colors from "@/constants/colors";
 import { ThemedText } from "@/components/themed-text";
 import ScreenHeader from "@/components/header";
 import Dropdown from "@/components/dropdown";
-import { SexoAnimal } from "@/ts/animalsProps";
+import { SexoAnimal, ResponseAnimalDto } from "@/ts/animalsProps";
 import { useAnimales } from "@/hooks/useAnimales";
 import { useCategorias } from "@/hooks/useCategorias";
 import { useParcelas } from "@/hooks/useParcelas";
+import { useAuth } from "@/supabase/useAuth";
+import { getAnimalById, actualizarAnimal } from "@/services/animalesService";
 
 export default function RegisterAnimalScreen() {
   const router = useRouter();
+  const { session } = useAuth();
+
+  // Recibe animal_id cuando viene desde la pantalla de detalles (modo edición)
+  const { animal_id } = useLocalSearchParams<{ animal_id?: string }>();
+  const modoEdicion = !!animal_id;
 
   // Hook para crear animales en el backend
-  const { crearAnimal, loading } = useAnimales();
+  const { crearAnimal, loading: loadingCrear } = useAnimales();
+
+  // Estado de carga para modo edición
+  const [guardando, setGuardando] = useState(false);
+  const [cargandoAnimal, setCargandoAnimal] = useState(false);
 
   // Opciones dinámicas desde el backend
   const { categorias } = useCategorias();
@@ -87,6 +92,44 @@ export default function RegisterAnimalScreen() {
   const [parcela, setParcela] = useState<number>(0);
   const [fechaNacimiento, setFechaNacimiento] = useState("");
   const [imagen, setImagen] = useState<string | null>(null);
+
+  // Datos del animal cargado para edición
+  const [animalEditData, setAnimalEditData] = useState<ResponseAnimalDto | null>(null);
+
+  // En modo edición: cargar datos del animal desde el backend
+  useEffect(() => {
+    if (!modoEdicion || !session?.access_token || !animal_id) return;
+    setCargandoAnimal(true);
+    getAnimalById(Number(animal_id), session.access_token)
+      .then(setAnimalEditData)
+      .catch(() => Alert.alert("Error", "No se pudo cargar el animal."))
+      .finally(() => setCargandoAnimal(false));
+  }, [modoEdicion, animal_id, session?.access_token]);
+
+  // Pre-rellenar el formulario cuando los datos del animal Y las listas estén listas
+  useEffect(() => {
+    if (!animalEditData || categorias.length === 0) return;
+
+    setNombre(animalEditData.Nombre);
+    setSexo((animalEditData.Sexo as SexoAnimal) ?? "");
+    setEstado(animalEditData.Estado_Label ?? "");
+    setRaza(animalEditData.Raza ?? "");
+    setColor(animalEditData.Color ?? "");
+    setFechaNacimiento(animalEditData.Fecha_Nacimiento ?? "");
+    setPeso(animalEditData.Peso != null ? String(animalEditData.Peso) : "");
+    setPesoUnidad(animalEditData.Peso_Unidad ?? "");
+    setAltura(animalEditData.Altura != null ? String(animalEditData.Altura) : "");
+    setObservaciones(animalEditData.Notas ?? "");
+    setImagen(animalEditData.Foto ?? null);
+
+    // Mapear nombre de categoría → ID
+    const cat = categorias.find((c) => c.Nombre === animalEditData.Categoria);
+    if (cat) setCategoriaAnimal(cat.Categoria_Animal_id);
+
+    // Mapear nombre de parcela → ID
+    const parc = parcelas.find((p) => p.Nombre === animalEditData.Parcela);
+    if (parc) setParcela(parc.Parcela_id);
+  }, [animalEditData, categorias, parcelas]);
 
   const handleSeleccionarImagen = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -136,8 +179,7 @@ export default function RegisterAnimalScreen() {
   };
 
   /**
-   * Valida los campos obligatorios y envía el animal al backend.
-   * Si la petición falla, muestra el mensaje de error del servidor.
+   * Valida los campos obligatorios y guarda el animal (crea o actualiza).
    */
   const handleGuardar = async () => {
     if (!nombre.trim()) {
@@ -153,35 +195,81 @@ export default function RegisterAnimalScreen() {
       return;
     }
 
-    const ok = await crearAnimal(
-      {
-        Nombre: nombre.trim(),
-        Sexo: sexo as SexoAnimal,
-        Categoria_Animal_id: categoriaAnimal,
-        Raza: raza.trim() || null,
-        Color: color.trim() || null,
-        Fecha_Nacimiento: fechaNacimiento.trim() || null,
-        Peso: peso ? parseFloat(peso) : null,
-        Peso_Unidad: pesoUnidad || null,
-        Altura: altura ? parseFloat(altura) : null,
-        Estado_Label: estado || null,
-        Notas: observaciones.trim() || null,
-        Parcela_id: parcela || null,
-      },
-      imagen ?? undefined,
-    );
-
-    if (ok) {
-      Alert.alert("Éxito", "Animal registrado correctamente.");
-      router.back();
+    if (modoEdicion) {
+      // Modo edición: llamar al servicio directamente
+      if (!session?.access_token) return;
+      setGuardando(true);
+      try {
+        await actualizarAnimal(
+          Number(animal_id),
+          {
+            Nombre: nombre.trim(),
+            Sexo: sexo as SexoAnimal,
+            Categoria_Animal_id: categoriaAnimal,
+            Raza: raza.trim() || null,
+            Color: color.trim() || null,
+            Fecha_Nacimiento: fechaNacimiento.trim() || null,
+            Peso: peso ? parseFloat(peso) : null,
+            Peso_Unidad: pesoUnidad || null,
+            Altura: altura ? parseFloat(altura) : null,
+            Estado_Label: estado || null,
+            Notas: observaciones.trim() || null,
+            Parcela_id: parcela || null,
+          },
+          session.access_token,
+        );
+        Alert.alert("Éxito", "Animal actualizado correctamente.");
+        router.back();
+      } catch (e: any) {
+        Alert.alert("Error", e.message ?? "No se pudo actualizar el animal.");
+      } finally {
+        setGuardando(false);
+      }
     } else {
-      Alert.alert("Error", "No se pudo registrar el animal. Intenta de nuevo.");
+      // Modo creación
+      const ok = await crearAnimal(
+        {
+          Nombre: nombre.trim(),
+          Sexo: sexo as SexoAnimal,
+          Categoria_Animal_id: categoriaAnimal,
+          Raza: raza.trim() || null,
+          Color: color.trim() || null,
+          Fecha_Nacimiento: fechaNacimiento.trim() || null,
+          Peso: peso ? parseFloat(peso) : null,
+          Peso_Unidad: pesoUnidad || null,
+          Altura: altura ? parseFloat(altura) : null,
+          Estado_Label: estado || null,
+          Notas: observaciones.trim() || null,
+          Parcela_id: parcela || null,
+        },
+        imagen ?? undefined,
+      );
+
+      if (ok) {
+        Alert.alert("Éxito", "Animal registrado correctamente.");
+        router.back();
+      } else {
+        Alert.alert("Error", "No se pudo registrar el animal. Intenta de nuevo.");
+      }
     }
   };
 
+  const loading = modoEdicion ? guardando : loadingCrear;
+
+  if (cargandoAnimal) {
+    return (
+      <>
+        <ScreenHeader title="Editar Animal" />
+        <View style={styles.centered}>
+          <ActivityIndicator size="large" color={Colors.PRIMARY_GREEN} />
+        </View>
+      </>
+    );
+  }
+
   return (
     <>
-      <ScreenHeader title="Registrar Animal" />
+      <ScreenHeader title={modoEdicion ? "Editar Animal" : "Registrar Animal"} />
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.container}
@@ -363,7 +451,9 @@ export default function RegisterAnimalScreen() {
             {loading ? (
               <ActivityIndicator color="#fff" />
             ) : (
-              <ThemedText style={styles.saveText}>Guardar</ThemedText>
+              <ThemedText style={styles.saveText}>
+                {modoEdicion ? "Actualizar" : "Guardar"}
+              </ThemedText>
             )}
           </TouchableOpacity>
         </View>
@@ -383,6 +473,7 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
     gap: 6,
   },
+  centered: { flex: 1, alignItems: "center", justifyContent: "center" },
   sectionTitle: {
     fontSize: 18,
     fontWeight: "700",

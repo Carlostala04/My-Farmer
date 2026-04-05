@@ -189,16 +189,17 @@ export default function RecordatoriosScreen() {
         title="Recordatorios"
         actions={[
           {
-            icon: <FilterIcon width={22} height={22} />,
+            icon: <FilterIcon width={22} height={22} style={{ position: "absolute", top: 18, right: 20 }}/>,
             onPress: () => console.log("filtrar"),
+            
           },
           {
             icon: (
               <Text
                 style={{
-                  fontSize: 28,
+                  fontSize: 35,
                   color: Colors.PRIMARY_GREEN,
-                  fontWeight: "300",
+                  fontWeight: "600",
                 }}
               >
                 +

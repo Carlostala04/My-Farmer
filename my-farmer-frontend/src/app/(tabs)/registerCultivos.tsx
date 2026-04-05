@@ -280,7 +280,7 @@ export default function RegisterCultivosScreen() {
 
         <View style={styles.row}>
           <View style={styles.rowItem}>
-            <ThemedText style={styles.label}>Fecha cosecha estimada</ThemedText>
+            <ThemedText style={styles.label}>Fecha cosecha</ThemedText>
             <TextInput
               style={styles.input}
               placeholder="Ej: 2024-06-15"
@@ -289,15 +289,15 @@ export default function RegisterCultivosScreen() {
               onChangeText={setFechaCosechaEstimada}
             />
           </View>
-          <View style={styles.rowItem}>
-            <ThemedText style={styles.label}>Fecha de cosecha</ThemedText>
+          {/* <View style={styles.rowItem}>
+            <ThemedText style={styles.label}>Fecha de cosecha estimada</ThemedText>
             <TextInput
               style={[styles.input, styles.inputReadonly]}
               placeholder="Sin registrar"
               placeholderTextColor={Colors.PLACEHOLDER_GRAY}
               editable={false}
             />
-          </View>
+          </View> */}
         </View>
 
         <ThemedText style={styles.label}>Rendimiento estimado</ThemedText>

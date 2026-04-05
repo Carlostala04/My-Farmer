@@ -28,6 +28,7 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
   ActivityIndicator,
+  ScrollView,
 } from "react-native";
 import {
   GestureHandlerRootView,
@@ -56,6 +57,8 @@ export default function RecordatoriosScreen() {
   const [categoriaActiva, setCategoriaActiva] =
     useState<CategoriaFiltro>("Todos");
   const [modalVisible, setModalVisible] = useState(false);
+  const [ordenDescendente, setOrdenDescendente] = useState(false);
+  const [filterModalVisible, setFilterModalVisible] = useState(false);
 
   // Datos reales del backend
   const {
@@ -94,15 +97,26 @@ export default function RecordatoriosScreen() {
         ? cultivosOpciones
         : [];
 
-  // Filtrado por categoría
+  // Filtrado por categoría y orden por fecha
   const filtrados = useMemo(() => {
-    if (categoriaActiva === "Todos") return recordatorios;
-    return recordatorios.filter(
-      (r) =>
-        r.Entidad_Tipo ===
-        (categoriaActiva === "Animales" ? "animal" : "cultivo"),
-    );
-  }, [categoriaActiva, recordatorios]);
+    let data =
+      categoriaActiva === "Todos"
+        ? recordatorios
+        : recordatorios.filter(
+            (r) =>
+              r.Entidad_Tipo ===
+              (categoriaActiva === "Animales" ? "animal" : "cultivo"),
+          );
+
+    if (ordenDescendente) {
+      data = [...data].sort(
+        (a, b) =>
+          new Date(b.Recordar).getTime() - new Date(a.Recordar).getTime(),
+      );
+    }
+
+    return data;
+  }, [categoriaActiva, recordatorios, ordenDescendente]);
 
   const resetModal = () => {
     setNuevoTitulo("");
@@ -189,9 +203,14 @@ export default function RecordatoriosScreen() {
         title="Recordatorios"
         actions={[
           {
-            icon: <FilterIcon width={22} height={22} style={{ position: "absolute", top: 18, right: 20 }}/>,
-            onPress: () => console.log("filtrar"),
-            
+            icon: (
+              <FilterIcon
+                width={22}
+                height={22}
+                style={{ position: "absolute", top: 18, right: 20 }}
+              />
+            ),
+            onPress: () => setFilterModalVisible(true),
           },
           {
             icon: (
@@ -326,6 +345,59 @@ export default function RecordatoriosScreen() {
           />
         )}
       </View>
+
+      {/* Modal de filtro por fecha */}
+      <Modal visible={filterModalVisible} transparent animationType="slide">
+        <TouchableWithoutFeedback onPress={() => setFilterModalVisible(false)}>
+          <View style={styles.modalOverlay}>
+            <TouchableWithoutFeedback>
+              <View style={[styles.filterModalContainer, { backgroundColor: t.card }]}>
+                <Text style={[styles.modalTitle, { color: t.title }]}>
+                  Ordenar por fecha
+                </Text>
+
+                <ScrollView contentContainerStyle={{ gap: 10 }}>
+                  {[
+                    { label: "Sin orden", value: false },
+                    { label: "Más reciente primero", value: true },
+                  ].map((op) => (
+                    <TouchableOpacity
+                      key={String(op.value)}
+                      style={[
+                        styles.opcionBtn,
+                        { borderColor: t.border },
+                        ordenDescendente === op.value && styles.opcionBtnActivo,
+                      ]}
+                      onPress={() => {
+                        setOrdenDescendente(op.value);
+                        setFilterModalVisible(false);
+                      }}
+                    >
+                      <Text
+                        style={[
+                          styles.opcionBtnText,
+                          { color: t.subtitle },
+                          ordenDescendente === op.value &&
+                            styles.opcionBtnTextActivo,
+                        ]}
+                      >
+                        {op.label}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+
+                <TouchableOpacity
+                  style={styles.cerrarBtn}
+                  onPress={() => setFilterModalVisible(false)}
+                >
+                  <Text style={styles.cerrarBtnText}>Cerrar</Text>
+                </TouchableOpacity>
+              </View>
+            </TouchableWithoutFeedback>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
 
       {/* Modal de creación de recordatorio */}
       <Modal visible={modalVisible} transparent animationType="slide">
@@ -516,6 +588,43 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   emptyText: { textAlign: "center", marginTop: 32, fontSize: 14 },
+  filterModalContainer: {
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 24,
+    gap: 12,
+  },
+  opcionBtn: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  opcionBtnActivo: {
+    backgroundColor: Colors.PRIMARY_GREEN,
+    borderColor: Colors.PRIMARY_GREEN,
+  },
+  opcionBtnText: {
+    fontSize: 15,
+    fontWeight: "500",
+  },
+  opcionBtnTextActivo: {
+    color: "#fff",
+    fontWeight: "600",
+  },
+  cerrarBtn: {
+    marginTop: 4,
+    height: 50,
+    borderRadius: 12,
+    backgroundColor: Colors.PRIMARY_GREEN,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  cerrarBtnText: {
+    fontSize: 16,
+    color: "#fff",
+    fontWeight: "600",
+  },
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.4)",

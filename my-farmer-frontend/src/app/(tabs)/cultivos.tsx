@@ -22,6 +22,9 @@ import {
   TextInput,
   Text,
   ActivityIndicator,
+  Modal,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
 } from "react-native";
 import { useRouter } from "expo-router";
 import NavBar from "@/components/navBar";
@@ -32,24 +35,52 @@ import Colors from "@/constants/colors";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useCultivos } from "@/hooks/useCultivos";
 
+type OrdenFecha = "siembra" | "cosecha" | null;
+
 export default function CultivosScreen() {
   const [buscar, setBuscar] = useState("");
+  const [ordenFecha, setOrdenFecha] = useState<OrdenFecha>(null);
+  const [filterModalVisible, setFilterModalVisible] = useState(false);
   const router = useRouter();
   const { t } = useTheme();
 
-  // Hook que obtiene los cultivos activos del usuario desde el backend
   const { cultivos, loading, error } = useCultivos();
 
-  // Filtrado local sobre los datos traídos del servidor
   const filteredData = useMemo(() => {
+    let data = [...cultivos];
+
+    if (ordenFecha === "siembra") {
+      data.sort((a, b) => {
+        const dateA = a.Fecha_Siembra ? new Date(a.Fecha_Siembra).getTime() : 0;
+        const dateB = b.Fecha_Siembra ? new Date(b.Fecha_Siembra).getTime() : 0;
+        return dateB - dateA;
+      });
+    } else if (ordenFecha === "cosecha") {
+      data.sort((a, b) => {
+        const dateA = a.Fecha_Cosecha_Estimada
+          ? new Date(a.Fecha_Cosecha_Estimada).getTime()
+          : 0;
+        const dateB = b.Fecha_Cosecha_Estimada
+          ? new Date(b.Fecha_Cosecha_Estimada).getTime()
+          : 0;
+        return dateB - dateA;
+      });
+    }
+
     const query = buscar.trim().toLowerCase();
-    if (!query) return cultivos;
-    return cultivos.filter(
+    if (!query) return data;
+    return data.filter(
       (cultivo) =>
         cultivo.Nombre.toLowerCase().includes(query) ||
         (cultivo.Parcela ?? "").toLowerCase().includes(query),
     );
-  }, [buscar, cultivos]);
+  }, [buscar, cultivos, ordenFecha]);
+
+  const opcionesOrden: { label: string; value: OrdenFecha }[] = [
+    { label: "Sin orden", value: null },
+    { label: "Fecha de siembra (más reciente)", value: "siembra" },
+    { label: "Fecha de cosecha (más reciente)", value: "cosecha" },
+  ];
 
   return (
     <>
@@ -65,7 +96,7 @@ export default function CultivosScreen() {
                 style={{ position: "absolute", top: 18, right: 20 }}
               />
             ),
-            onPress: () => console.log("filtrar"),
+            onPress: () => setFilterModalVisible(true),
           },
           {
             icon: (
@@ -148,6 +179,53 @@ export default function CultivosScreen() {
           />
         )}
       </View>
+
+      {/* Modal de filtro por fecha */}
+      <Modal visible={filterModalVisible} transparent animationType="slide">
+        <TouchableWithoutFeedback onPress={() => setFilterModalVisible(false)}>
+          <View style={styles.modalOverlay}>
+            <TouchableWithoutFeedback>
+              <View style={[styles.modalContainer, { backgroundColor: t.card }]}>
+                <Text style={[styles.modalTitle, { color: t.title }]}>
+                  Ordenar por fecha
+                </Text>
+
+                {opcionesOrden.map((op) => (
+                  <TouchableOpacity
+                    key={String(op.value)}
+                    style={[
+                      styles.opcionBtn,
+                      { borderColor: t.border },
+                      ordenFecha === op.value && styles.opcionBtnActivo,
+                    ]}
+                    onPress={() => {
+                      setOrdenFecha(op.value);
+                      setFilterModalVisible(false);
+                    }}
+                  >
+                    <Text
+                      style={[
+                        styles.opcionBtnText,
+                        { color: t.subtitle },
+                        ordenFecha === op.value && styles.opcionBtnTextActivo,
+                      ]}
+                    >
+                      {op.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+
+                <TouchableOpacity
+                  style={styles.cerrarBtn}
+                  onPress={() => setFilterModalVisible(false)}
+                >
+                  <Text style={styles.cerrarBtnText}>Cerrar</Text>
+                </TouchableOpacity>
+              </View>
+            </TouchableWithoutFeedback>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
     </>
   );
 }
@@ -180,5 +258,52 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginTop: 32,
     fontSize: 14,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.4)",
+    justifyContent: "flex-end",
+  },
+  modalContainer: {
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 24,
+    gap: 10,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    marginBottom: 4,
+  },
+  opcionBtn: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  opcionBtnActivo: {
+    backgroundColor: Colors.PRIMARY_GREEN,
+    borderColor: Colors.PRIMARY_GREEN,
+  },
+  opcionBtnText: {
+    fontSize: 15,
+    fontWeight: "500",
+  },
+  opcionBtnTextActivo: {
+    color: "#fff",
+    fontWeight: "600",
+  },
+  cerrarBtn: {
+    marginTop: 4,
+    height: 50,
+    borderRadius: 12,
+    backgroundColor: Colors.PRIMARY_GREEN,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  cerrarBtnText: {
+    fontSize: 16,
+    color: "#fff",
+    fontWeight: "600",
   },
 });

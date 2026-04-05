@@ -353,8 +353,8 @@ export default function Home() {
         </Text>
 
         <View style={{ height: 16 }} />
-        <Pressable onPress={()=>router.replace("/(tabs)/Mapa")}>
-          <Text>Ir a mapa</Text>
+        <Pressable style={styles.button_map} onPress={()=>router.replace("/(tabs)/Mapa")}>
+          <Text style={styles.button_map_text}>Ir a mapa</Text>
         </Pressable>
       </ScrollView>
     </>
@@ -524,4 +524,19 @@ const styles = StyleSheet.create({
     textShadowRadius: 4,
   },
   cultivoDate: { color: "rgba(255,255,255,0.85)", fontSize: 11 },
+  button_map:{
+    backgroundColor:Colors.PRIMARY_GREEN,
+    width:100,
+    height:34,
+    borderRadius:5,
+
+  },
+
+  button_map_text:{
+    fontWeight:"700",
+    color:"#fff",
+    fontSize:16,
+    textAlign:"center",
+    marginTop:5
+  }
 });

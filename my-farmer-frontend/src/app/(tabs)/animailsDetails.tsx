@@ -27,6 +27,7 @@ import Colors from "@/constants/colors";
 import ScreenHeader from "@/components/header";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import DeleteIcon from "@/components/ui/deleteIcon";
+import EditIcon from "@/components/ui/editIcon";
 import { useAuth } from "@/supabase/useAuth";
 import { getAnimalById } from "@/services/animalesService";
 import { eliminarAnimal } from "@/services/animalesService";
@@ -135,6 +136,14 @@ const AnimalsDetails = () => {
       <ScreenHeader
         title="Detalles Animal"
         actions={[
+          {
+            icon: <EditIcon width={22} height={22} />,
+            onPress: () =>
+              router.push({
+                pathname: "/(tabs)/registerAnimal",
+                params: { animal_id: String(animal.Animal_id) },
+              }),
+          },
           {
             icon: eliminando ? (
               <ActivityIndicator size="small" color="#EF4444" />

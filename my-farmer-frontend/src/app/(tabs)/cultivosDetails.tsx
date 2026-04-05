@@ -28,6 +28,7 @@ import Colors from "@/constants/colors";
 import ScreenHeader from "@/components/header";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import DeleteIcon from "@/components/ui/deleteIcon";
+import EditIcon from "@/components/ui/editIcon";
 import { useAuth } from "@/supabase/useAuth";
 import { getCultivoById, eliminarCultivo } from "@/services/cultivosService";
 import { useRecordatorios } from "@/hooks/useRecordatorios";
@@ -158,6 +159,14 @@ const CultivosDetail = () => {
       <ScreenHeader
         title="Detalle de Cultivo"
         actions={[
+          {
+            icon: <EditIcon width={22} height={22} />,
+            onPress: () =>
+              router.push({
+                pathname: "/(tabs)/registerCultivos",
+                params: { cultivo_id: String(cultivo.Cultivo_id) },
+              }),
+          },
           {
             icon: eliminando ? (
               <ActivityIndicator size="small" color="#EF4444" />

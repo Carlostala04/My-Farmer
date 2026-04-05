@@ -273,13 +273,13 @@ const CultivosDetail = () => {
               {cultivo.Fecha_Cosecha_Estimada ?? "—"}
             </Text>
           </View>
-          <View style={styles.detailRow}>
+          {/* <View style={styles.detailRow}>
             <Text style={styles.detailIcon}>✅</Text>
             <Text style={styles.label}>Fecha de cosecha:</Text>
             <Text style={styles.value}>
               {cultivo.Fecha_Cosecha ?? "Sin registrar"}
             </Text>
-          </View>
+          </View> */}
           {cultivo.Rendimiento_Estimado != null && (
             <View style={styles.detailRow}>
               <Text style={styles.detailIcon}>⚖️</Text>

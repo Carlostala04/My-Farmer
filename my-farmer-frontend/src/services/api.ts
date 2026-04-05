@@ -81,8 +81,8 @@ export async function apiFetch<T>(
     throw new ApiError(response.status, message);
   }
 
-  // DELETE y similares pueden devolver 204 sin cuerpo
-  if (response.status === 204) return undefined as T;
-
-  return response.json();
+  // DELETE y similares pueden devolver 204 sin cuerpo, o 200 con cuerpo vacío
+  const text = await response.text();
+  if (!text.trim()) return undefined as T;
+  return JSON.parse(text);
 }

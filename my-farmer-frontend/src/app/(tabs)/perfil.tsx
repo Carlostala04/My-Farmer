@@ -21,6 +21,8 @@ import {
   Switch,
   Image,
   Alert,
+  Modal,
+  Platform,
   ActivityIndicator,
 } from "react-native";
 import Svg, { Path, Circle, Line } from "react-native-svg";
@@ -151,6 +153,7 @@ export default function PerfilScreen() {
 
   // Estado local de carga de foto (para mostrar spinner mientras se sube)
   const [subiendoFoto, setSubiendoFoto] = useState(false);
+  const [fotoMenuVisible, setFotoMenuVisible] = useState(false);
 
   /**
    * Sube la imagen seleccionada a Supabase Storage y actualiza el perfil en el backend.
@@ -218,16 +221,16 @@ export default function PerfilScreen() {
   };
 
   const seleccionarFoto = () => {
-    Alert.alert("Cambiar foto", "¿Cómo quieres cambiar tu foto?", [
-      { text: "Cámara", onPress: tomarFoto },
-      { text: "Galería", onPress: cambiarFoto },
-      {
-        text: "Eliminar foto",
-        style: "destructive",
-        onPress: eliminarFoto,
-      },
-      { text: "Cancelar", style: "cancel" },
-    ]);
+    if (Platform.OS === "ios") {
+      Alert.alert("Cambiar foto", "¿Cómo quieres cambiar tu foto?", [
+        { text: "Cámara", onPress: tomarFoto },
+        { text: "Galería", onPress: cambiarFoto },
+        { text: "Eliminar foto", style: "destructive", onPress: eliminarFoto },
+        { text: "Cancelar", style: "cancel" },
+      ]);
+    } else {
+      setFotoMenuVisible(true);
+    }
   };
 
   /** Cierra la sesión del usuario en Supabase y redirige al login. */
@@ -539,6 +542,53 @@ export default function PerfilScreen() {
           Myfarmer v2.4.0 — 2026
         </Text>
       </ScrollView>
+
+      {/* Action sheet para cambiar foto (Android) */}
+      <Modal
+        visible={fotoMenuVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setFotoMenuVisible(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setFotoMenuVisible(false)}
+        >
+          <View style={[styles.modalSheet, { backgroundColor: card }]}>
+            <Text style={[styles.modalTitle, { color: title }]}>
+              Cambiar foto
+            </Text>
+            <TouchableOpacity
+              style={styles.modalOption}
+              onPress={() => { setFotoMenuVisible(false); tomarFoto(); }}
+            >
+              <Text style={[styles.modalOptionText, { color: title }]}>Cámara</Text>
+            </TouchableOpacity>
+            <View style={[styles.divider, { backgroundColor: border }]} />
+            <TouchableOpacity
+              style={styles.modalOption}
+              onPress={() => { setFotoMenuVisible(false); cambiarFoto(); }}
+            >
+              <Text style={[styles.modalOptionText, { color: title }]}>Galería</Text>
+            </TouchableOpacity>
+            <View style={[styles.divider, { backgroundColor: border }]} />
+            <TouchableOpacity
+              style={styles.modalOption}
+              onPress={() => { setFotoMenuVisible(false); eliminarFoto(); }}
+            >
+              <Text style={[styles.modalOptionText, { color: "#EF4444" }]}>Eliminar foto</Text>
+            </TouchableOpacity>
+            <View style={[styles.divider, { backgroundColor: border }]} />
+            <TouchableOpacity
+              style={styles.modalOption}
+              onPress={() => setFotoMenuVisible(false)}
+            >
+              <Text style={[styles.modalOptionText, { color: subtitle }]}>Cancelar</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </View>
   );
 }
@@ -650,4 +700,29 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
   },
   premiumBadgeText: { fontSize: 11, fontWeight: "700", color: "#fff" },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: "flex-end",
+    backgroundColor: "rgba(0,0,0,0.4)",
+  },
+  modalSheet: {
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    paddingBottom: 32,
+    paddingTop: 8,
+  },
+  modalTitle: {
+    textAlign: "center",
+    fontSize: 13,
+    fontWeight: "600",
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+  },
+  modalOption: {
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+  },
+  modalOptionText: {
+    fontSize: 16,
+  },
 });

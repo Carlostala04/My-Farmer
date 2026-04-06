@@ -33,7 +33,7 @@ import { useUsuario } from "@/hooks/useUsuario";
 import { useAnimales } from "@/hooks/useAnimales";
 import { useCultivos } from "@/hooks/useCultivos";
 import { supabase } from "@/supabase/supabaseClient";
-import { subirFotoPerfil, actualizarPerfil } from "@/services/usuariosService";
+import { actualizarPerfil } from "@/services/usuariosService";
 
 const IconSettings = ({ dark }: { dark: boolean }) => (
   <Svg
@@ -157,13 +157,11 @@ export default function PerfilScreen() {
    * Flujo: ImagePicker → Supabase Storage (bucket 'usuario') → PATCH /usuarios
    */
   const procesarFoto = async (uri: string) => {
-    if (!usuario?.Usuario_id) return;
     setSubiendoFoto(true);
     try {
       const token =
         (await supabase.auth.getSession()).data.session?.access_token ?? "";
-      const publicUrl = await subirFotoPerfil(uri, usuario.Usuario_id);
-      await actualizarPerfil({ Foto: publicUrl }, token);
+      await actualizarPerfil({}, token, uri);
       setFoto(uri);
       await refetchUsuario();
     } catch (e: any) {

@@ -15,7 +15,6 @@
 
 import { apiFetch } from "./api";
 import { ResponseUsuarioDto } from "@/ts/usuarioProps";
-import { supabase } from "@/supabase/supabaseClient";
 
 /** Obtiene el perfil del usuario actualmente autenticado. */
 export async function getMiPerfil(token: string): Promise<ResponseUsuarioDto> {
@@ -24,75 +23,34 @@ export async function getMiPerfil(token: string): Promise<ResponseUsuarioDto> {
 
 /**
  * Actualiza campos del perfil del usuario autenticado.
- * El backend identifica al usuario por el JWT, no por ID en la URL.
+ * Si se pasa imagenUri, la adjunta como archivo (multipart/form-data) igual que animales.
+ * El backend tiene FileInterceptor('Foto') y sube la imagen a Supabase Storage.
  */
 export async function actualizarPerfil(
   data: Partial<{ Nombre: string; Apellido: string; Foto: string | null }>,
   token: string,
+  imagenUri?: string,
 ): Promise<ResponseUsuarioDto> {
-  return apiFetch<ResponseUsuarioDto>(`/usuarios`, {
+  if (imagenUri) {
+    const form = new FormData();
+    if (data.Nombre != null) form.append("Nombre", data.Nombre);
+    if (data.Apellido != null) form.append("Apellido", data.Apellido);
+
+    const fileName = imagenUri.split("/").pop() ?? "foto.jpg";
+    const fileType = fileName.endsWith(".png") ? "image/png" : "image/jpeg";
+    form.append("Foto", { uri: imagenUri, name: fileName, type: fileType } as any);
+
+    return apiFetch<ResponseUsuarioDto>("/usuarios", {
+      method: "PATCH",
+      token,
+      body: form,
+      isFormData: true,
+    });
+  }
+
+  return apiFetch<ResponseUsuarioDto>("/usuarios", {
     method: "PATCH",
     token,
     body: data,
   });
-}
-
-/**
- * Sube una foto de perfil a Supabase Storage y retorna la URL pública.
- *
- * Usa la REST API de Supabase directamente con FormData + referencia de archivo nativa
- * de React Native, ya que fetch(localUri) y XHR→Blob no funcionan con URIs locales
- * (content:// en Android, file:// en iOS) cuando se pasan al cliente JS de Supabase.
- *
- * @param imagenUri  URI local de la imagen (resultado de ImagePicker)
- * @param usuarioId  ID del usuario, usado para nombrar el archivo de forma única
- * @returns          URL pública de la imagen en Supabase Storage
- * @throws           Error si la subida falla
- */
-export async function subirFotoPerfil(
-  imagenUri: string,
-  usuarioId: number,
-): Promise<string> {
-  const ext = imagenUri.split(".").pop()?.toLowerCase() ?? "jpg";
-  const fileName = `perfil_${usuarioId}_${Date.now()}.${ext}`;
-  const contentType = `image/${ext === "jpg" ? "jpeg" : ext}`;
-
-  const session = (await supabase.auth.getSession()).data.session;
-  if (!session) throw new Error("No hay sesión activa.");
-
-  // Patrón nativo de React Native para subir archivos: FormData con referencia directa
-  // a la URI local. El motor de red nativo (no JS) lee y sube el archivo.
-  const formData = new FormData();
-  formData.append("", {
-    uri: imagenUri,
-    name: fileName,
-    type: contentType,
-  } as any);
-
-  const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
-  const supabaseKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
-
-  const res = await fetch(
-    `${supabaseUrl}/storage/v1/object/usuario/${fileName}`,
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${session.access_token}`,
-        apikey: supabaseKey!,
-        "x-upsert": "true",
-      },
-      body: formData,
-    },
-  );
-
-  if (!res.ok) {
-    const msg = await res.text();
-    throw new Error(`Error al subir la foto: ${msg}`);
-  }
-
-  const { data: urlData } = supabase.storage
-    .from("usuario")
-    .getPublicUrl(fileName);
-
-  return urlData.publicUrl;
 }

@@ -561,30 +561,47 @@ export default function PerfilScreen() {
             </Text>
             <TouchableOpacity
               style={styles.modalOption}
-              onPress={() => { setFotoMenuVisible(false); tomarFoto(); }}
+              onPress={() => {
+                setFotoMenuVisible(false);
+                tomarFoto();
+              }}
             >
-              <Text style={[styles.modalOptionText, { color: title }]}>Cámara</Text>
+              <Text style={[styles.modalOptionText, { color: title }]}>
+                Cámara
+              </Text>
             </TouchableOpacity>
             <View style={[styles.divider, { backgroundColor: border }]} />
             <TouchableOpacity
               style={styles.modalOption}
-              onPress={() => { setFotoMenuVisible(false); cambiarFoto(); }}
+              onPress={() => {
+                setFotoMenuVisible(false);
+                cambiarFoto();
+              }}
             >
-              <Text style={[styles.modalOptionText, { color: title }]}>Galería</Text>
+              <Text style={[styles.modalOptionText, { color: title }]}>
+                Galería
+              </Text>
             </TouchableOpacity>
             <View style={[styles.divider, { backgroundColor: border }]} />
             <TouchableOpacity
               style={styles.modalOption}
-              onPress={() => { setFotoMenuVisible(false); eliminarFoto(); }}
+              onPress={() => {
+                setFotoMenuVisible(false);
+                eliminarFoto();
+              }}
             >
-              <Text style={[styles.modalOptionText, { color: "#EF4444" }]}>Eliminar foto</Text>
+              <Text style={[styles.modalOptionText, { color: "#EF4444" }]}>
+                Eliminar foto
+              </Text>
             </TouchableOpacity>
             <View style={[styles.divider, { backgroundColor: border }]} />
             <TouchableOpacity
               style={styles.modalOption}
               onPress={() => setFotoMenuVisible(false)}
             >
-              <Text style={[styles.modalOptionText, { color: subtitle }]}>Cancelar</Text>
+              <Text style={[styles.modalOptionText, { color: subtitle }]}>
+                Cancelar
+              </Text>
             </TouchableOpacity>
           </View>
         </TouchableOpacity>

@@ -154,23 +154,37 @@ export default function PerfilScreen() {
 
   /**
    * Sube la imagen seleccionada a Supabase Storage y actualiza el perfil en el backend.
-   * Flujo: ImagePicker → Supabase Storage (bucket 'usuario') → PATCH /usuarios/:id
+   * Flujo: ImagePicker → Supabase Storage (bucket 'usuario') → PATCH /usuarios
    */
   const procesarFoto = async (uri: string) => {
     if (!usuario?.Usuario_id) return;
     setSubiendoFoto(true);
     try {
+      const token =
+        (await supabase.auth.getSession()).data.session?.access_token ?? "";
       const publicUrl = await subirFotoPerfil(uri, usuario.Usuario_id);
-      await actualizarPerfil(
-        usuario.Usuario_id,
-        { Foto: publicUrl },
-        (await supabase.auth.getSession()).data.session?.access_token ?? "",
-      );
-      // Actualiza el estado local inmediato y recarga el perfil
+      await actualizarPerfil({ Foto: publicUrl }, token);
       setFoto(uri);
       await refetchUsuario();
     } catch (e: any) {
       Alert.alert("Error", e.message ?? "No se pudo actualizar la foto.");
+    } finally {
+      setSubiendoFoto(false);
+    }
+  };
+
+  /** Elimina la foto de perfil en el backend y limpia el estado local. */
+  const eliminarFoto = async () => {
+    if (!usuario?.Usuario_id) return;
+    setSubiendoFoto(true);
+    try {
+      const token =
+        (await supabase.auth.getSession()).data.session?.access_token ?? "";
+      await actualizarPerfil({ Foto: null }, token);
+      setFoto("");
+      await refetchUsuario();
+    } catch (e: any) {
+      Alert.alert("Error", e.message ?? "No se pudo eliminar la foto.");
     } finally {
       setSubiendoFoto(false);
     }
@@ -212,7 +226,7 @@ export default function PerfilScreen() {
       {
         text: "Eliminar foto",
         style: "destructive",
-        onPress: () => setFoto(""),
+        onPress: eliminarFoto,
       },
       { text: "Cancelar", style: "cancel" },
     ]);

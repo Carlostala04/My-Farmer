@@ -99,7 +99,7 @@ export default function LoginScreen() {
         if (result.type === "success" && result.url) {
           console.log("4. URL de retorno recibida:");
 
-          // 🔥 Extraer tokens de forma más segura
+          //  Extraer tokens de forma más segura
           let access_token = null;
           let refresh_token = null;
 

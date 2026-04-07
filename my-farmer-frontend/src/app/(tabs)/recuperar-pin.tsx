@@ -7,21 +7,54 @@ import {
   TextInput,
   Pressable,
 } from "react-native";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import Colors from "@/constants/colors";
 import { Spacing } from "@/constants/theme";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { ApiError } from "@/services/api";
+
+const API_URL = process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:3000";
 
 export default function RecuperarPinScreen() {
+  const { correo } = useLocalSearchParams<{ correo: string }>();
   const [pin, setPin] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [reenvioLoading, setReenvioLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [reenvioMsg, setReenvioMsg] = useState("");
 
   function handleVerificar() {
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      router.push("/(tabs)/recuperar-contrasena" as any);
-    }, 800);
+    // Solo navega con los params; la validación real se hace en el paso 3
+    router.push({
+      pathname: "/(tabs)/recuperar-contrasena" as any,
+      params: { correo, pin },
+    });
+  }
+
+  async function handleReenviar() {
+    if (!correo) return;
+    setReenvioMsg("");
+    setError("");
+    setReenvioLoading(true);
+    try {
+      const res = await fetch(`${API_URL}/usuarios/solicitar-recuperacion`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: correo }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        const msg = Array.isArray(data.message)
+          ? data.message.join(", ")
+          : (data.message ?? "Error al reenviar");
+        throw new ApiError(res.status, msg);
+      }
+      setPin("");
+      setReenvioMsg("PIN reenviado. Revisa tu correo.");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Error al reenviar el PIN");
+    } finally {
+      setReenvioLoading(false);
+    }
   }
 
   return (
@@ -57,12 +90,16 @@ export default function RecuperarPinScreen() {
           style={styles.hiddenInput}
           autoFocus
         />
-        <Text style={styles.resend}>
-          ¿No recibiste el PIN?{" "}
-          <Text style={{ color: Colors.PRIMARY_GREEN, fontWeight: "700" }}>
-            Reenviar
+        <TouchableOpacity onPress={handleReenviar} disabled={reenvioLoading}>
+          <Text style={styles.resend}>
+            ¿No recibiste el PIN?{" "}
+            <Text style={{ color: Colors.PRIMARY_GREEN, fontWeight: "700" }}>
+              {reenvioLoading ? "Enviando..." : "Reenviar"}
+            </Text>
           </Text>
-        </Text>
+        </TouchableOpacity>
+        {!!reenvioMsg && <Text style={styles.successText}>{reenvioMsg}</Text>}
+        {!!error && <Text style={styles.errorText}>{error}</Text>}
         <Pressable
           style={({ pressed }) => [
             styles.button,
@@ -70,11 +107,9 @@ export default function RecuperarPinScreen() {
             pin.length < 6 && styles.buttonDisabled,
           ]}
           onPress={handleVerificar}
-          disabled={pin.length < 6 || loading}
+          disabled={pin.length < 6}
         >
-          <Text style={styles.buttonText}>
-            {loading ? "Verificando..." : "Verificar PIN"}
-          </Text>
+          <Text style={styles.buttonText}>Verificar PIN</Text>
         </Pressable>
       </View>
     </SafeAreaView>
@@ -154,5 +189,17 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "700",
     color: "#FFFFFF",
+  },
+  successText: {
+    fontSize: 13,
+    color: Colors.PRIMARY_GREEN,
+    textAlign: "center",
+    marginBottom: Spacing.two,
+  },
+  errorText: {
+    fontSize: 13,
+    color: Colors.ERROR_TEXT,
+    textAlign: "center",
+    marginBottom: Spacing.two,
   },
 });

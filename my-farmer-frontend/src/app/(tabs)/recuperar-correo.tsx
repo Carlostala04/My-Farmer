@@ -14,17 +14,37 @@ import {
 import { router } from "expo-router";
 import Colors from "@/constants/colors";
 import { Spacing } from "@/constants/theme";
+import { ApiError } from "@/services/api";
+
+const API_URL = process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:3000";
 
 export default function RecuperarCorreoScreen() {
   const [correo, setCorreo] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  function handleEnviar() {
+  async function handleEnviar() {
+    setError("");
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      const res = await fetch(`${API_URL}/usuarios/solicitar-recuperacion`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: correo }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        const msg = Array.isArray(data.message)
+          ? data.message.join(", ")
+          : (data.message ?? "Error al enviar el PIN");
+        throw new ApiError(res.status, msg);
+      }
       router.push({ pathname: "/(tabs)/recuperar-pin" as any, params: { correo } });
-    }, 800);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Error al enviar el PIN");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -57,6 +77,7 @@ export default function RecuperarCorreoScreen() {
             placeholderTextColor={Colors.PLACEHOLDER_GRAY}
           />
           <Text style={styles.hint}>Te enviaremos un PIN de 6 dígitos</Text>
+          {!!error && <Text style={styles.errorText}>{error}</Text>}
           <Pressable
             style={({ pressed }) => [
               styles.button,
@@ -125,7 +146,12 @@ const styles = StyleSheet.create({
   hint: {
     fontSize: 12,
     color: Colors.PLACEHOLDER_GRAY,
-    marginBottom: Spacing.four,
+    marginBottom: Spacing.two,
+  },
+  errorText: {
+    fontSize: 13,
+    color: Colors.ERROR_TEXT,
+    marginBottom: Spacing.two,
   },
   button: {
     backgroundColor: Colors.PRIMARY_GREEN,

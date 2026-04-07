@@ -4,28 +4,49 @@ import {
   Text,
   ScrollView,
   StyleSheet,
-  SafeAreaView,
   TouchableOpacity,
   TextInput,
   Pressable,
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
-import { router } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { router, useLocalSearchParams } from "expo-router";
 import Colors from "@/constants/colors";
 import { Spacing } from "@/constants/theme";
+import { ApiError } from "@/services/api";
+
+const API_URL = process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:3000";
 
 export default function RecuperarContrasenaScreen() {
+  const { correo, pin } = useLocalSearchParams<{ correo: string; pin: string }>();
   const [nueva, setNueva] = useState("");
   const [confirmar, setConfirmar] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  function handleGuardar() {
+  async function handleGuardar() {
+    setError("");
     setLoading(true);
-    setTimeout(() => {
+    try {
+      const res = await fetch(`${API_URL}/usuarios/confirmar-recuperacion`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: correo, codigo: pin, nuevaContrasena: nueva }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        const msg = Array.isArray(data.message)
+          ? data.message.join(", ")
+          : (data.message ?? "Error al cambiar la contraseña");
+        throw new ApiError(res.status, msg);
+      }
+      router.replace("/login" as any);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Error al cambiar la contraseña");
+    } finally {
       setLoading(false);
-      router.replace("/login");
-    }, 800);
+    }
   }
 
   const mismatch = !!confirmar && nueva !== confirmar;
@@ -72,6 +93,7 @@ export default function RecuperarContrasenaScreen() {
           {mismatch && (
             <Text style={styles.errorText}>Las contraseñas no coinciden</Text>
           )}
+          {!!error && <Text style={styles.errorText}>{error}</Text>}
 
           <Pressable
             style={({ pressed }) => [

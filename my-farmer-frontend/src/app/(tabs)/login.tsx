@@ -150,14 +150,10 @@ export default function LoginScreen() {
               }
 
               console.log("8. Redirigiendo a Mapa...");
-              Alert.alert("Éxito", "Bienvenido");
               router.replace("/home");
             } else {
               console.log("Error: No hay sesión o usuario tras setSession");
-              Alert.alert(
-                "Error",
-                "No se pudo iniciar la sesión correctamente.",
-              );
+              Alert.alert("Error", "El correo o contraseña son incorrectos.");
             }
           } else {
             console.log("Error: No se encontraron tokens en la URL");

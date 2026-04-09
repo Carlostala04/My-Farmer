@@ -67,6 +67,7 @@ export default function RecordatoriosScreen() {
     error,
     crearRecordatorio,
     eliminarRecordatorio,
+    toggleRecordatorio,
   } = useRecordatorios();
   const { animales } = useAnimales();
   const { cultivos } = useCultivos();
@@ -292,8 +293,11 @@ export default function RecordatoriosScreen() {
                       { backgroundColor: t.card, borderColor: t.border },
                     ]}
                   >
-                    {/* Indicador visual de cancelado */}
-                    <View
+                    {/* Checkbox para marcar como completado */}
+                    <TouchableOpacity
+                      onPress={() =>
+                        toggleRecordatorio(item.Recordatorio_id, item.Cancelado)
+                      }
                       style={[
                         styles.checkbox,
                         item.Cancelado && styles.checkboxActivo,
@@ -302,7 +306,7 @@ export default function RecordatoriosScreen() {
                       {item.Cancelado && (
                         <Text style={styles.checkmark}>✓</Text>
                       )}
-                    </View>
+                    </TouchableOpacity>
 
                     <View style={styles.cardContent}>
                       <Text

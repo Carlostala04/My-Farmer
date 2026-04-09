@@ -32,6 +32,8 @@ import EditIcon from "@/components/ui/editIcon";
 import { useAuth } from "@/supabase/useAuth";
 import { getCultivoById, eliminarCultivo } from "@/services/cultivosService";
 import { useRecordatorios } from "@/hooks/useRecordatorios";
+import { useCosechas } from "@/hooks/useCosechas";
+import { useCrecimientos } from "@/hooks/useCrecimientos";
 import { ResponseCultivoDto } from "@/ts/cultivoProps";
 
 const CultivosDetail = () => {
@@ -50,6 +52,14 @@ const CultivosDetail = () => {
 
   // Hook de recordatorios para filtrar los de este cultivo
   const { recordatorios } = useRecordatorios();
+
+  // Hook de cosechas para este cultivo
+  const { cosechas } = useCosechas(cultivo_id ? Number(cultivo_id) : null);
+
+  // Hook de crecimiento para este cultivo
+  const { crecimientos } = useCrecimientos(
+    cultivo_id ? Number(cultivo_id) : null,
+  );
 
   // Recordatorios que pertenecen a este cultivo específico
   const recordatoriosDelCultivo = recordatorios.filter(
@@ -254,6 +264,32 @@ const CultivosDetail = () => {
               </View>
             </>
           )}
+
+          {crecimientos.length > 0 && (
+            <>
+              <View style={styles.divider} />
+              <Text style={styles.subSectionTitle}>
+                Registros de Crecimiento
+              </Text>
+              {crecimientos.map((reg) => (
+                <View key={reg.Crecimiento_id} style={styles.cosechaRow}>
+                  <View style={styles.cosechaInfo}>
+                    <Text style={styles.cosechaFecha}>
+                      {reg.Registro.slice(0, 10)}
+                    </Text>
+                    {reg.Altura != null && (
+                      <Text style={styles.cosechaCantidad}>
+                        {reg.Altura} cm
+                      </Text>
+                    )}
+                  </View>
+                  {reg.Observaciones ? (
+                    <Text style={styles.cosechaObs}>{reg.Observaciones}</Text>
+                  ) : null}
+                </View>
+              ))}
+            </>
+          )}
         </View>
 
         {/* Cosecha y Fechas */}
@@ -291,6 +327,30 @@ const CultivosDetail = () => {
             </View>
           )}
         </View>
+        {/**lo nuevo desde aqui */}
+        {/* Cosechas Registradas */}
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>🌾 Cosechas Registradas</Text>
+          <View style={styles.divider} />
+          {cosechas.length === 0 ? (
+            <Text style={styles.emptyText}>Sin cosechas registradas.</Text>
+          ) : (
+            cosechas.map((cosecha) => (
+              <View key={cosecha.Cosecha_id} style={styles.cosechaRow}>
+                <View style={styles.cosechaInfo}>
+                  <Text style={styles.cosechaFecha}>{cosecha.Fecha}</Text>
+                  <Text style={styles.cosechaCantidad}>
+                    {cosecha.Cantidad} {cosecha.Unidad}
+                  </Text>
+                </View>
+                {cosecha.Observaciones ? (
+                  <Text style={styles.cosechaObs}>{cosecha.Observaciones}</Text>
+                ) : null}
+              </View>
+            ))
+          )}
+        </View>
+        {/**Hasta aqui */}
 
         {/* Notas y Recordatorios */}
         <View style={styles.card}>
@@ -417,6 +477,17 @@ const styles = StyleSheet.create({
   checkmark: { color: "#fff", fontSize: 11, fontWeight: "700" },
   reminderText: { fontSize: 13, color: Colors.VALUE, flex: 1 },
   reminderDate: { fontSize: 12, color: Colors.SUBTITLE },
+
+  cosechaRow: {
+    borderLeftWidth: 3,
+    borderLeftColor: "#22c55e",
+    paddingLeft: 10,
+    gap: 2,
+  },
+  cosechaInfo: { flexDirection: "row", justifyContent: "space-between" },
+  cosechaFecha: { fontSize: 13, color: Colors.SUBTITLE },
+  cosechaCantidad: { fontSize: 13, fontWeight: "600", color: Colors.VALUE },
+  cosechaObs: { fontSize: 12, color: Colors.SUBTITLE, fontStyle: "italic" },
 });
 
 export default CultivosDetail;

@@ -26,6 +26,7 @@ import {
   getRecordatorios,
   crearRecordatorio as crearService,
   eliminarRecordatorio as eliminarService,
+  actualizarRecordatorio as actualizarService,
 } from "@/services/recordatoriosService";
 import {
   CreateRecordatorioDto,
@@ -103,6 +104,34 @@ export function useRecordatorios() {
     [session?.access_token],
   );
 
+  /**
+   * Alterna el estado Cancelado de un recordatorio (toggle completado).
+   * Actualiza el estado local optimistamente y luego sincroniza con el backend.
+   */
+  const toggleRecordatorio = useCallback(
+    async (id: number, canceladoActual: boolean): Promise<void> => {
+      if (!session?.access_token) return;
+      // Actualización optimista
+      setRecordatorios((prev) =>
+        prev.map((r) =>
+          r.Recordatorio_id === id ? { ...r, Cancelado: !canceladoActual } : r,
+        ),
+      );
+      try {
+        await actualizarService(id, { Cancelado: !canceladoActual }, session.access_token);
+      } catch (e: any) {
+        // Revertir si falla
+        setRecordatorios((prev) =>
+          prev.map((r) =>
+            r.Recordatorio_id === id ? { ...r, Cancelado: canceladoActual } : r,
+          ),
+        );
+        setError(e.message ?? "Error al actualizar el recordatorio");
+      }
+    },
+    [session?.access_token],
+  );
+
   return {
     recordatorios,
     loading,
@@ -110,5 +139,6 @@ export function useRecordatorios() {
     refetch: fetchRecordatorios,
     crearRecordatorio,
     eliminarRecordatorio,
+    toggleRecordatorio,
   };
 }

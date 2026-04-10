@@ -2,6 +2,7 @@ import React from "react";
 import { View, Text, Image, StyleSheet, Pressable } from "react-native";
 import Colors from "@/constants/colors";
 import { ResponseAnimalDto } from "@/ts/animalsProps";
+import { useTheme } from "@/contexts/ThemeContext";
 
 type CardProps = Pick<ResponseAnimalDto, "Nombre" | "Estado_Label" | "Foto" | "Fecha_Nacimiento"> & {
   onPress?: () => void;
@@ -22,18 +23,19 @@ export default function Card({
   onPress,
 }: CardProps) {
   const edad = calcularEdad(Fecha_Nacimiento);
+  const { t } = useTheme();
   return (
     <Pressable
       onPress={onPress}
-      style={({ pressed }) => [styles.card, pressed && { opacity: 0.75 }]}
+      style={({ pressed }) => [styles.card, { backgroundColor: t.card, borderColor: t.border }, pressed && { opacity: 0.75 }]}
     >
       <Image style={styles.image} source={{ uri: Foto ?? undefined }} />
 
       <View style={styles.content}>
-        <Text style={styles.title} numberOfLines={1}>
+        <Text style={[styles.title, { color: t.title }]} numberOfLines={1}>
           {Nombre}
         </Text>
-        <Text style={styles.subtitle}>{`${edad} años`}</Text>
+        <Text style={[styles.subtitle, { color: t.subtitle }]}>{`${edad} años`}</Text>
 
         <View style={[styles.badge, { backgroundColor: status[(Estado_Label ?? "").toUpperCase() as keyof typeof status] ?? Colors.PRIMARY_GREEN }]}>
           <Text style={styles.badgeText} numberOfLines={1}>
@@ -60,9 +62,7 @@ const styles = StyleSheet.create({
     gap: 20,
     padding: 14,
     borderRadius: 18,
-    backgroundColor: "#FFFFFF",
     borderWidth: 1,
-    borderColor: "rgba(0,0,0,0.06)",
     shadowColor: "#000",
     shadowOpacity: 0.05,
     shadowRadius: 10,
@@ -87,13 +87,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 22,
     fontWeight: "700",
-    color: "#111827",
   },
 
   subtitle: {
     fontSize: 16,
     fontWeight: "500",
-    color: "#6B7280",
   },
 
   badge: {

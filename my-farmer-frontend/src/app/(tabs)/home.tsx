@@ -28,6 +28,7 @@ import {
   Pressable,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import NavBar from "@/components/navBar";
 import Colors from "@/constants/colors";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -50,6 +51,7 @@ const statusColors: Record<string, string> = {
 export default function Home() {
   const router = useRouter();
   const { t } = useTheme();
+  const insets = useSafeAreaInsets();
 
   // Datos reales del backend
   const { usuario, loading: loadingUsuario } = useUsuario();
@@ -65,7 +67,7 @@ export default function Home() {
       <NavBar />
       <ScrollView
         style={[styles.container, { backgroundColor: t.bg }]}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[styles.scrollContent, { paddingTop: insets.top + 16, paddingBottom: 80 + insets.bottom + 16 }]}
         showsVerticalScrollIndicator={false}
       >
         {/* Bienvenida con nombre real del usuario */}
@@ -353,7 +355,10 @@ export default function Home() {
         </Text>
 
         <View style={{ height: 16 }} />
-        <Pressable style={styles.button_map} onPress={()=>router.replace("/(tabs)/Mapa")}>
+        <Pressable
+          style={styles.button_map}
+          onPress={() => router.replace("/(tabs)/Mapa")}
+        >
           <Text style={styles.button_map_text}>Ir a mapa</Text>
         </Pressable>
       </ScrollView>
@@ -363,7 +368,7 @@ export default function Home() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.BACKGROUND },
-  scrollContent: { padding: 16, paddingBottom: 100 },
+  scrollContent: { padding: 16 },
 
   welcomeCard: {
     backgroundColor: Colors.CARD_DETAILS,
@@ -524,19 +529,18 @@ const styles = StyleSheet.create({
     textShadowRadius: 4,
   },
   cultivoDate: { color: "rgba(255,255,255,0.85)", fontSize: 11 },
-  button_map:{
-    backgroundColor:Colors.PRIMARY_GREEN,
-    width:100,
-    height:34,
-    borderRadius:5,
-
+  button_map: {
+    backgroundColor: Colors.PRIMARY_GREEN,
+    width: 100,
+    height: 34,
+    borderRadius: 5,
   },
 
-  button_map_text:{
-    fontWeight:"700",
-    color:"#fff",
-    fontSize:16,
-    textAlign:"center",
-    marginTop:5
-  }
+  button_map_text: {
+    fontWeight: "700",
+    color: "#fff",
+    fontSize: 16,
+    textAlign: "center",
+    marginTop: 5,
+  },
 });

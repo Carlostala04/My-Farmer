@@ -1,10 +1,11 @@
-import { View, Text, Pressable, StyleSheet } from "react-native";
+import { View, Text, Pressable, StyleSheet, ActivityIndicator } from "react-native";
 import React from "react";
-import { ImageBackground } from "expo-image";
 type CardSuspriptionProps = {
   precio: number;
   descuento: boolean;
   porcentajeDescuento: number;
+  onPress?: () => void;
+  loading?: boolean;
 };
 
 const items = [
@@ -18,6 +19,8 @@ const CardSuspription = ({
   precio,
   descuento,
   porcentajeDescuento,
+  onPress,
+  loading = false,
 }: CardSuspriptionProps) => {
   return (
     <View style={styles.card_container}>
@@ -67,9 +70,16 @@ const CardSuspription = ({
             style={({ pressed }) => [
               styles.button,
               pressed && styles.buttonPressed,
+              loading && styles.buttonDisabled,
             ]}
+            onPress={onPress}
+            disabled={loading}
           >
-            <Text style={styles.buttonText}>Cambiarme a Premium ↗</Text>
+            {loading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.buttonText}>Paga premium ↗</Text>
+            )}
           </Pressable>
 
           <Text style={styles.guarantee}>
@@ -233,6 +243,10 @@ const styles = StyleSheet.create({
   buttonPressed: {
     backgroundColor: "#14a10f",
     transform: [{ scale: 0.98 }],
+  },
+
+  buttonDisabled: {
+    opacity: 0.6,
   },
 
   buttonText: {

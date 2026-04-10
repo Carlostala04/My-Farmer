@@ -30,6 +30,7 @@ import {
   ActivityIndicator,
   ScrollView,
 } from "react-native";
+import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import {
   GestureHandlerRootView,
   Swipeable,
@@ -80,7 +81,36 @@ export default function RecordatoriosScreen() {
   const [nuevaEntidadId, setNuevaEntidadId] = useState<number>(0);
   const [nuevaDescripcion, setNuevaDescripcion] = useState("");
   const [nuevoRecordar, setNuevoRecordar] = useState("");
+  const [showFechaPicker, setShowFechaPicker] = useState(false);
+  const [showHoraPicker, setShowHoraPicker] = useState(false);
+  const [recordarFechaValue, setRecordarFechaValue] = useState(new Date());
+  const [recordarHoraValue, setRecordarHoraValue] = useState(new Date());
   const [guardando, setGuardando] = useState(false);
+
+  const buildRecordarString = (fecha: Date, hora: Date) => {
+    const y = fecha.getFullYear();
+    const m = String(fecha.getMonth() + 1).padStart(2, "0");
+    const d = String(fecha.getDate()).padStart(2, "0");
+    const hh = String(hora.getHours()).padStart(2, "0");
+    const mm = String(hora.getMinutes()).padStart(2, "0");
+    return `${y}-${m}-${d} ${hh}:${mm}`;
+  };
+
+  const handleFechaChange = (event: DateTimePickerEvent, date?: Date) => {
+    if (Platform.OS === "android") setShowFechaPicker(false);
+    if (date && event.type !== "dismissed") {
+      setRecordarFechaValue(date);
+      setNuevoRecordar(buildRecordarString(date, recordarHoraValue));
+    }
+  };
+
+  const handleHoraChange = (event: DateTimePickerEvent, date?: Date) => {
+    if (Platform.OS === "android") setShowHoraPicker(false);
+    if (date && event.type !== "dismissed") {
+      setRecordarHoraValue(date);
+      setNuevoRecordar(buildRecordarString(recordarFechaValue, date));
+    }
+  };
 
   // Opciones de entidades para los dropdowns del formulario
   const animalesOpciones = animales.map((a) => ({
@@ -125,6 +155,8 @@ export default function RecordatoriosScreen() {
     setNuevaEntidadId(0);
     setNuevaDescripcion("");
     setNuevoRecordar("");
+    setRecordarFechaValue(new Date());
+    setRecordarHoraValue(new Date());
   };
 
   /** Valida y envía el nuevo recordatorio al backend. */
@@ -472,13 +504,40 @@ export default function RecordatoriosScreen() {
                 />
 
                 <Text style={[styles.modalLabel, { color: t.title }]}>Recordar el</Text>
-                <TextInput
-                  style={[styles.modalInput, { backgroundColor: t.input, borderColor: t.border, color: t.title }]}
-                  placeholder="YYYY-MM-DD HH:MM"
-                  placeholderTextColor={t.placeholder}
-                  value={nuevoRecordar}
-                  onChangeText={setNuevoRecordar}
-                />
+                <View style={styles.dateRow}>
+                  <TouchableOpacity
+                    style={[styles.dateButton, { backgroundColor: t.input, borderColor: t.border }]}
+                    onPress={() => setShowFechaPicker(true)}
+                  >
+                    <Text style={nuevoRecordar ? [styles.dateText, { color: t.title }] : styles.datePlaceholder}>
+                      {nuevoRecordar ? nuevoRecordar.split(" ")[0] : "YYYY-MM-DD"}
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.dateButton, { backgroundColor: t.input, borderColor: t.border }]}
+                    onPress={() => setShowHoraPicker(true)}
+                  >
+                    <Text style={nuevoRecordar ? [styles.dateText, { color: t.title }] : styles.datePlaceholder}>
+                      {nuevoRecordar ? nuevoRecordar.split(" ")[1] ?? "HH:MM" : "HH:MM"}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+                {showFechaPicker && (
+                  <DateTimePicker
+                    value={recordarFechaValue}
+                    mode="date"
+                    display={Platform.OS === "ios" ? "spinner" : "default"}
+                    onChange={handleFechaChange}
+                  />
+                )}
+                {showHoraPicker && (
+                  <DateTimePicker
+                    value={recordarHoraValue}
+                    mode="time"
+                    display={Platform.OS === "ios" ? "spinner" : "default"}
+                    onChange={handleHoraChange}
+                  />
+                )}
 
                 <View style={styles.modalButtons}>
                   <TouchableOpacity
@@ -705,4 +764,14 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   saveText: { fontSize: 16, color: "#fff", fontWeight: "600" },
+  dateRow: { flexDirection: "row", gap: 8 },
+  dateButton: {
+    flex: 1,
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  dateText: { fontSize: 15 },
+  datePlaceholder: { fontSize: 15, color: Colors.PLACEHOLDER_GRAY },
 });

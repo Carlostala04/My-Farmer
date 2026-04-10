@@ -22,19 +22,23 @@ import {
   StyleSheet,
   Alert,
   ActivityIndicator,
+  TouchableOpacity,
 } from "react-native";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Image } from "expo-image";
 import Colors from "@/constants/colors";
 import ScreenHeader from "@/components/header";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { useFocusEffect } from "@react-navigation/native";
 import DeleteIcon from "@/components/ui/deleteIcon";
 import EditIcon from "@/components/ui/editIcon";
 import { useAuth } from "@/supabase/useAuth";
 import { getAnimalById } from "@/services/animalesService";
 import { eliminarAnimal } from "@/services/animalesService";
 import { useRecordatorios } from "@/hooks/useRecordatorios";
+import { useEventosAnimales } from "@/hooks/useEventosAnimales";
 import { ResponseAnimalDto } from "@/ts/animalsProps";
+import type { ResponseEventoAnimalDto } from "@/ts/eventoAnimal";
 import { useTheme } from "@/contexts/ThemeContext";
 import { RecordatoriosIcon } from "@/components/ui/recordatorios_icon";
 
@@ -55,6 +59,21 @@ const AnimalsDetails = () => {
 
   // Hook de recordatorios para filtrar los de este animal
   const { recordatorios } = useRecordatorios();
+
+  // Hook de eventos para este animal
+  const {
+    eventos,
+    loading: loadingEventos,
+    refetch: refetchEventos,
+    eliminarEvento,
+  } = useEventosAnimales(Number(animal_id));
+
+  // Recargar eventos cada vez que la pantalla recibe el foco (ej: al volver de registerEvento)
+  useFocusEffect(
+    useCallback(() => {
+      refetchEventos();
+    }, [refetchEventos]),
+  );
 
   // Recordatorios que pertenecen a este animal específico
   const recordatoriosDelAnimal = recordatorios.filter(
@@ -101,6 +120,25 @@ const AnimalsDetails = () => {
             } finally {
               setEliminando(false);
             }
+          },
+        },
+      ],
+    );
+  };
+
+  /** Confirma y elimina un evento del animal. */
+  const handleEliminarEvento = (ev: ResponseEventoAnimalDto) => {
+    Alert.alert(
+      "Eliminar Evento",
+      `¿Deseas eliminar "${ev.Titulo}"?`,
+      [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Eliminar",
+          style: "destructive",
+          onPress: async () => {
+            const ok = await eliminarEvento(ev.Evento_id);
+            if (!ok) Alert.alert("Error", "No se pudo eliminar el evento.");
           },
         },
       ],
@@ -263,6 +301,94 @@ const AnimalsDetails = () => {
             )}
           </View>
         </View>
+
+        {/* ── Eventos del Animal ─────────────────────────────────────────── */}
+        <View style={[styles.extras, { backgroundColor: t.card, borderColor: t.border }]}>
+          <View style={styles.eventosHeader}>
+            <Text style={[styles.sectionTitle, { color: t.title }]}>Eventos</Text>
+            <TouchableOpacity
+              style={styles.addEventoBtn}
+              onPress={() =>
+                router.push({
+                  pathname: "/(tabs)/registerEvento" as any,
+                  params: {
+                    animal_id: String(animal_id),
+                    animal_nombre: animal?.Nombre ?? "",
+                  },
+                })
+              }
+            >
+              <Text style={styles.addEventoBtnText}>+ Agregar</Text>
+            </TouchableOpacity>
+          </View>
+          <View style={[styles.divider, { backgroundColor: t.border }]} />
+
+          {loadingEventos ? (
+            <ActivityIndicator
+              size="small"
+              color={Colors.PRIMARY_GREEN}
+              style={{ marginVertical: 8 }}
+            />
+          ) : eventos.length === 0 ? (
+            <Text style={[styles.emptyText, { color: t.subtitle }]}>
+              Sin eventos registrados.
+            </Text>
+          ) : (
+            eventos.map((ev) => (
+              <View
+                key={ev.Evento_id}
+                style={[styles.eventoRow, { borderBottomColor: t.border }]}
+              >
+                {/* Parte izquierda: navega a edición */}
+                <TouchableOpacity
+                  style={styles.eventoRowContent}
+                  onPress={() =>
+                    router.push({
+                      pathname: "/(tabs)/registerEvento" as any,
+                      params: {
+                        animal_id: String(animal_id),
+                        evento_id: String(ev.Evento_id),
+                        animal_nombre: animal?.Nombre ?? "",
+                      },
+                    })
+                  }
+                >
+                  <View
+                    style={[
+                      styles.tipoBadge,
+                      { backgroundColor: tipoColor(ev.Tipo) },
+                    ]}
+                  >
+                    <Text style={styles.tipoBadgeText}>
+                      {tipoLabel(ev.Tipo)}
+                    </Text>
+                  </View>
+                  <View style={styles.eventoInfo}>
+                    <Text
+                      style={[styles.eventoTitulo, { color: t.title }]}
+                      numberOfLines={1}
+                    >
+                      {ev.Titulo}
+                    </Text>
+                    <Text style={[styles.eventoFecha, { color: t.subtitle }]}>
+                      {formatDate(ev.Fecha)}
+                      {ev.Descripcion ? ` · ${ev.Descripcion}` : ""}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+
+                {/* Botón eliminar */}
+                <TouchableOpacity
+                  onPress={() => handleEliminarEvento(ev)}
+                  style={styles.eventoDeleteBtn}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                >
+                  <DeleteIcon width={16} height={16} />
+                </TouchableOpacity>
+              </View>
+            ))
+          )}
+        </View>
       </ScrollView>
     </>
   );
@@ -277,6 +403,30 @@ function formatDate(date: string) {
   })
     .format(dateObject)
     .toString();
+}
+
+const TIPO_LABELS: Record<string, string> = {
+  vacuna: "Vacuna",
+  revision: "Revisión",
+  tratamiento: "Tratamiento",
+  alimentacion: "Alimentación",
+  otro: "Otro",
+};
+
+const TIPO_COLORS: Record<string, string> = {
+  vacuna: "#3B82F6",
+  revision: "#8B5CF6",
+  tratamiento: "#F97316",
+  alimentacion: "#22C55E",
+  otro: "#6B7280",
+};
+
+function tipoLabel(tipo: string): string {
+  return TIPO_LABELS[tipo] ?? tipo;
+}
+
+function tipoColor(tipo: string): string {
+  return TIPO_COLORS[tipo] ?? "#6B7280";
 }
 
 const styles = StyleSheet.create({
@@ -367,6 +517,52 @@ const styles = StyleSheet.create({
   },
   reminderText: { fontSize: 14, flex: 1 },
   reminderDate: { fontSize: 13 },
+
+  // ── Eventos ──────────────────────────────────────────────────────────────
+  eventosHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 10,
+  },
+  addEventoBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 20,
+    backgroundColor: Colors.PRIMARY_GREEN,
+  },
+  addEventoBtnText: {
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "700",
+  },
+  eventoRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    gap: 8,
+  },
+  eventoRowContent: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  tipoBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+  },
+  tipoBadgeText: {
+    color: "#fff",
+    fontSize: 10,
+    fontWeight: "700",
+  },
+  eventoInfo: { flex: 1 },
+  eventoTitulo: { fontSize: 14, fontWeight: "600" },
+  eventoFecha: { fontSize: 12, marginTop: 1 },
+  eventoDeleteBtn: { padding: 4 },
 });
 
 export default AnimalsDetails;

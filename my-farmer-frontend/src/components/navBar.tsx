@@ -1,6 +1,7 @@
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import React, { useMemo } from 'react';
 import { Link, usePathname } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import colors from '@/constants/colors';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -15,6 +16,7 @@ type NavKey = 'home' | 'animales' | 'cultivos' | 'recordatorios' | 'perfil';
 export default function navBar() {
   const pathname = usePathname();
   const { t } = useTheme();
+  const insets = useSafeAreaInsets();
 
   const items = useMemo(
     () =>
@@ -55,7 +57,7 @@ export default function navBar() {
   );
 
   return (
-    <View style={[styles.navBar_container, { backgroundColor: t.navBar }]}>
+    <View style={[styles.navBar_container, { backgroundColor: t.navBar, paddingBottom: insets.bottom, height: 80 + insets.bottom }]}>
       {items.map((item) => {
         const isSelected =
           item.href === '/'
@@ -83,7 +85,6 @@ export default function navBar() {
 const styles = StyleSheet.create({
  navBar_container: {
     width: '100%',
-    height: 80,
     backgroundColor: '#fff',
     position: 'absolute',
     left: 0,

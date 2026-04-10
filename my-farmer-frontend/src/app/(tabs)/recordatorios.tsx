@@ -319,7 +319,7 @@ export default function RecordatoriosScreen() {
                         {item.Titulo}
                       </Text>
                       <Text style={[styles.cardFecha, { color: t.subtitle }]}>
-                        {item.Recordar}
+                        {formatDate(item.Recordar)}
                       </Text>
                     </View>
 
@@ -411,19 +411,19 @@ export default function RecordatoriosScreen() {
               behavior={Platform.OS === "ios" ? "padding" : "height"}
               style={{ width: "100%" }}
             >
-              <View style={styles.modalContainer}>
-                <Text style={styles.modalTitle}>Nuevo Recordatorio</Text>
+              <View style={[styles.modalContainer, { backgroundColor: t.card }]}>
+                <Text style={[styles.modalTitle, { color: t.title }]}>Nuevo Recordatorio</Text>
 
-                <Text style={styles.modalLabel}>Título</Text>
+                <Text style={[styles.modalLabel, { color: t.title }]}>Título</Text>
                 <TextInput
-                  style={styles.modalInput}
+                  style={[styles.modalInput, { backgroundColor: t.input, borderColor: t.border, color: t.title }]}
                   placeholder="Título del recordatorio"
-                  placeholderTextColor={Colors.PLACEHOLDER_GRAY}
+                  placeholderTextColor={t.placeholder}
                   value={nuevoTitulo}
                   onChangeText={setNuevoTitulo}
                 />
 
-                <Text style={styles.modalLabel}>Categoría</Text>
+                <Text style={[styles.modalLabel, { color: t.title }]}>Categoría</Text>
                 <Dropdown
                   data={entidadTipoOpciones}
                   placeholder="Seleccione una categoría"
@@ -460,36 +460,36 @@ export default function RecordatoriosScreen() {
                   </>
                 )}
 
-                <Text style={styles.modalLabel}>Descripción</Text>
+                <Text style={[styles.modalLabel, { color: t.title }]}>Descripción</Text>
                 <TextInput
-                  style={styles.modalTextArea}
+                  style={[styles.modalTextArea, { backgroundColor: t.input, borderColor: t.border, color: t.title }]}
                   placeholder="Descripción del recordatorio (opcional)"
-                  placeholderTextColor={Colors.PLACEHOLDER_GRAY}
+                  placeholderTextColor={t.placeholder}
                   value={nuevaDescripcion}
                   onChangeText={setNuevaDescripcion}
                   multiline
                   numberOfLines={3}
                 />
 
-                <Text style={styles.modalLabel}>Recordar el</Text>
+                <Text style={[styles.modalLabel, { color: t.title }]}>Recordar el</Text>
                 <TextInput
-                  style={styles.modalInput}
+                  style={[styles.modalInput, { backgroundColor: t.input, borderColor: t.border, color: t.title }]}
                   placeholder="YYYY-MM-DD HH:MM"
-                  placeholderTextColor={Colors.PLACEHOLDER_GRAY}
+                  placeholderTextColor={t.placeholder}
                   value={nuevoRecordar}
                   onChangeText={setNuevoRecordar}
                 />
 
                 <View style={styles.modalButtons}>
                   <TouchableOpacity
-                    style={styles.cancelButton}
+                    style={[styles.cancelButton, { backgroundColor: t.input, borderColor: t.border }]}
                     disabled={guardando}
                     onPress={() => {
                       resetModal();
                       setModalVisible(false);
                     }}
                   >
-                    <Text style={styles.cancelText}>Cancelar</Text>
+                    <Text style={[styles.cancelText, { color: t.title }]}>Cancelar</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={[styles.saveButton, guardando && { opacity: 0.7 }]}
@@ -511,7 +511,16 @@ export default function RecordatoriosScreen() {
     </GestureHandlerRootView>
   );
 }
+function formatDate(date:string){
+  const dateObject = new Date(date)
+  const fechaFormated = new Intl.DateTimeFormat('es-CR',{
+    day:'2-digit',
+    month:"2-digit",
+    year:'numeric'
 
+  }).format(dateObject).toString()
+  return fechaFormated
+}
 const styles = StyleSheet.create({
   container: {
     flex: 1,

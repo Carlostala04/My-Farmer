@@ -18,7 +18,9 @@ import {
   Alert,
   Image,
   ActivityIndicator,
+  Platform,
 } from "react-native";
+import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import Colors from "@/constants/colors";
@@ -93,6 +95,21 @@ export default function RegisterAnimalScreen() {
   const [fechaNacimiento, setFechaNacimiento] = useState("");
   const [imagen, setImagen] = useState<string | null>(null);
 
+  // DatePicker para fecha de nacimiento
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [datePickerValue, setDatePickerValue] = useState(new Date());
+
+  const handleDateChange = (event: DateTimePickerEvent, date?: Date) => {
+    if (Platform.OS === "android") setShowDatePicker(false);
+    if (date && event.type !== "dismissed") {
+      setDatePickerValue(date);
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, "0");
+      const d = String(date.getDate()).padStart(2, "0");
+      setFechaNacimiento(`${y}-${m}-${d}`);
+    }
+  };
+
   // Datos del animal cargado para edición
   const [animalEditData, setAnimalEditData] = useState<ResponseAnimalDto | null>(null);
 
@@ -115,7 +132,12 @@ export default function RegisterAnimalScreen() {
     setEstado(animalEditData.Estado_Label ?? "");
     setRaza(animalEditData.Raza ?? "");
     setColor(animalEditData.Color ?? "");
-    setFechaNacimiento(animalEditData.Fecha_Nacimiento ?? "");
+    const fechaNac = animalEditData.Fecha_Nacimiento ?? "";
+    setFechaNacimiento(fechaNac);
+    if (fechaNac) {
+      const parsed = new Date(fechaNac);
+      if (!isNaN(parsed.getTime())) setDatePickerValue(parsed);
+    }
     setPeso(animalEditData.Peso != null ? String(animalEditData.Peso) : "");
     setPesoUnidad(animalEditData.Peso_Unidad ?? "");
     setAltura(animalEditData.Altura != null ? String(animalEditData.Altura) : "");
@@ -359,13 +381,24 @@ export default function RegisterAnimalScreen() {
         <View style={styles.row}>
           <View style={styles.rowItem}>
             <ThemedText style={styles.label}>Fecha de nacimiento</ThemedText>
-            <TextInput
+            <TouchableOpacity
               style={styles.input}
-              placeholder="YYYY/MM/DD"
-              placeholderTextColor={Colors.PLACEHOLDER_GRAY}
-              value={fechaNacimiento}
-              onChangeText={setFechaNacimiento}
-            />
+              onPress={() => setShowDatePicker(true)}
+            >
+              <ThemedText
+                style={fechaNacimiento ? styles.dateText : styles.datePlaceholder}
+              >
+                {fechaNacimiento || "YYYY-MM-DD"}
+              </ThemedText>
+            </TouchableOpacity>
+            {showDatePicker && (
+              <DateTimePicker
+                value={datePickerValue}
+                mode="date"
+                display={Platform.OS === "ios" ? "spinner" : "default"}
+                onChange={handleDateChange}
+              />
+            )}
           </View>
           <View style={styles.rowItem}>
             <ThemedText style={styles.label}>Color</ThemedText>
@@ -595,5 +628,15 @@ const styles = StyleSheet.create({
     color: "#e53935",
     textAlign: "center",
     marginBottom: 4,
+  },
+  dateText: {
+    fontSize: 15,
+    color: Colors.TITLE,
+    lineHeight: 50,
+  },
+  datePlaceholder: {
+    fontSize: 15,
+    color: Colors.PLACEHOLDER_GRAY,
+    lineHeight: 50,
   },
 });

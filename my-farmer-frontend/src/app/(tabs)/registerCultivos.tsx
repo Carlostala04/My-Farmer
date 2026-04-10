@@ -18,7 +18,9 @@ import {
   Alert,
   Image,
   ActivityIndicator,
+  Platform,
 } from "react-native";
+import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import Colors from "@/constants/colors";
@@ -90,6 +92,35 @@ export default function RegisterCultivosScreen() {
   const [observaciones, setObservaciones] = useState("");
   const [imagen, setImagen] = useState<string | null>(null);
 
+  // DatePickers para fechas
+  const [showSiembraPicker, setShowSiembraPicker] = useState(false);
+  const [siembraPickerValue, setSiembraPickerValue] = useState(new Date());
+  const [showCosechaPicker, setShowCosechaPicker] = useState(false);
+  const [cosechaPickerValue, setCosechaPickerValue] = useState(new Date());
+
+  const formatDateYMD = (date: Date): string => {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, "0");
+    const d = String(date.getDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
+  };
+
+  const handleSiembraChange = (event: DateTimePickerEvent, date?: Date) => {
+    if (Platform.OS === "android") setShowSiembraPicker(false);
+    if (date && event.type !== "dismissed") {
+      setSiembraPickerValue(date);
+      setFechaSiembra(formatDateYMD(date));
+    }
+  };
+
+  const handleCosechaChange = (event: DateTimePickerEvent, date?: Date) => {
+    if (Platform.OS === "android") setShowCosechaPicker(false);
+    if (date && event.type !== "dismissed") {
+      setCosechaPickerValue(date);
+      setFechaCosechaEstimada(formatDateYMD(date));
+    }
+  };
+
   // Datos del cultivo cargado para edición
   const [cultivoEditData, setCultivoEditData] = useState<ResponseCultivoDto | null>(null);
 
@@ -109,8 +140,20 @@ export default function RegisterCultivosScreen() {
 
     setNombre(cultivoEditData.Nombre);
     setEstado((cultivoEditData.Estado as EstadoCultivo) ?? "en_crecimiento");
-    setFechaSiembra(cultivoEditData.Fecha_Siembra ?? "");
-    setFechaCosechaEstimada(cultivoEditData.Fecha_Cosecha_Estimada ?? "");
+
+    const fechaSiem = cultivoEditData.Fecha_Siembra ?? "";
+    setFechaSiembra(fechaSiem);
+    if (fechaSiem) {
+      const parsed = new Date(fechaSiem);
+      if (!isNaN(parsed.getTime())) setSiembraPickerValue(parsed);
+    }
+
+    const fechaCos = cultivoEditData.Fecha_Cosecha_Estimada ?? "";
+    setFechaCosechaEstimada(fechaCos);
+    if (fechaCos) {
+      const parsed = new Date(fechaCos);
+      if (!isNaN(parsed.getTime())) setCosechaPickerValue(parsed);
+    }
     setRendimientoEstimado(
       cultivoEditData.Rendimiento_Estimado != null
         ? String(cultivoEditData.Rendimiento_Estimado)
@@ -327,13 +370,22 @@ export default function RegisterCultivosScreen() {
         <View style={styles.row}>
           <View style={styles.rowItem}>
             <ThemedText style={styles.label}>Fecha de Siembra</ThemedText>
-            <TextInput
+            <TouchableOpacity
               style={styles.input}
-              placeholder="Ej: 2024-03-15"
-              placeholderTextColor={Colors.PLACEHOLDER_GRAY}
-              value={fechaSiembra}
-              onChangeText={setFechaSiembra}
-            />
+              onPress={() => setShowSiembraPicker(true)}
+            >
+              <ThemedText style={fechaSiembra ? styles.dateText : styles.datePlaceholder}>
+                {fechaSiembra || "YYYY-MM-DD"}
+              </ThemedText>
+            </TouchableOpacity>
+            {showSiembraPicker && (
+              <DateTimePicker
+                value={siembraPickerValue}
+                mode="date"
+                display={Platform.OS === "ios" ? "spinner" : "default"}
+                onChange={handleSiembraChange}
+              />
+            )}
           </View>
           <View style={styles.rowItem}>
             <ThemedText style={styles.label}>Estado</ThemedText>
@@ -369,13 +421,22 @@ export default function RegisterCultivosScreen() {
         <View style={styles.row}>
           <View style={styles.rowItem}>
             <ThemedText style={styles.label}>Fecha cosecha</ThemedText>
-            <TextInput
+            <TouchableOpacity
               style={styles.input}
-              placeholder="Ej: 2024-06-15"
-              placeholderTextColor={Colors.PLACEHOLDER_GRAY}
-              value={fechaCosechaEstimada}
-              onChangeText={setFechaCosechaEstimada}
-            />
+              onPress={() => setShowCosechaPicker(true)}
+            >
+              <ThemedText style={fechaCosechaEstimada ? styles.dateText : styles.datePlaceholder}>
+                {fechaCosechaEstimada || "YYYY-MM-DD"}
+              </ThemedText>
+            </TouchableOpacity>
+            {showCosechaPicker && (
+              <DateTimePicker
+                value={cosechaPickerValue}
+                mode="date"
+                display={Platform.OS === "ios" ? "spinner" : "default"}
+                onChange={handleCosechaChange}
+              />
+            )}
           </View>
         </View>
 
@@ -580,5 +641,15 @@ const styles = StyleSheet.create({
     color: "#e53935",
     textAlign: "center",
     marginBottom: 4,
+  },
+  dateText: {
+    fontSize: 15,
+    color: Colors.TITLE,
+    lineHeight: 50,
+  },
+  datePlaceholder: {
+    fontSize: 15,
+    color: Colors.PLACEHOLDER_GRAY,
+    lineHeight: 50,
   },
 });

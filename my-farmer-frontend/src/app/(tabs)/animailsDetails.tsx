@@ -11,6 +11,8 @@
  *    regresa a la pantalla anterior.
  *  - Se muestra un indicador de carga mientras se obtienen los datos.
  *  - Las notas mostradas vienen del campo `Notas` del animal en el backend.
+ *  - Se adapta al modo oscuro y claro usando useTheme.
+ *  - El icono de campana 🔔 fue reemplazado por un SVG.
  */
 
 import {
@@ -33,10 +35,13 @@ import { getAnimalById } from "@/services/animalesService";
 import { eliminarAnimal } from "@/services/animalesService";
 import { useRecordatorios } from "@/hooks/useRecordatorios";
 import { ResponseAnimalDto } from "@/ts/animalsProps";
+import { useTheme } from "@/contexts/ThemeContext";
+import { RecordatoriosIcon } from "@/components/ui/recordatorios_icon";
 
 const AnimalsDetails = () => {
   const router = useRouter();
   const { session } = useAuth();
+  const { t } = useTheme();
 
   // Parámetros que vienen desde la pantalla de lista de animales
   const { animal_id, foto: fotoFallback } = useLocalSearchParams<{
@@ -113,7 +118,7 @@ const AnimalsDetails = () => {
     return (
       <>
         <ScreenHeader title="Detalles Animal" />
-        <View style={styles.centered}>
+        <View style={[styles.centered, { backgroundColor: t.bg }]}>
           <ActivityIndicator size="large" color={Colors.PRIMARY_GREEN} />
         </View>
       </>
@@ -124,8 +129,8 @@ const AnimalsDetails = () => {
     return (
       <>
         <ScreenHeader title="Detalles Animal" />
-        <View style={styles.centered}>
-          <Text style={{ color: Colors.SUBTITLE }}>Animal no encontrado.</Text>
+        <View style={[styles.centered, { backgroundColor: t.bg }]}>
+          <Text style={{ color: t.subtitle }}>Animal no encontrado.</Text>
         </View>
       </>
     );
@@ -155,19 +160,19 @@ const AnimalsDetails = () => {
         ]}
       />
       <ScrollView
-        style={styles.container}
+        style={[styles.container, { backgroundColor: t.bg }]}
         contentContainerStyle={styles.contentContainer}
         showsVerticalScrollIndicator={false}
       >
         {/* Foto y nombre */}
-        <View style={styles.about_container}>
+        <View style={[styles.about_container, { backgroundColor: t.card, borderColor: t.border }]}>
           <Image
             source={{ uri: animal.Foto ?? fotoFallback ?? undefined }}
             style={styles.avatar}
           />
           <View style={styles.profileInfo}>
-            <Text style={styles.animalName}>{animal.Nombre}</Text>
-            <Text style={styles.animalRaza}>
+            <Text style={[styles.animalName, { color: t.title }]}>{animal.Nombre}</Text>
+            <Text style={[styles.animalRaza, { color: t.subtitle }]}>
               {animal.Categoria ?? "Animal"}
               {animal.Raza ? ` · ${animal.Raza}` : ""}
             </Text>
@@ -187,41 +192,41 @@ const AnimalsDetails = () => {
         </View>
 
         {/* Detalles Físicos */}
-        <View style={styles.details_section}>
-          <Text style={styles.sectionTitle}>Detalles Físicos</Text>
-          <View style={styles.divider} />
+        <View style={[styles.details_section, { backgroundColor: t.card, borderColor: t.border }]}>
+          <Text style={[styles.sectionTitle, { color: t.title }]}>Detalles Físicos</Text>
+          <View style={[styles.divider, { backgroundColor: t.border }]} />
           <View style={styles.animal_details}>
             <View style={styles.details}>
-              <Text style={styles.label}>Edad:</Text>
-              <Text style={styles.value}>
+              <Text style={[styles.label, { color: t.subtitle }]}>Edad:</Text>
+              <Text style={[styles.value, { color: t.title }]}>
                 {calcularEdad(animal.Fecha_Nacimiento)}
               </Text>
             </View>
             <View style={styles.details}>
-              <Text style={styles.label}>Sexo:</Text>
-              <Text style={styles.value}>{animal.Sexo ?? "—"}</Text>
+              <Text style={[styles.label, { color: t.subtitle }]}>Sexo:</Text>
+              <Text style={[styles.value, { color: t.title }]}>{animal.Sexo ?? "—"}</Text>
             </View>
             <View style={styles.details}>
-              <Text style={styles.label}>Peso:</Text>
-              <Text style={styles.value}>
+              <Text style={[styles.label, { color: t.subtitle }]}>Peso:</Text>
+              <Text style={[styles.value, { color: t.title }]}>
                 {animal.Peso != null
                   ? `${animal.Peso} ${animal.Peso_Unidad ?? "kg"}`
                   : "—"}
               </Text>
             </View>
             <View style={styles.details}>
-              <Text style={styles.label}>Altura:</Text>
-              <Text style={styles.value}>
+              <Text style={[styles.label, { color: t.subtitle }]}>Altura:</Text>
+              <Text style={[styles.value, { color: t.title }]}>
                 {animal.Altura != null ? `${animal.Altura} cm` : "—"}
               </Text>
             </View>
             <View style={styles.details}>
-              <Text style={styles.label}>Color:</Text>
-              <Text style={styles.value}>{animal.Color ?? "—"}</Text>
+              <Text style={[styles.label, { color: t.subtitle }]}>Color:</Text>
+              <Text style={[styles.value, { color: t.title }]}>{animal.Color ?? "—"}</Text>
             </View>
             <View style={styles.details}>
-              <Text style={styles.label}>Parcela:</Text>
-              <Text style={styles.value}>
+              <Text style={[styles.label, { color: t.subtitle }]}>Parcela:</Text>
+              <Text style={[styles.value, { color: t.title }]}>
                 {animal.Parcela ?? "Sin asignar"}
               </Text>
             </View>
@@ -229,29 +234,29 @@ const AnimalsDetails = () => {
         </View>
 
         {/* Notas y Recordatorios */}
-        <View style={styles.extras}>
+        <View style={[styles.extras, { backgroundColor: t.card, borderColor: t.border }]}>
           {/* Notas del backend */}
           {animal.Notas && (
             <View style={styles.notasSection}>
-              <Text style={styles.sectionTitle}>Notas</Text>
-              <View style={styles.divider} />
-              <Text style={styles.notasText}>{animal.Notas}</Text>
+              <Text style={[styles.sectionTitle, { color: t.title }]}>Notas</Text>
+              <View style={[styles.divider, { backgroundColor: t.border }]} />
+              <Text style={[styles.notasText, { color: t.subtitle }]}>{animal.Notas}</Text>
             </View>
           )}
 
           {/* Recordatorios del backend filtrados por este animal */}
           <View style={styles.rediminders}>
-            <Text style={styles.sectionTitle}>Próximos Recordatorios</Text>
-            <View style={styles.divider} />
+            <Text style={[styles.sectionTitle, { color: t.title }]}>Próximos Recordatorios</Text>
+            <View style={[styles.divider, { backgroundColor: t.border }]} />
             {recordatoriosDelAnimal.length === 0 ? (
-              <Text style={styles.emptyText}>Sin recordatorios próximos.</Text>
+              <Text style={[styles.emptyText, { color: t.subtitle }]}>Sin recordatorios próximos.</Text>
             ) : (
               recordatoriosDelAnimal.map((rec) => (
                 <View key={rec.Recordatorio_id} style={styles.reminderRow}>
-                  <Text style={styles.reminderIcon}>🔔</Text>
-                  <Text style={styles.reminderText}>
+                  <RecordatoriosIcon size={16} color={Colors.PRIMARY_GREEN} />
+                  <Text style={[styles.reminderText, { color: t.title }]}>
                     {rec.Titulo}{" "}
-                    <Text style={styles.reminderDate}>— {rec.Recordar}</Text>
+                    <Text style={[styles.reminderDate, { color: t.subtitle }]}>— {formatDate(rec.Recordar)}</Text>
                   </Text>
                 </View>
               ))
@@ -263,27 +268,34 @@ const AnimalsDetails = () => {
   );
 };
 
-const cardStyle = {
-  backgroundColor: Colors.CARD_DETAILS,
-  borderRadius: 16,
-  padding: 16,
-  shadowColor: "#000",
-  shadowOffset: { width: 0, height: 1 },
-  shadowOpacity: 0.06,
-  shadowRadius: 4,
-  elevation: 2,
-};
+function formatDate(date: string) {
+  const dateObject = new Date(date);
+  return new Intl.DateTimeFormat("es-CR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  })
+    .format(dateObject)
+    .toString();
+}
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.BACKGROUND },
+  container: { flex: 1 },
   contentContainer: { padding: 16, paddingBottom: 32, gap: 12 },
   centered: { flex: 1, alignItems: "center", justifyContent: "center" },
 
   about_container: {
-    ...cardStyle,
+    borderRadius: 16,
+    padding: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 2,
     flexDirection: "row",
     alignItems: "center",
     gap: 14,
+    borderWidth: 1,
   },
   avatar: {
     width: 80,
@@ -295,10 +307,9 @@ const styles = StyleSheet.create({
   animalName: {
     fontSize: 22,
     fontWeight: "700",
-    color: Colors.TITLE,
     letterSpacing: -0.3,
   },
-  animalRaza: { fontSize: 13, color: Colors.SUBTITLE },
+  animalRaza: { fontSize: 13 },
   estadoBadge: {
     alignSelf: "flex-start",
     paddingHorizontal: 10,
@@ -308,37 +319,54 @@ const styles = StyleSheet.create({
   },
   estadoBadgeText: { color: "#fff", fontSize: 11, fontWeight: "700" },
 
-  details_section: { ...cardStyle },
+  details_section: {
+    borderRadius: 16,
+    padding: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 2,
+    borderWidth: 1,
+  },
   sectionTitle: {
     fontSize: 17,
     fontWeight: "700",
-    color: Colors.TITLE,
     marginBottom: 10,
   },
-  divider: { height: 1, backgroundColor: Colors.DIVIDER, marginBottom: 12 },
+  divider: { height: 1, marginBottom: 12 },
   animal_details: { gap: 6 },
   details: {
     flexDirection: "row",
     justifyContent: "space-between",
     paddingVertical: 2,
   },
-  label: { fontSize: 14, color: Colors.LABEL },
-  value: { fontSize: 14, fontWeight: "500", color: Colors.VALUE },
+  label: { fontSize: 14 },
+  value: { fontSize: 14, fontWeight: "500" },
 
-  extras: { ...cardStyle, gap: 16 },
+  extras: {
+    borderRadius: 16,
+    padding: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 2,
+    gap: 16,
+    borderWidth: 1,
+  },
   notasSection: { gap: 0 },
-  notasText: { fontSize: 14, color: Colors.SUBTITLE, lineHeight: 20 },
+  notasText: { fontSize: 14, lineHeight: 20 },
   rediminders: { gap: 0 },
-  emptyText: { fontSize: 13, color: Colors.SUBTITLE, fontStyle: "italic" },
+  emptyText: { fontSize: 13, fontStyle: "italic" },
   reminderRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
     marginBottom: 6,
   },
-  reminderIcon: { fontSize: 16 },
-  reminderText: { fontSize: 14, color: Colors.VALUE, flex: 1 },
-  reminderDate: { fontSize: 13, color: Colors.SUBTITLE },
+  reminderText: { fontSize: 14, flex: 1 },
+  reminderDate: { fontSize: 13 },
 });
 
 export default AnimalsDetails;

@@ -12,6 +12,8 @@
  *  - Las fechas, rendimiento estimado y notas vienen del campo real del backend.
  *  - Se mantiene la barra de progreso (días desde siembra vs estimado de cosecha).
  *  - Se muestra un indicador de carga mientras se obtienen los datos.
+ *  - Se adapta al modo oscuro y claro usando useTheme.
+ *  - Los emojis 🌱, 📅, 🌾, 🔔 fueron reemplazados por iconos SVG.
  */
 
 import {
@@ -35,10 +37,16 @@ import { useRecordatorios } from "@/hooks/useRecordatorios";
 import { useCosechas } from "@/hooks/useCosechas";
 import { useCrecimientos } from "@/hooks/useCrecimientos";
 import { ResponseCultivoDto } from "@/ts/cultivoProps";
+import { useTheme } from "@/contexts/ThemeContext";
+import CalendarIcon from "@/components/ui/calendarIcon";
+import SeedlingIcon from "@/components/ui/seedlingIcon";
+import { WheatIcon } from "@/components/ui/wheat_icon";
+import { RecordatoriosIcon } from "@/components/ui/recordatorios_icon";
 
 const CultivosDetail = () => {
   const router = useRouter();
   const { session } = useAuth();
+  const { t } = useTheme();
 
   // Parámetros que vienen desde la pantalla de lista de cultivos
   const { cultivo_id, imagen: imagenFallback } = useLocalSearchParams<{
@@ -142,7 +150,7 @@ const CultivosDetail = () => {
     return (
       <>
         <ScreenHeader title="Detalle de Cultivo" />
-        <View style={styles.centered}>
+        <View style={[styles.centered, { backgroundColor: t.bg }]}>
           <ActivityIndicator size="large" color={Colors.PRIMARY_GREEN} />
         </View>
       </>
@@ -153,8 +161,8 @@ const CultivosDetail = () => {
     return (
       <>
         <ScreenHeader title="Detalle de Cultivo" />
-        <View style={styles.centered}>
-          <Text style={{ color: Colors.SUBTITLE }}>Cultivo no encontrado.</Text>
+        <View style={[styles.centered, { backgroundColor: t.bg }]}>
+          <Text style={{ color: t.subtitle }}>Cultivo no encontrado.</Text>
         </View>
       </>
     );
@@ -188,7 +196,7 @@ const CultivosDetail = () => {
         ]}
       />
       <ScrollView
-        style={styles.container}
+        style={[styles.container, { backgroundColor: t.bg }]}
         contentContainerStyle={styles.contentContainer}
         showsVerticalScrollIndicator={false}
       >
@@ -209,10 +217,11 @@ const CultivosDetail = () => {
         </View>
 
         {/* Seguimiento de Crecimiento */}
-        <View style={styles.card}>
+        <View style={[styles.card, { backgroundColor: t.card, borderColor: t.border }]}>
           <View style={styles.cardTitleRow}>
-            <Text style={styles.sectionTitle}>
-              🌱 Seguimiento de Crecimiento
+            <SeedlingIcon size={18} color={Colors.PRIMARY_GREEN} />
+            <Text style={[styles.sectionTitle, { color: t.title }]}>
+              Seguimiento de Crecimiento
             </Text>
             <View
               style={[
@@ -230,25 +239,25 @@ const CultivosDetail = () => {
               </Text>
             </View>
           </View>
-          <View style={styles.divider} />
+          <View style={[styles.divider, { backgroundColor: t.border }]} />
 
-          <Text style={styles.label}>
+          <Text style={[styles.label, { color: t.subtitle }]}>
             Tipo de cultivo:{" "}
-            <Text style={styles.value}>{cultivo.Tipo_Cultivo ?? "—"}</Text>
+            <Text style={[styles.value, { color: t.title }]}>{cultivo.Tipo_Cultivo ?? "—"}</Text>
           </Text>
 
           {total > 0 && (
             <>
               <View style={styles.daysRow}>
-                <Text style={styles.daysIcon}>📅</Text>
-                <Text style={styles.label}>
+                <CalendarIcon size={15} color={t.subtitle} />
+                <Text style={[styles.label, { color: t.subtitle }]}>
                   Días desde siembra:{" "}
-                  <Text style={styles.value}>
+                  <Text style={[styles.value, { color: t.title }]}>
                     {transcurridos} de {total}
                   </Text>
                 </Text>
               </View>
-              <View style={styles.progressBackground}>
+              <View style={[styles.progressBackground, { backgroundColor: t.border }]}>
                 <View
                   style={[
                     styles.progressFill,
@@ -257,8 +266,8 @@ const CultivosDetail = () => {
                 />
               </View>
               <View style={styles.progressLabels}>
-                <Text style={styles.progressLabel}>Siembra</Text>
-                <Text style={styles.progressLabel}>
+                <Text style={[styles.progressLabel, { color: t.subtitle }]}>Siembra</Text>
+                <Text style={[styles.progressLabel, { color: t.subtitle }]}>
                   {`${Math.round(progreso * 100)}% completado`}
                 </Text>
               </View>
@@ -267,24 +276,24 @@ const CultivosDetail = () => {
 
           {crecimientos.length > 0 && (
             <>
-              <View style={styles.divider} />
-              <Text style={styles.subSectionTitle}>
+              <View style={[styles.divider, { backgroundColor: t.border }]} />
+              <Text style={[styles.subSectionTitle, { color: t.title }]}>
                 Registros de Crecimiento
               </Text>
               {crecimientos.map((reg) => (
-                <View key={reg.Crecimiento_id} style={styles.cosechaRow}>
+                <View key={reg.Crecimiento_id} style={[styles.cosechaRow, { borderLeftColor: Colors.PRIMARY_GREEN }]}>
                   <View style={styles.cosechaInfo}>
-                    <Text style={styles.cosechaFecha}>
+                    <Text style={[styles.cosechaFecha, { color: t.subtitle }]}>
                       {reg.Registro.slice(0, 10)}
                     </Text>
                     {reg.Altura != null && (
-                      <Text style={styles.cosechaCantidad}>
+                      <Text style={[styles.cosechaCantidad, { color: t.title }]}>
                         {reg.Altura} cm
                       </Text>
                     )}
                   </View>
                   {reg.Observaciones ? (
-                    <Text style={styles.cosechaObs}>{reg.Observaciones}</Text>
+                    <Text style={[styles.cosechaObs, { color: t.subtitle }]}>{reg.Observaciones}</Text>
                   ) : null}
                 </View>
               ))}
@@ -293,89 +302,90 @@ const CultivosDetail = () => {
         </View>
 
         {/* Cosecha y Fechas */}
-        <View style={styles.card}>
-          <Text style={styles.sectionTitle}>🌾 Cosecha y Fechas</Text>
-          <View style={styles.divider} />
+        <View style={[styles.card, { backgroundColor: t.card, borderColor: t.border }]}>
+          <View style={styles.cardTitleRow}>
+            <WheatIcon size={18} color={t.title} />
+            <Text style={[styles.sectionTitle, { color: t.title }]}>Cosecha y Fechas</Text>
+          </View>
+          <View style={[styles.divider, { backgroundColor: t.border }]} />
 
           <View style={styles.detailRow}>
-            <Text style={styles.detailIcon}>📅</Text>
-            <Text style={styles.label}>Siembra:</Text>
-            <Text style={styles.value}>{cultivo.Fecha_Siembra ?? "—"}</Text>
+            <CalendarIcon size={15} color={t.subtitle} />
+            <Text style={[styles.label, { color: t.subtitle }]}>Siembra:</Text>
+            <Text style={[styles.value, { color: t.title }]}>{cultivo.Fecha_Siembra ?? "—"}</Text>
           </View>
           <View style={styles.detailRow}>
-            <Text style={styles.detailIcon}>📅</Text>
-            <Text style={styles.label}>Cosecha estimada:</Text>
-            <Text style={styles.value}>
+            <CalendarIcon size={15} color={t.subtitle} />
+            <Text style={[styles.label, { color: t.subtitle }]}>Cosecha estimada:</Text>
+            <Text style={[styles.value, { color: t.title }]}>
               {cultivo.Fecha_Cosecha_Estimada ?? "—"}
             </Text>
           </View>
-          {/* <View style={styles.detailRow}>
-            <Text style={styles.detailIcon}>✅</Text>
-            <Text style={styles.label}>Fecha de cosecha:</Text>
-            <Text style={styles.value}>
-              {cultivo.Fecha_Cosecha ?? "Sin registrar"}
-            </Text>
-          </View> */}
           {cultivo.Rendimiento_Estimado != null && (
             <View style={styles.detailRow}>
-              <Text style={styles.detailIcon}>⚖️</Text>
-              <Text style={styles.label}>Rendimiento estimado:</Text>
-              <Text style={styles.value}>
+              <WheatIcon size={15} color={t.subtitle} />
+              <Text style={[styles.label, { color: t.subtitle }]}>Rendimiento estimado:</Text>
+              <Text style={[styles.value, { color: t.title }]}>
                 {cultivo.Rendimiento_Estimado}{" "}
                 {cultivo.Rendimiento_Unidad ?? ""}
               </Text>
             </View>
           )}
         </View>
-        {/**lo nuevo desde aqui */}
+
         {/* Cosechas Registradas */}
-        <View style={styles.card}>
-          <Text style={styles.sectionTitle}>🌾 Cosechas Registradas</Text>
-          <View style={styles.divider} />
+        <View style={[styles.card, { backgroundColor: t.card, borderColor: t.border }]}>
+          <View style={styles.cardTitleRow}>
+            <WheatIcon size={18} color={t.title} />
+            <Text style={[styles.sectionTitle, { color: t.title }]}>Cosechas Registradas</Text>
+          </View>
+          <View style={[styles.divider, { backgroundColor: t.border }]} />
           {cosechas.length === 0 ? (
-            <Text style={styles.emptyText}>Sin cosechas registradas.</Text>
+            <Text style={[styles.emptyText, { color: t.subtitle }]}>Sin cosechas registradas.</Text>
           ) : (
             cosechas.map((cosecha) => (
-              <View key={cosecha.Cosecha_id} style={styles.cosechaRow}>
+              <View key={cosecha.Cosecha_id} style={[styles.cosechaRow, { borderLeftColor: Colors.PRIMARY_GREEN }]}>
                 <View style={styles.cosechaInfo}>
-                  <Text style={styles.cosechaFecha}>{cosecha.Fecha}</Text>
-                  <Text style={styles.cosechaCantidad}>
+                  <Text style={[styles.cosechaFecha, { color: t.subtitle }]}>{cosecha.Fecha}</Text>
+                  <Text style={[styles.cosechaCantidad, { color: t.title }]}>
                     {cosecha.Cantidad} {cosecha.Unidad}
                   </Text>
                 </View>
                 {cosecha.Observaciones ? (
-                  <Text style={styles.cosechaObs}>{cosecha.Observaciones}</Text>
+                  <Text style={[styles.cosechaObs, { color: t.subtitle }]}>{cosecha.Observaciones}</Text>
                 ) : null}
               </View>
             ))
           )}
         </View>
-        {/**Hasta aqui */}
 
         {/* Notas y Recordatorios */}
-        <View style={styles.card}>
-          <Text style={styles.sectionTitle}>🔔 Notas y Recordatorios</Text>
-          <View style={styles.divider} />
+        <View style={[styles.card, { backgroundColor: t.card, borderColor: t.border }]}>
+          <View style={styles.cardTitleRow}>
+            <RecordatoriosIcon size={18} color={Colors.PRIMARY_GREEN} />
+            <Text style={[styles.sectionTitle, { color: t.title }]}>Notas y Recordatorios</Text>
+          </View>
+          <View style={[styles.divider, { backgroundColor: t.border }]} />
 
           {cultivo.Notas ? (
-            <Text style={styles.notasText}>{cultivo.Notas}</Text>
+            <Text style={[styles.notasText, { color: t.subtitle }]}>{cultivo.Notas}</Text>
           ) : (
-            <Text style={styles.emptyText}>Sin notas registradas.</Text>
+            <Text style={[styles.emptyText, { color: t.subtitle }]}>Sin notas registradas.</Text>
           )}
 
-          <Text style={styles.subSectionTitle}>Recordatorios Próximos</Text>
+          <Text style={[styles.subSectionTitle, { color: t.title }]}>Recordatorios Próximos</Text>
           {recordatoriosDelCultivo.length === 0 ? (
-            <Text style={styles.emptyText}>Sin recordatorios próximos.</Text>
+            <Text style={[styles.emptyText, { color: t.subtitle }]}>Sin recordatorios próximos.</Text>
           ) : (
             recordatoriosDelCultivo.map((rec) => (
               <View key={rec.Recordatorio_id} style={styles.reminderRow}>
-                <View style={styles.checkbox}>
+                <View style={[styles.checkbox, { borderColor: t.border }]}>
                   {rec.Cancelado && <Text style={styles.checkmark}>✓</Text>}
                 </View>
-                <Text style={styles.detailIcon}>📅</Text>
-                <Text style={styles.reminderText}>
+                <CalendarIcon size={15} color={t.subtitle} />
+                <Text style={[styles.reminderText, { color: t.title }]}>
                   {rec.Titulo}{" "}
-                  <Text style={styles.reminderDate}>— {rec.Recordar}</Text>
+                  <Text style={[styles.reminderDate, { color: t.subtitle }]}>— {formatDate(rec.Recordar)}</Text>
                 </Text>
               </View>
             ))
@@ -386,24 +396,24 @@ const CultivosDetail = () => {
   );
 };
 
-const cardStyle = {
-  backgroundColor: Colors.CARD_DETAILS,
-  borderRadius: 16,
-  padding: 16,
-  shadowColor: "#000",
-  shadowOffset: { width: 0, height: 1 },
-  shadowOpacity: 0.06,
-  shadowRadius: 4,
-  elevation: 2,
-};
+function formatDate(date: string) {
+  const dateObject = new Date(date);
+  return new Intl.DateTimeFormat("es-CR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  })
+    .format(dateObject)
+    .toString();
+}
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.BACKGROUND },
+  container: { flex: 1 },
   contentContainer: { padding: 16, paddingBottom: 40, gap: 12 },
   centered: { flex: 1, alignItems: "center", justifyContent: "center" },
 
   heroCard: {
-    ...cardStyle,
+    borderRadius: 16,
     padding: 0,
     height: 180,
     overflow: "hidden",
@@ -418,32 +428,38 @@ const styles = StyleSheet.create({
   heroNombre: { fontSize: 24, fontWeight: "700", color: "#fff" },
   heroSubtitle: { fontSize: 13, color: "rgba(255,255,255,0.85)" },
 
-  card: { ...cardStyle, gap: 8 },
+  card: {
+    borderRadius: 16,
+    padding: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 2,
+    gap: 8,
+    borderWidth: 1,
+  },
   cardTitleRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
+    gap: 6,
   },
   sectionTitle: {
     fontSize: 16,
     fontWeight: "700",
-    color: Colors.TITLE,
     flex: 1,
   },
-  divider: { height: 1, backgroundColor: Colors.DIVIDER, marginVertical: 4 },
+  divider: { height: 1, marginVertical: 4 },
   badge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 },
   badgeText: { fontSize: 12, fontWeight: "600" },
 
   detailRow: { flexDirection: "row", alignItems: "center", gap: 6 },
-  detailIcon: { fontSize: 15 },
   daysRow: { flexDirection: "row", alignItems: "center", gap: 6 },
-  daysIcon: { fontSize: 15 },
-  label: { fontSize: 14, color: Colors.LABEL, flex: 1 },
-  value: { fontSize: 14, fontWeight: "600", color: Colors.VALUE },
+  label: { fontSize: 14, flex: 1 },
+  value: { fontSize: 14, fontWeight: "600" },
 
   progressBackground: {
     height: 8,
-    backgroundColor: "#E5E7EB",
     borderRadius: 99,
     overflow: "hidden",
     marginTop: 4,
@@ -454,14 +470,13 @@ const styles = StyleSheet.create({
     borderRadius: 99,
   },
   progressLabels: { flexDirection: "row", justifyContent: "space-between" },
-  progressLabel: { fontSize: 11, color: Colors.SUBTITLE },
+  progressLabel: { fontSize: 11 },
 
-  notasText: { fontSize: 13, color: Colors.SUBTITLE, lineHeight: 19 },
-  emptyText: { fontSize: 13, color: Colors.SUBTITLE, fontStyle: "italic" },
+  notasText: { fontSize: 13, lineHeight: 19 },
+  emptyText: { fontSize: 13, fontStyle: "italic" },
   subSectionTitle: {
     fontSize: 14,
     fontWeight: "700",
-    color: Colors.TITLE,
     marginTop: 4,
   },
   reminderRow: { flexDirection: "row", alignItems: "center", gap: 8 },
@@ -470,24 +485,22 @@ const styles = StyleSheet.create({
     height: 18,
     borderRadius: 4,
     borderWidth: 1.5,
-    borderColor: Colors.LABEL,
     alignItems: "center",
     justifyContent: "center",
   },
   checkmark: { color: "#fff", fontSize: 11, fontWeight: "700" },
-  reminderText: { fontSize: 13, color: Colors.VALUE, flex: 1 },
-  reminderDate: { fontSize: 12, color: Colors.SUBTITLE },
+  reminderText: { fontSize: 13, flex: 1 },
+  reminderDate: { fontSize: 12 },
 
   cosechaRow: {
     borderLeftWidth: 3,
-    borderLeftColor: "#22c55e",
     paddingLeft: 10,
     gap: 2,
   },
   cosechaInfo: { flexDirection: "row", justifyContent: "space-between" },
-  cosechaFecha: { fontSize: 13, color: Colors.SUBTITLE },
-  cosechaCantidad: { fontSize: 13, fontWeight: "600", color: Colors.VALUE },
-  cosechaObs: { fontSize: 12, color: Colors.SUBTITLE, fontStyle: "italic" },
+  cosechaFecha: { fontSize: 13 },
+  cosechaCantidad: { fontSize: 13, fontWeight: "600" },
+  cosechaObs: { fontSize: 12, fontStyle: "italic" },
 });
 
 export default CultivosDetail;

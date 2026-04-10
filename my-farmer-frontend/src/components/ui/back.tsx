@@ -2,9 +2,11 @@ import * as React from "react";
 import { Pressable } from "react-native";
 import Svg, { Polyline, SvgProps } from "react-native-svg";
 import { useRouter } from "expo-router";
+import { useTheme } from "@/contexts/ThemeContext";
 
 const BackIcon = (props: SvgProps) => {
   const router = useRouter();
+  const { darkMode } = useTheme();
 
   return (
     <Pressable onPress={() => router.back()}>
@@ -13,7 +15,7 @@ const BackIcon = (props: SvgProps) => {
         width={24}
         height={24}
         fill="none"
-        stroke="currentColor"
+        stroke={darkMode ? "#FFFFFF" : "#1A1A1A"}
         strokeWidth={2.5}
         strokeLinecap="round"
         strokeLinejoin="round"

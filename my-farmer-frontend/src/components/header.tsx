@@ -40,24 +40,25 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
+    justifyContent: "flex-start",
     paddingHorizontal: 16,
-    paddingVertical: 20,
+    paddingTop: 40,
+    paddingBottom: 20,
     backgroundColor: "#FFFFFF",
     borderBottomWidth: 1,
     borderBottomColor: "#F0F0F0",
-    marginTop:20
   },
   title: {
-    position:"absolute",
-    left:50,
     fontSize: 22,
     fontWeight: "700",
     color: "#1A1A1A",
+    marginLeft: 8,
+    flexShrink: 1,
   },
   actionsContainer: {
     flexDirection: "row",
     gap: 8,
+    marginLeft: "auto",
   },
   actionButton: {
     padding: 4,

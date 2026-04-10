@@ -1,5 +1,6 @@
 import React from 'react';
 import Svg, { G, Path, Circle, SvgProps } from 'react-native-svg';
+import { useTheme } from '@/contexts/ThemeContext';
 
 type AnimalsIconProps = SvgProps & {
   size?: number;
@@ -7,7 +8,8 @@ type AnimalsIconProps = SvgProps & {
 };
 
 export function AnimalsIcon(props: AnimalsIconProps) {
-  const { width, height, size = 24, color = 'black', stroke, ...rest } = props ?? {};
+  const { t } = useTheme();
+  const { width, height, size = 24, color = t.title, stroke, ...rest } = props ?? {};
 
   const w = width ?? size;
   const h = height ?? size;

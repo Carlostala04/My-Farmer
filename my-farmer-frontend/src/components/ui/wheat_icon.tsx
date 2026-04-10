@@ -1,5 +1,6 @@
 import React from 'react';
 import Svg, { G, Path, SvgProps } from 'react-native-svg';
+import { useTheme } from '@/contexts/ThemeContext';
 
 type WheatIconProps = SvgProps & {
   size?: number;
@@ -7,7 +8,8 @@ type WheatIconProps = SvgProps & {
 };
 
 export function WheatIcon(props: WheatIconProps) {
-  const { width, height, size = 24, color = 'black', stroke, ...rest } = props ?? {};
+  const { t } = useTheme();
+  const { width, height, size = 24, color = t.title, stroke, ...rest } = props ?? {};
 
   const w = width ?? size;
   const h = height ?? size;

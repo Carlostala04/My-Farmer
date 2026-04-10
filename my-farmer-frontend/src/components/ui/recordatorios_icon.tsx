@@ -1,5 +1,6 @@
 import React from 'react';
 import Svg, { G, Path, SvgProps } from 'react-native-svg';
+import { useTheme } from '@/contexts/ThemeContext';
 
 type RecordatoriosIconProps = SvgProps & {
   size?: number;
@@ -7,7 +8,8 @@ type RecordatoriosIconProps = SvgProps & {
 };
 
 export function RecordatoriosIcon(props: RecordatoriosIconProps) {
-  const { width, height, size = 24, color = 'black', stroke, ...rest } = props ?? {};
+  const { t } = useTheme();
+  const { width, height, size = 24, color = t.title, stroke, ...rest } = props ?? {};
 
   const w = width ?? size;
   const h = height ?? size;

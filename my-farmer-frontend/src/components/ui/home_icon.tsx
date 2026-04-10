@@ -1,5 +1,6 @@
 import React from 'react';
 import Svg, { G, Path, SvgProps } from 'react-native-svg';
+import { useTheme } from '@/contexts/ThemeContext';
 
 type HouseProps = SvgProps & {
   size?: number;
@@ -7,11 +8,12 @@ type HouseProps = SvgProps & {
 };
 
 export function House(props: HouseProps) {
+  const { t } = useTheme();
   const {
     width,
     height,
     size = 24,
-    color = 'black',
+    color = t.title,
     stroke,
     ...rest
   } = props ?? {};

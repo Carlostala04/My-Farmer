@@ -1,6 +1,15 @@
-import { View, StyleSheet } from "react-native";
 import React, { useState } from "react";
-import { Picker } from "@react-native-picker/picker";
+import {
+  View,
+  Text,
+  Modal,
+  TouchableOpacity,
+  FlatList,
+  TouchableWithoutFeedback,
+  StyleSheet,
+} from "react-native";
+import { useTheme } from "@/contexts/ThemeContext";
+import Colors from "@/constants/colors";
 
 type DataItem = {
   id: number;
@@ -14,48 +23,146 @@ type DropdownProps = {
   onValueChange?: (value: string | number) => void;
 };
 
-//data = representa cualquier entidad de la base de datos
-export default function Dropdown({ data, placeholder, value, onValueChange }: DropdownProps) {
+export default function Dropdown({
+  data,
+  placeholder,
+  value,
+  onValueChange,
+}: DropdownProps) {
+  const { t } = useTheme();
+  const [open, setOpen] = useState(false);
   const [internalValue, setInternalValue] = useState<string | number>("");
 
   const selectedValue = value !== undefined ? value : internalValue;
+  const selectedItem = data.find((item) => item.id === selectedValue);
 
-  const handleChange = (itemValue: string | number) => {
+  const handleSelect = (itemId: number) => {
     if (onValueChange) {
-      onValueChange(itemValue);
+      onValueChange(itemId);
     } else {
-      setInternalValue(itemValue);
+      setInternalValue(itemId);
     }
+    setOpen(false);
   };
 
   return (
-    <View style={styles.container}>
-      <Picker
-        selectedValue={selectedValue}
-        onValueChange={handleChange}
-        style={styles.picker}
-        dropdownIconColor="#4CAF50"
+    <>
+      <TouchableOpacity
+        style={[
+          styles.trigger,
+          { backgroundColor: t.input, borderColor: t.border },
+        ]}
+        onPress={() => setOpen(true)}
+        activeOpacity={0.7}
       >
-        <Picker.Item label={placeholder} value="" />
-        {data.map((item) => (
-          <Picker.Item key={item.id} label={item.nombre} value={item.id} />
-        ))}
-      </Picker>
-    </View>
+        <Text
+          style={
+            selectedItem
+              ? [styles.selectedText, { color: t.title }]
+              : styles.placeholder
+          }
+        >
+          {selectedItem ? selectedItem.nombre : placeholder}
+        </Text>
+        <Text style={[styles.arrow, { color: Colors.PRIMARY_GREEN }]}>▾</Text>
+      </TouchableOpacity>
+
+      <Modal visible={open} transparent animationType="fade">
+        <TouchableWithoutFeedback onPress={() => setOpen(false)}>
+          <View style={styles.overlay}>
+            <TouchableWithoutFeedback>
+              <View style={[styles.sheet, { backgroundColor: t.card }]}>
+                <Text style={[styles.sheetTitle, { color: t.title }]}>
+                  {placeholder}
+                </Text>
+                <FlatList
+                  data={data}
+                  keyExtractor={(item) => String(item.id)}
+                  renderItem={({ item }) => (
+                    <TouchableOpacity
+                      style={[
+                        styles.item,
+                        { borderBottomColor: t.border },
+                        selectedValue === item.id && styles.itemActive,
+                      ]}
+                      onPress={() => handleSelect(item.id)}
+                    >
+                      <Text
+                        style={[
+                          styles.itemText,
+                          { color: t.title },
+                          selectedValue === item.id && styles.itemTextActive,
+                        ]}
+                      >
+                        {item.nombre}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                />
+              </View>
+            </TouchableWithoutFeedback>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  trigger: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     borderWidth: 1,
-    borderColor: "#4CAF50",
-    borderRadius: 8,
-    backgroundColor: "#fff",
-    marginVertical: 8,
-    overflow: "hidden",
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    marginVertical: 4,
   },
-  picker: {
-    height: 50,
-    color: "#333",
+  selectedText: {
+    fontSize: 15,
+    flex: 1,
+  },
+  placeholder: {
+    fontSize: 15,
+    color: Colors.PLACEHOLDER_GRAY,
+    flex: 1,
+  },
+  arrow: {
+    fontSize: 18,
+    marginLeft: 8,
+  },
+  overlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.4)",
+    justifyContent: "flex-end",
+  },
+  sheet: {
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 20,
+    maxHeight: "60%",
+  },
+  sheetTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    marginBottom: 12,
+    textAlign: "center",
+  },
+  item: {
+    paddingVertical: 14,
+    paddingHorizontal: 8,
+    borderBottomWidth: 1,
+  },
+  itemActive: {
+    backgroundColor: Colors.PRIMARY_GREEN + "20",
+    borderRadius: 8,
+  },
+  itemText: {
+    fontSize: 15,
+  },
+  itemTextActive: {
+    color: Colors.PRIMARY_GREEN,
+    fontWeight: "600",
   },
 });

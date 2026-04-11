@@ -35,10 +35,14 @@ import { useCategorias } from "@/hooks/useCategorias";
 import { useParcelas } from "@/hooks/useParcelas";
 import { useAuth } from "@/supabase/useAuth";
 import { getAnimalById, actualizarAnimal } from "@/services/animalesService";
+import { useTheme } from "@/contexts/ThemeContext";
 
 export default function RegisterAnimalScreen() {
   const router = useRouter();
   const { session } = useAuth();
+  const { t } = useTheme();
+  const titleStyle = { color: t.title };
+  const subtitleStyle = { color: t.subtitle };
 
   // Recibe animal_id cuando viene desde la pantalla de detalles (modo edición)
   const { animal_id } = useLocalSearchParams<{ animal_id?: string }>();
@@ -295,7 +299,7 @@ export default function RegisterAnimalScreen() {
     <>
       <ScreenHeader title={modoEdicion ? "Editar Animal" : "Registrar Animal"} />
       <ScrollView
-        style={styles.scroll}
+        style={[styles.scroll, { backgroundColor: t.bg }]}
         contentContainerStyle={styles.container}
         showsVerticalScrollIndicator={false}
       >
@@ -307,7 +311,7 @@ export default function RegisterAnimalScreen() {
           {imagen ? (
             <Image source={{ uri: imagen }} style={styles.imagePreview} />
           ) : (
-            <View style={styles.imagePlaceholder}>
+            <View style={[styles.imagePlaceholder, { backgroundColor: t.input, borderColor: t.border }]}>
               <ThemedText style={styles.imagePlaceholderIcon}>📷</ThemedText>
               <ThemedText style={styles.imagePlaceholderText}>
                 Agregar foto del animal
@@ -324,8 +328,8 @@ export default function RegisterAnimalScreen() {
         )}
 
         {/* Datos Básicos */}
-        <ThemedText style={styles.sectionTitle}>Datos Básicos</ThemedText>
-        <ThemedText style={styles.label}>Sexo</ThemedText>
+        <ThemedText style={[styles.sectionTitle, titleStyle]}>Datos Básicos</ThemedText>
+        <ThemedText style={[styles.label, titleStyle]}>Sexo</ThemedText>
         <Dropdown
           data={sexoOpciones}
           placeholder="Ingrese el sexo del animal"
@@ -335,20 +339,20 @@ export default function RegisterAnimalScreen() {
             if (encontrado) setSexo(encontrado.value);
           }}
         />
-        <ThemedText style={styles.label}>Nombre del Animal</ThemedText>
+        <ThemedText style={[styles.label, titleStyle]}>Nombre del Animal</ThemedText>
         <TextInput
-          style={styles.input}
+          style={[styles.input, { backgroundColor: t.input, borderColor: t.border, color: t.title }]}
           placeholder="Ej: Manchas"
-          placeholderTextColor={Colors.PLACEHOLDER_GRAY}
+          placeholderTextColor={t.placeholder}
           value={nombre}
           onChangeText={setNombre}
         />
-        <ThemedText style={styles.hint}>
+        <ThemedText style={[styles.hint, subtitleStyle]}>
           Nombre único para identificar al animal dentro de tu rebaño o grupo.
         </ThemedText>
 
         {/* Categoría cargada dinámicamente desde el backend */}
-        <ThemedText style={styles.label}>Categoria animal</ThemedText>
+        <ThemedText style={[styles.label, titleStyle]}>Categoria animal</ThemedText>
         <Dropdown
           data={categoriasOpciones}
           placeholder="Seleccione una categoria para el animal"
@@ -356,7 +360,7 @@ export default function RegisterAnimalScreen() {
           onValueChange={(val) => setCategoriaAnimal(Number(val))}
         />
 
-        <ThemedText style={styles.label}>Estado</ThemedText>
+        <ThemedText style={[styles.label, titleStyle]}>Estado</ThemedText>
         <Dropdown
           data={estadoOpciones}
           placeholder="Seleccione el estado del animal"
@@ -366,29 +370,29 @@ export default function RegisterAnimalScreen() {
             if (encontrado) setEstado(encontrado.nombre);
           }}
         />
-        <ThemedText style={styles.label}>Raza</ThemedText>
+        <ThemedText style={[styles.label, titleStyle]}>Raza</ThemedText>
         <TextInput
           placeholder="Ingrese la raza del animal"
-          placeholderTextColor={Colors.PLACEHOLDER_GRAY}
+          placeholderTextColor={t.placeholder}
           value={raza}
           onChangeText={setRaza}
-          style={styles.input}
+          style={[styles.input, { backgroundColor: t.input, borderColor: t.border, color: t.title }]}
         />
 
         {/* Características Físicas */}
-        <ThemedText style={styles.sectionTitle}>
+        <ThemedText style={[styles.sectionTitle, titleStyle]}>
           Características Físicas
         </ThemedText>
 
         <View style={styles.row}>
           <View style={styles.rowItem}>
-            <ThemedText style={styles.label}>Fecha de nacimiento</ThemedText>
+            <ThemedText style={[styles.label, titleStyle]}>Fecha de nacimiento</ThemedText>
             <TouchableOpacity
-              style={styles.input}
+              style={[styles.input, { backgroundColor: t.input, borderColor: t.border }]}
               onPress={() => setShowDatePicker(true)}
             >
               <ThemedText
-                style={fechaNacimiento ? styles.dateText : styles.datePlaceholder}
+                style={[fechaNacimiento ? styles.dateText : styles.datePlaceholder, { color: fechaNacimiento ? t.title : t.placeholder }]}
               >
                 {fechaNacimiento || "YYYY-MM-DD"}
               </ThemedText>
@@ -424,6 +428,7 @@ export default function RegisterAnimalScreen() {
                       display="spinner"
                       onChange={handleDateChange}
                       textColor="#000000"
+                      themeVariant="light"
                       style={styles.iosPicker}
                     />
                   </View>
@@ -432,18 +437,18 @@ export default function RegisterAnimalScreen() {
             )}
           </View>
           <View style={styles.rowItem}>
-            <ThemedText style={styles.label}>Color</ThemedText>
+            <ThemedText style={[styles.label, titleStyle]}>Color</ThemedText>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { backgroundColor: t.input, borderColor: t.border, color: t.title }]}
               placeholder="Ej: Blanco, Marrón"
-              placeholderTextColor={Colors.PLACEHOLDER_GRAY}
+              placeholderTextColor={t.placeholder}
               value={color}
               onChangeText={setColor}
             />
           </View>
         </View>
 
-        <ThemedText style={styles.label}>Unidad de peso</ThemedText>
+        <ThemedText style={[styles.label, titleStyle]}>Unidad de peso</ThemedText>
         <Dropdown
           data={pesosOpciones}
           placeholder="Ingrese la unidad de peso"
@@ -453,30 +458,30 @@ export default function RegisterAnimalScreen() {
             if (encontrado) setPesoUnidad(encontrado.nombre);
           }}
         />
-        <ThemedText style={styles.hint}>Ingrese el peso del animal</ThemedText>
+        <ThemedText style={[styles.hint, subtitleStyle]}>Ingrese el peso del animal</ThemedText>
         <TextInput
           placeholder="Ingrese el peso del animal"
-          placeholderTextColor={Colors.PLACEHOLDER_GRAY}
+          placeholderTextColor={t.placeholder}
           value={peso}
           onChangeText={setPeso}
           keyboardType="numeric"
-          style={styles.input}
+          style={[styles.input, { backgroundColor: t.input, borderColor: t.border, color: t.title }]}
         />
-        <ThemedText style={styles.label}>Altura (cm)</ThemedText>
+        <ThemedText style={[styles.label, titleStyle]}>Altura (cm)</ThemedText>
         <TextInput
-          style={styles.input}
+          style={[styles.input, { backgroundColor: t.input, borderColor: t.border, color: t.title }]}
           placeholder="Ej: 150"
-          placeholderTextColor={Colors.PLACEHOLDER_GRAY}
+          placeholderTextColor={t.placeholder}
           keyboardType="numeric"
           value={altura}
           onChangeText={setAltura}
         />
-        <ThemedText style={styles.hint}>
+        <ThemedText style={[styles.hint, subtitleStyle]}>
           Altura desde el suelo hasta el lomo del animal.
         </ThemedText>
 
         {/* Parcela cargada dinámicamente desde el backend */}
-        <ThemedText style={styles.label}>Parcela</ThemedText>
+        <ThemedText style={[styles.label, titleStyle]}>Parcela</ThemedText>
         <Dropdown
           data={parcelasOpciones}
           placeholder="Seleccione una parcela"
@@ -485,13 +490,13 @@ export default function RegisterAnimalScreen() {
         />
 
         {/* Notas Adicionales */}
-        <ThemedText style={styles.sectionTitle}>Notas Adicionales</ThemedText>
+        <ThemedText style={[styles.sectionTitle, titleStyle]}>Notas Adicionales</ThemedText>
 
-        <ThemedText style={styles.label}>Observaciones</ThemedText>
+        <ThemedText style={[styles.label, titleStyle]}>Observaciones</ThemedText>
         <TextInput
-          style={styles.textArea}
+          style={[styles.textArea, { backgroundColor: t.input, borderColor: t.border, color: t.title }]}
           placeholder="Cualquier información relevante sobre el animal, historial médico, comportamiento, etc."
-          placeholderTextColor={Colors.PLACEHOLDER_GRAY}
+          placeholderTextColor={t.placeholder}
           multiline
           numberOfLines={4}
           value={observaciones}
@@ -501,11 +506,11 @@ export default function RegisterAnimalScreen() {
         {/* Botones */}
         <View style={styles.buttons}>
           <TouchableOpacity
-            style={styles.cancelButton}
+            style={[styles.cancelButton, { backgroundColor: t.input, borderColor: t.border }]}
             onPress={() => router.back()}
             disabled={loading}
           >
-            <ThemedText style={styles.cancelText}>Cancelar</ThemedText>
+            <ThemedText style={[styles.cancelText, titleStyle]}>Cancelar</ThemedText>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.saveButton, loading && { opacity: 0.7 }]}
@@ -529,7 +534,6 @@ export default function RegisterAnimalScreen() {
 const styles = StyleSheet.create({
   scroll: {
     flex: 1,
-    backgroundColor: Colors.BACKGROUND,
   },
   container: {
     paddingHorizontal: 16,
@@ -541,44 +545,35 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: "700",
-    color: Colors.TITLE,
     marginTop: 20,
     marginBottom: 8,
   },
   label: {
     fontSize: 14,
     fontWeight: "500",
-    color: Colors.TITLE,
     marginBottom: 4,
     marginTop: 8,
   },
   hint: {
     fontSize: 12,
-    color: Colors.PLACEHOLDER_GRAY,
     marginTop: 4,
   },
   input: {
     width: "100%",
     height: 50,
-    backgroundColor: Colors.CARD_DETAILS,
-    borderColor: Colors.INPUT_BORDER,
     borderWidth: 1,
     borderRadius: 12,
     paddingHorizontal: 16,
     fontSize: 15,
-    color: Colors.TITLE,
   },
   textArea: {
     width: "100%",
     minHeight: 100,
-    backgroundColor: Colors.CARD_DETAILS,
-    borderColor: Colors.INPUT_BORDER,
     borderWidth: 1,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 12,
     fontSize: 15,
-    color: Colors.TITLE,
     textAlignVertical: "top",
   },
   row: {
@@ -598,14 +593,11 @@ const styles = StyleSheet.create({
     height: 50,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: Colors.INPUT_BORDER,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: Colors.CARD_DETAILS,
   },
   cancelText: {
     fontSize: 16,
-    color: Colors.TITLE,
     fontWeight: "500",
   },
   saveButton: {

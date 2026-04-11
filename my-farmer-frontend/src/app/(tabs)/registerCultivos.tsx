@@ -19,6 +19,8 @@ import {
   Image,
   ActivityIndicator,
   Platform,
+  Modal,
+  Text,
 } from "react-native";
 import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -33,10 +35,14 @@ import { useTiposCultivo } from "@/hooks/useTiposCultivo";
 import { useParcelas } from "@/hooks/useParcelas";
 import { useAuth } from "@/supabase/useAuth";
 import { getCultivoById, actualizarCultivo } from "@/services/cultivosService";
+import { useTheme } from "@/contexts/ThemeContext";
 
 export default function RegisterCultivosScreen() {
   const router = useRouter();
   const { session } = useAuth();
+  const { t } = useTheme();
+  const titleStyle = { color: t.title };
+  const subtitleStyle = { color: t.subtitle };
 
   // Recibe cultivo_id cuando viene desde la pantalla de detalles (modo edición)
   const { cultivo_id } = useLocalSearchParams<{ cultivo_id?: string }>();
@@ -309,7 +315,7 @@ export default function RegisterCultivosScreen() {
     <>
       <ScreenHeader title={modoEdicion ? "Editar Cultivo" : "Registrar Cultivo"} />
       <ScrollView
-        style={styles.scroll}
+        style={[styles.scroll, { backgroundColor: t.bg }]}
         contentContainerStyle={styles.container}
         showsVerticalScrollIndicator={false}
       >
@@ -338,57 +344,86 @@ export default function RegisterCultivosScreen() {
         )}
 
         {/* Datos Básicos */}
-        <ThemedText style={styles.sectionTitle}>Datos Básicos</ThemedText>
+        <ThemedText style={[styles.sectionTitle, titleStyle]}>Datos Básicos</ThemedText>
 
-        <ThemedText style={styles.label}>Nombre del Cultivo</ThemedText>
+        <ThemedText style={[styles.label, titleStyle]}>Nombre del Cultivo</ThemedText>
         <TextInput
-          style={styles.input}
+          style={[styles.input, { backgroundColor: t.input, borderColor: t.border, color: t.title }]}
           placeholder="Ej: Maíz del norte"
-          placeholderTextColor={Colors.PLACEHOLDER_GRAY}
+          placeholderTextColor={t.placeholder}
           value={nombre}
           onChangeText={setNombre}
         />
-        <ThemedText style={styles.hint}>
+        <ThemedText style={[styles.hint, subtitleStyle]}>
           Nombre único para identificar este cultivo dentro de tu finca.
         </ThemedText>
 
         {/* Tipo de cultivo cargado dinámicamente desde el backend */}
-        <ThemedText style={styles.label}>Tipo de Cultivo</ThemedText>
+        <ThemedText style={[styles.label, titleStyle]}>Tipo de Cultivo</ThemedText>
         <Dropdown
           data={tiposOpciones}
           placeholder="Ingrese el tipo de cultivo"
           value={tipo}
           onValueChange={(val) => setTipo(Number(val))}
         />
-        <ThemedText style={styles.hint}>
+        <ThemedText style={[styles.hint, subtitleStyle]}>
           Especifica la especie o variedad del cultivo.
         </ThemedText>
 
         {/* Siembra y Ubicación */}
-        <ThemedText style={styles.sectionTitle}>Siembra y Ubicación</ThemedText>
+        <ThemedText style={[styles.sectionTitle, titleStyle]}>Siembra y Ubicación</ThemedText>
 
         <View style={styles.row}>
           <View style={styles.rowItem}>
-            <ThemedText style={styles.label}>Fecha de Siembra</ThemedText>
+            <ThemedText style={[styles.label, titleStyle]}>Fecha de Siembra</ThemedText>
             <TouchableOpacity
-              style={styles.input}
+              style={[styles.input, { backgroundColor: t.input, borderColor: t.border }]}
               onPress={() => setShowSiembraPicker(true)}
             >
-              <ThemedText style={fechaSiembra ? styles.dateText : styles.datePlaceholder}>
+              <ThemedText style={[fechaSiembra ? styles.dateText : styles.datePlaceholder, { color: fechaSiembra ? t.title : t.placeholder }]}>
                 {fechaSiembra || "YYYY-MM-DD"}
               </ThemedText>
             </TouchableOpacity>
-            {showSiembraPicker && (
+            {/* Android: diálogo nativo */}
+            {showSiembraPicker && Platform.OS === "android" && (
               <DateTimePicker
                 value={siembraPickerValue}
                 mode="date"
-                display={Platform.OS === "ios" ? "spinner" : "default"}
+                display="default"
                 onChange={handleSiembraChange}
               />
             )}
+            {/* iOS: modal con fondo blanco para que el spinner sea visible */}
+            {Platform.OS === "ios" && (
+              <Modal
+                visible={showSiembraPicker}
+                transparent
+                animationType="slide"
+                onRequestClose={() => setShowSiembraPicker(false)}
+              >
+                <View style={styles.iosModalOverlay}>
+                  <View style={styles.iosPickerContainer}>
+                    <View style={styles.iosPickerHeader}>
+                      <TouchableOpacity onPress={() => setShowSiembraPicker(false)}>
+                        <Text style={styles.iosPickerDone}>Listo</Text>
+                      </TouchableOpacity>
+                    </View>
+                    <DateTimePicker
+                      value={siembraPickerValue}
+                      mode="date"
+                      display="spinner"
+                      onChange={handleSiembraChange}
+                      textColor="#000000"
+                      themeVariant="light"
+                      style={styles.iosPicker}
+                    />
+                  </View>
+                </View>
+              </Modal>
+            )}
           </View>
           <View style={styles.rowItem}>
-            <ThemedText style={styles.label}>Estado</ThemedText>
+            <ThemedText style={[styles.label, titleStyle]}>Estado</ThemedText>
             <Dropdown
               data={estadoOpciones}
               placeholder="Seleccione un estado"
@@ -404,53 +439,82 @@ export default function RegisterCultivosScreen() {
         </View>
 
         {/* Parcela cargada dinámicamente desde el backend */}
-        <ThemedText style={styles.label}>Ubicación / Parcela</ThemedText>
+        <ThemedText style={[styles.label, titleStyle]}>Ubicación / Parcela</ThemedText>
         <Dropdown
           data={parcelasOpciones}
           placeholder="Seleccione una parcela"
           value={ubicacion}
           onValueChange={(val) => setUbicacion(Number(val))}
         />
-        <ThemedText style={styles.hint}>
+        <ThemedText style={[styles.hint, subtitleStyle]}>
           Indica en qué zona o parcela de la finca se encuentra el cultivo.
         </ThemedText>
 
         {/* Cosecha */}
-        <ThemedText style={styles.sectionTitle}>Cosecha</ThemedText>
+        <ThemedText style={[styles.sectionTitle, titleStyle]}>Cosecha</ThemedText>
 
         <View style={styles.row}>
           <View style={styles.rowItem}>
-            <ThemedText style={styles.label}>Fecha cosecha</ThemedText>
+            <ThemedText style={[styles.label, titleStyle]}>Fecha cosecha</ThemedText>
             <TouchableOpacity
-              style={styles.input}
+              style={[styles.input, { backgroundColor: t.input, borderColor: t.border }]}
               onPress={() => setShowCosechaPicker(true)}
             >
-              <ThemedText style={fechaCosechaEstimada ? styles.dateText : styles.datePlaceholder}>
+              <ThemedText style={[fechaCosechaEstimada ? styles.dateText : styles.datePlaceholder, { color: fechaCosechaEstimada ? t.title : t.placeholder }]}>
                 {fechaCosechaEstimada || "YYYY-MM-DD"}
               </ThemedText>
             </TouchableOpacity>
-            {showCosechaPicker && (
+            {/* Android: diálogo nativo */}
+            {showCosechaPicker && Platform.OS === "android" && (
               <DateTimePicker
                 value={cosechaPickerValue}
                 mode="date"
-                display={Platform.OS === "ios" ? "spinner" : "default"}
+                display="default"
                 onChange={handleCosechaChange}
               />
+            )}
+            {/* iOS: modal con fondo blanco para que el spinner sea visible */}
+            {Platform.OS === "ios" && (
+              <Modal
+                visible={showCosechaPicker}
+                transparent
+                animationType="slide"
+                onRequestClose={() => setShowCosechaPicker(false)}
+              >
+                <View style={styles.iosModalOverlay}>
+                  <View style={styles.iosPickerContainer}>
+                    <View style={styles.iosPickerHeader}>
+                      <TouchableOpacity onPress={() => setShowCosechaPicker(false)}>
+                        <Text style={styles.iosPickerDone}>Listo</Text>
+                      </TouchableOpacity>
+                    </View>
+                    <DateTimePicker
+                      value={cosechaPickerValue}
+                      mode="date"
+                      display="spinner"
+                      onChange={handleCosechaChange}
+                      textColor="#000000"
+                      themeVariant="light"
+                      style={styles.iosPicker}
+                    />
+                  </View>
+                </View>
+              </Modal>
             )}
           </View>
         </View>
 
-        <ThemedText style={styles.label}>Rendimiento estimado</ThemedText>
+        <ThemedText style={[styles.label, titleStyle]}>Rendimiento estimado</ThemedText>
         <TextInput
-          style={styles.input}
+          style={[styles.input, { backgroundColor: t.input, borderColor: t.border, color: t.title }]}
           placeholder="Ej: 500"
-          placeholderTextColor={Colors.PLACEHOLDER_GRAY}
+          placeholderTextColor={t.placeholder}
           keyboardType="numeric"
           value={rendimientoEstimado}
           onChangeText={setRendimientoEstimado}
         />
 
-        <ThemedText style={styles.label}>Unidad de rendimiento</ThemedText>
+        <ThemedText style={[styles.label, titleStyle]}>Unidad de rendimiento</ThemedText>
         <Dropdown
           data={rendimientoUnidadOpciones}
           placeholder="Seleccione una unidad"
@@ -464,13 +528,13 @@ export default function RegisterCultivosScreen() {
         />
 
         {/* Notas Adicionales */}
-        <ThemedText style={styles.sectionTitle}>Notas Adicionales</ThemedText>
+        <ThemedText style={[styles.sectionTitle, titleStyle]}>Notas Adicionales</ThemedText>
 
-        <ThemedText style={styles.label}>Observaciones</ThemedText>
+        <ThemedText style={[styles.label, titleStyle]}>Observaciones</ThemedText>
         <TextInput
-          style={styles.textArea}
+          style={[styles.textArea, { backgroundColor: t.input, borderColor: t.border, color: t.title }]}
           placeholder="Cualquier información relevante sobre el cultivo, condiciones del suelo, riego, fertilizantes, etc."
-          placeholderTextColor={Colors.PLACEHOLDER_GRAY}
+          placeholderTextColor={t.placeholder}
           multiline
           numberOfLines={4}
           value={observaciones}
@@ -480,11 +544,11 @@ export default function RegisterCultivosScreen() {
         {/* Botones */}
         <View style={styles.buttons}>
           <TouchableOpacity
-            style={styles.cancelButton}
+            style={[styles.cancelButton, { backgroundColor: t.input, borderColor: t.border }]}
             onPress={() => router.back()}
             disabled={loading}
           >
-            <ThemedText style={styles.cancelText}>Cancelar</ThemedText>
+            <ThemedText style={[styles.cancelText, titleStyle]}>Cancelar</ThemedText>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.saveButton, loading && { opacity: 0.7 }]}
@@ -508,7 +572,6 @@ export default function RegisterCultivosScreen() {
 const styles = StyleSheet.create({
   scroll: {
     flex: 1,
-    backgroundColor: Colors.BACKGROUND,
   },
   container: {
     paddingHorizontal: 16,
@@ -520,32 +583,26 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: "700",
-    color: Colors.TITLE,
     marginTop: 20,
     marginBottom: 8,
   },
   label: {
     fontSize: 14,
     fontWeight: "500",
-    color: Colors.TITLE,
     marginBottom: 4,
     marginTop: 8,
   },
   hint: {
     fontSize: 12,
-    color: Colors.PLACEHOLDER_GRAY,
     marginTop: 4,
   },
   input: {
     width: "100%",
     height: 50,
-    backgroundColor: Colors.CARD_DETAILS,
-    borderColor: Colors.INPUT_BORDER,
     borderWidth: 1,
     borderRadius: 12,
     paddingHorizontal: 16,
     fontSize: 15,
-    color: Colors.TITLE,
   },
   inputReadonly: {
     opacity: 0.5,
@@ -553,14 +610,11 @@ const styles = StyleSheet.create({
   textArea: {
     width: "100%",
     minHeight: 100,
-    backgroundColor: Colors.CARD_DETAILS,
-    borderColor: Colors.INPUT_BORDER,
     borderWidth: 1,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 12,
     fontSize: 15,
-    color: Colors.TITLE,
     textAlignVertical: "top",
   },
   row: {
@@ -580,14 +634,11 @@ const styles = StyleSheet.create({
     height: 50,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: Colors.INPUT_BORDER,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: Colors.CARD_DETAILS,
   },
   cancelText: {
     fontSize: 16,
-    color: Colors.TITLE,
     fontWeight: "500",
   },
   saveButton: {
@@ -651,5 +702,33 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: Colors.PLACEHOLDER_GRAY,
     lineHeight: 50,
+  },
+  // iOS date picker modal
+  iosModalOverlay: {
+    flex: 1,
+    justifyContent: "flex-end",
+    backgroundColor: "rgba(0,0,0,0.4)",
+  },
+  iosPickerContainer: {
+    backgroundColor: "#ffffff",
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    paddingBottom: 24,
+  },
+  iosPickerHeader: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: "#e5e5e5",
+  },
+  iosPickerDone: {
+    color: Colors.PRIMARY_GREEN,
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  iosPicker: {
+    backgroundColor: "#ffffff",
   },
 });

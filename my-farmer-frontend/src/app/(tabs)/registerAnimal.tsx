@@ -327,7 +327,7 @@ export default function RegisterAnimalScreen() {
         <Dropdown
           data={sexoOpciones}
           placeholder="Ingrese el sexo del animal"
-          value={sexo}
+          value={sexoOpciones.find((o) => o.value === sexo)?.id ?? ""}
           onValueChange={(val) => {
             const encontrado = sexoOpciones.find((o) => o.id === Number(val));
             if (encontrado) setSexo(encontrado.value);
@@ -358,7 +358,7 @@ export default function RegisterAnimalScreen() {
         <Dropdown
           data={estadoOpciones}
           placeholder="Seleccione el estado del animal"
-          value={estado}
+          value={estadoOpciones.find((o) => o.nombre === estado)?.id ?? ""}
           onValueChange={(val) => {
             const encontrado = estadoOpciones.find((o) => o.id === Number(val));
             if (encontrado) setEstado(encontrado.nombre);
@@ -416,7 +416,7 @@ export default function RegisterAnimalScreen() {
         <Dropdown
           data={pesosOpciones}
           placeholder="Ingrese la unidad de peso"
-          value={pesoUnidad}
+          value={pesosOpciones.find((o) => o.nombre === pesoUnidad)?.id ?? ""}
           onValueChange={(val) => {
             const encontrado = pesosOpciones.find((o) => o.id === Number(val));
             if (encontrado) setPesoUnidad(encontrado.nombre);

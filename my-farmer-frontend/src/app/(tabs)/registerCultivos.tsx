@@ -392,7 +392,7 @@ export default function RegisterCultivosScreen() {
             <Dropdown
               data={estadoOpciones}
               placeholder="Seleccione un estado"
-              value={estado}
+              value={estadoOpciones.find((o) => o.value === estado)?.id ?? ""}
               onValueChange={(val) => {
                 const encontrado = estadoOpciones.find(
                   (o) => o.id === Number(val),
@@ -454,7 +454,7 @@ export default function RegisterCultivosScreen() {
         <Dropdown
           data={rendimientoUnidadOpciones}
           placeholder="Seleccione una unidad"
-          value={rendimientoUnidad}
+          value={rendimientoUnidadOpciones.find((o) => o.nombre === rendimientoUnidad)?.id ?? ""}
           onValueChange={(val) => {
             const encontrado = rendimientoUnidadOpciones.find(
               (o) => o.id === Number(val),

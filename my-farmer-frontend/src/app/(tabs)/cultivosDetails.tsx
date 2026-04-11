@@ -23,6 +23,7 @@ import {
   StyleSheet,
   Alert,
   ActivityIndicator,
+  TouchableOpacity,
 } from "react-native";
 import React, { useEffect, useState } from "react";
 import { Image } from "expo-image";
@@ -359,6 +360,19 @@ const CultivosDetail = () => {
           )}
         </View>
 
+        {/* Historial del Cultivo */}
+        <TouchableOpacity
+          style={styles.historialBtn}
+          onPress={() =>
+            router.push({
+              pathname: "/(tabs)/historialCultivos",
+              params: { cultivoId: String(cultivo_id) },
+            })
+          }
+        >
+          <Text style={styles.historialBtnText}>Ver Historial del Cultivo</Text>
+        </TouchableOpacity>
+
         {/* Notas y Recordatorios */}
         <View style={[styles.card, { backgroundColor: t.card, borderColor: t.border }]}>
           <View style={styles.cardTitleRow}>
@@ -492,6 +506,17 @@ const styles = StyleSheet.create({
   reminderText: { fontSize: 13, flex: 1 },
   reminderDate: { fontSize: 12 },
 
+  historialBtn: {
+    backgroundColor: Colors.PRIMARY_GREEN,
+    padding: 14,
+    borderRadius: 12,
+    alignItems: "center",
+  },
+  historialBtnText: {
+    color: "#fff",
+    fontSize: 15,
+    fontWeight: "700",
+  },
   cosechaRow: {
     borderLeftWidth: 3,
     paddingLeft: 10,

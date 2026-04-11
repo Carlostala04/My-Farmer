@@ -19,6 +19,8 @@ import {
   Image,
   ActivityIndicator,
   Platform,
+  Modal,
+  Text,
 } from "react-native";
 import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -391,13 +393,42 @@ export default function RegisterAnimalScreen() {
                 {fechaNacimiento || "YYYY-MM-DD"}
               </ThemedText>
             </TouchableOpacity>
-            {showDatePicker && (
+            {/* Android: el picker se muestra como diálogo nativo */}
+            {showDatePicker && Platform.OS === "android" && (
               <DateTimePicker
                 value={datePickerValue}
                 mode="date"
-                display={Platform.OS === "ios" ? "spinner" : "default"}
+                display="default"
                 onChange={handleDateChange}
               />
+            )}
+
+            {/* iOS: modal con fondo blanco explícito para que el spinner sea visible */}
+            {Platform.OS === "ios" && (
+              <Modal
+                visible={showDatePicker}
+                transparent
+                animationType="slide"
+                onRequestClose={() => setShowDatePicker(false)}
+              >
+                <View style={styles.iosModalOverlay}>
+                  <View style={styles.iosPickerContainer}>
+                    <View style={styles.iosPickerHeader}>
+                      <TouchableOpacity onPress={() => setShowDatePicker(false)}>
+                        <Text style={styles.iosPickerDone}>Listo</Text>
+                      </TouchableOpacity>
+                    </View>
+                    <DateTimePicker
+                      value={datePickerValue}
+                      mode="date"
+                      display="spinner"
+                      onChange={handleDateChange}
+                      textColor="#000000"
+                      style={styles.iosPicker}
+                    />
+                  </View>
+                </View>
+              </Modal>
             )}
           </View>
           <View style={styles.rowItem}>
@@ -638,5 +669,33 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: Colors.PLACEHOLDER_GRAY,
     lineHeight: 50,
+  },
+  // iOS date picker modal
+  iosModalOverlay: {
+    flex: 1,
+    justifyContent: "flex-end",
+    backgroundColor: "rgba(0,0,0,0.4)",
+  },
+  iosPickerContainer: {
+    backgroundColor: "#ffffff",
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    paddingBottom: 24,
+  },
+  iosPickerHeader: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: "#e5e5e5",
+  },
+  iosPickerDone: {
+    color: Colors.PRIMARY_GREEN,
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  iosPicker: {
+    backgroundColor: "#ffffff",
   },
 });

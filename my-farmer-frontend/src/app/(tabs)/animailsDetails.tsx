@@ -15,32 +15,31 @@
  *  - El icono de campana 🔔 fue reemplazado por un SVG.
  */
 
-import {
-  View,
-  Text,
-  ScrollView,
-  StyleSheet,
-  Alert,
-  ActivityIndicator,
-  TouchableOpacity,
-} from "react-native";
-import React, { useCallback, useEffect, useState } from "react";
-import { Image } from "expo-image";
-import Colors from "@/constants/colors";
 import ScreenHeader from "@/components/header";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import { useFocusEffect } from "@react-navigation/native";
 import DeleteIcon from "@/components/ui/deleteIcon";
 import EditIcon from "@/components/ui/editIcon";
-import { useAuth } from "@/supabase/useAuth";
-import { getAnimalById } from "@/services/animalesService";
-import { eliminarAnimal } from "@/services/animalesService";
-import { useRecordatorios } from "@/hooks/useRecordatorios";
+import { RecordatoriosIcon } from "@/components/ui/recordatorios_icon";
+import Colors from "@/constants/colors";
+import { useTheme } from "@/contexts/ThemeContext";
 import { useEventosAnimales } from "@/hooks/useEventosAnimales";
+import { useRecordatorios } from "@/hooks/useRecordatorios";
+import { eliminarAnimal, getAnimalById } from "@/services/animalesService";
+import { useAuth } from "@/supabase/useAuth";
 import { ResponseAnimalDto } from "@/ts/animalsProps";
 import type { ResponseEventoAnimalDto } from "@/ts/eventoAnimal";
-import { useTheme } from "@/contexts/ThemeContext";
-import { RecordatoriosIcon } from "@/components/ui/recordatorios_icon";
+import { useFocusEffect } from "@react-navigation/native";
+import { Image } from "expo-image";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import React, { useCallback, useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 const AnimalsDetails = () => {
   const router = useRouter();
@@ -301,6 +300,19 @@ const AnimalsDetails = () => {
             )}
           </View>
         </View>
+
+        {/* ── Historial del Animal ───────────────────────────────────────── */}
+        <TouchableOpacity
+          style={styles.historialBtn}
+          onPress={() =>
+            router.push({
+              pathname: "/(tabs)/historialAnimales",
+              params: { animalId: String(animal_id) },
+            })
+          }
+        >
+          <Text style={styles.historialBtnText}>Ver Historial del Animal</Text>
+        </TouchableOpacity>
 
         {/* ── Eventos del Animal ─────────────────────────────────────────── */}
         <View style={[styles.extras, { backgroundColor: t.card, borderColor: t.border }]}>
@@ -563,6 +575,19 @@ const styles = StyleSheet.create({
   eventoTitulo: { fontSize: 14, fontWeight: "600" },
   eventoFecha: { fontSize: 12, marginTop: 1 },
   eventoDeleteBtn: { padding: 4 },
+
+  // ── Historial ─────────────────────────────────────────────────────────────
+  historialBtn: {
+    backgroundColor: Colors.PRIMARY_GREEN,
+    padding: 14,
+    borderRadius: 12,
+    alignItems: "center",
+  },
+  historialBtnText: {
+    color: "#fff",
+    fontSize: 15,
+    fontWeight: "700",
+  },
 });
 
 export default AnimalsDetails;

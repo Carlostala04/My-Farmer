@@ -59,7 +59,8 @@ export default function AnimalsScreen() {
       (animal) =>
         animal.Nombre.toLowerCase().includes(query) ||
         (animal.Raza ?? "").toLowerCase().includes(query) ||
-        (animal.Estado_Label ?? "").toLowerCase().includes(query),
+        (animal.Estado_Label ?? "").toLowerCase().includes(query) ||
+        (animal.Color ?? "").toLowerCase().includes(query),
     );
   }, [buscar, animales, filtroCategoria]);
 

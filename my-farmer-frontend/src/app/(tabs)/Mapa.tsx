@@ -327,7 +327,7 @@ export default function MapaParcelaScreen() {
       // Pasamos las variables de React a JS
       const parcelas = ${JSON.stringify(parcelas)};
       const userLocation = ${JSON.stringify(userLocation)};
-      
+
       const defaultView = [9.9281, -84.0907];
       const initialView = userLocation || defaultView;
       const initialZoom = userLocation ? 18 : 16;

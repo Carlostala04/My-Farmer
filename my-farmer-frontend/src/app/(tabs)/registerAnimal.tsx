@@ -36,6 +36,10 @@ import { useParcelas } from "@/hooks/useParcelas";
 import { useAuth } from "@/supabase/useAuth";
 import { getAnimalById, actualizarAnimal } from "@/services/animalesService";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useSuscripcion } from "@/hooks/useSuscripcion";
+import { PlanSuscripcion } from "@/ts/suscripcion";
+
+const LIMITE_PLAN_GRATUITO_ANIMALES = 5;
 
 export default function RegisterAnimalScreen() {
   const router = useRouter();
@@ -49,7 +53,13 @@ export default function RegisterAnimalScreen() {
   const modoEdicion = !!animal_id;
 
   // Hook para crear animales en el backend
-  const { crearAnimal, loading: loadingCrear } = useAnimales();
+  const { crearAnimal, loading: loadingCrear, error: errorAnimal, animales } = useAnimales();
+  const { suscripcionActiva } = useSuscripcion();
+
+  // Mostrar error del hook cuando ocurre
+  useEffect(() => {
+    if (errorAnimal) Alert.alert("Error", errorAnimal);
+  }, [errorAnimal]);
 
   // Estado de carga para modo edición
   const [guardando, setGuardando] = useState(false);
@@ -223,6 +233,20 @@ export default function RegisterAnimalScreen() {
       return;
     }
 
+    // Verificar límite del plan gratuito solo en modo creación
+    if (!modoEdicion) {
+      const esPremium =
+        suscripcionActiva?.Plan === PlanSuscripcion.PREMIUM;
+      if (!esPremium && animales.length >= LIMITE_PLAN_GRATUITO_ANIMALES) {
+        Alert.alert(
+          "Límite alcanzado",
+          `El plan gratuito permite hasta ${LIMITE_PLAN_GRATUITO_ANIMALES} animales registrados. Actualiza a Premium para registrar más.`,
+          [{ text: "Aceptar" }],
+        );
+        return;
+      }
+    }
+
     if (modoEdicion) {
       // Modo edición: llamar al servicio directamente
       if (!session?.access_token) return;
@@ -276,9 +300,8 @@ export default function RegisterAnimalScreen() {
       if (ok) {
         Alert.alert("Éxito", "Animal registrado correctamente.");
         router.back();
-      } else {
-        Alert.alert("Error", "No se pudo registrar el animal. Intenta de nuevo.");
       }
+      // Si !ok, el useEffect de errorAnimal ya mostrará el mensaje de error del hook
     }
   };
 

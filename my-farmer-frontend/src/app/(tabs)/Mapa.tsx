@@ -416,7 +416,7 @@ export default function MapaParcelaScreen() {
           // Props específicas de iOS
           allowsInlineMediaPlayback
           allowsLinkPreview={false}
-          dataDetectorTypes="none"
+          {...(Platform.OS === "ios" && { dataDetectorTypes: "none" })}
           scalesPageToFit={false}
           startInLoadingState={Platform.OS === "ios"}
           // Evita que el WebView interfiera con el scroll del formulario

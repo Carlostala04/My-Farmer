@@ -32,21 +32,44 @@ Notifications.setNotificationHandler({
 
 async function registrarDispositivo(): Promise<string | null> {
   // Las notificaciones push solo funcionan en dispositivos físicos
-  if (!Device.isDevice) return null;
-
-  // Verificar / solicitar permisos
-  let { status } = await Notifications.getPermissionsAsync();
-  if (status !== "granted") {
-    const { status: nuevoStatus } =
-      await Notifications.requestPermissionsAsync();
-    status = nuevoStatus;
+  if (!Device.isDevice) {
+    console.log("Notificaciones push no disponibles en emuladores/simuladores.");
+    return null;
   }
-  if (status !== "granted") return null;
 
-  // Obtener el Expo Push Token del dispositivo
-  const projectId = Constants.expoConfig?.extra?.eas?.projectId;
-  const tokenData = await Notifications.getExpoPushTokenAsync({ projectId });
-  return tokenData.data;
+  try {
+    // Verificar / solicitar permisos
+    let { status } = await Notifications.getPermissionsAsync();
+    if (status !== "granted") {
+      const { status: nuevoStatus } =
+        await Notifications.requestPermissionsAsync();
+      status = nuevoStatus;
+    }
+    if (status !== "granted") {
+      console.warn("El usuario denegó los permisos de notificaciones push.");
+      return null;
+    }
+
+    // Verificar que el projectId esté configurado
+    const projectId = Constants.expoConfig?.extra?.eas?.projectId;
+    if (!projectId) {
+      console.warn(
+        "No se encontró el projectId en la configuración de Expo (eas.projectId). " +
+        "Las notificaciones push no funcionarán correctamente.",
+      );
+      return null;
+    }
+
+    // Obtener el Expo Push Token del dispositivo
+    const tokenData = await Notifications.getExpoPushTokenAsync({ projectId });
+    return tokenData.data;
+  } catch (error: any) {
+    console.warn(
+      "Error al obtener el token de notificaciones push:",
+      error?.message ?? error,
+    );
+    return null;
+  }
 }
 
 export function useNotifications(authToken: string | null) {
@@ -67,22 +90,36 @@ export function useNotifications(authToken: string | null) {
         console.warn("Error al registrar notificaciones:", error);
       });
 
-    // Listener: notificación recibida mientras la app está abierta (foreground)
-    receivedListener.current = Notifications.addNotificationReceivedListener(
-      (notification) => {
-        const titulo = notification.request.content.title ?? "Sin título";
-        console.log("Notificación recibida en foreground:", titulo);
-      },
-    );
+    try {
+      // Listener: notificación recibida mientras la app está abierta (foreground)
+      receivedListener.current = Notifications.addNotificationReceivedListener(
+        (notification) => {
+          const titulo = notification.request.content.title ?? "Sin título";
+          console.log("Notificación recibida en foreground:", titulo);
+        },
+      );
 
-    // Listener: usuario tocó la notificación (foreground o background)
-    responseListener.current =
-      Notifications.addNotificationResponseReceivedListener((response) => {
-        const data = response.notification.request.content.data as Record<string, unknown>;
-        if (data?.screen === "recordatorios") {
-          router.push("/(tabs)/recordatorios" as any);
-        }
-      });
+      // Listener: usuario tocó la notificación (foreground o background)
+      responseListener.current =
+        Notifications.addNotificationResponseReceivedListener((response) => {
+          try {
+            const data = response.notification.request.content.data as Record<string, unknown>;
+            if (data?.screen === "recordatorios") {
+              router.push("/(tabs)/recordatorios" as any);
+            }
+          } catch (navError: any) {
+            console.warn(
+              "Error al navegar desde notificación:",
+              navError?.message ?? navError,
+            );
+          }
+        });
+    } catch (listenerError: any) {
+      console.warn(
+        "Error al registrar listeners de notificaciones:",
+        listenerError?.message ?? listenerError,
+      );
+    }
 
     return () => {
       receivedListener.current?.remove();

@@ -36,6 +36,8 @@ import { useAnimales } from "@/hooks/useAnimales";
 import { useCultivos } from "@/hooks/useCultivos";
 import { supabase } from "@/supabase/supabaseClient";
 import { actualizarPerfil } from "@/services/usuariosService";
+import { useSuscripcion } from "@/hooks/useSuscripcion";
+import { PlanSuscripcion } from "@/ts/suscripcion";
 
 const IconSettings = ({ dark }: { dark: boolean }) => (
   <Svg
@@ -150,6 +152,9 @@ export default function PerfilScreen() {
   } = useUsuario();
   const { animales } = useAnimales();
   const { cultivos } = useCultivos();
+  const { suscripcionActiva } = useSuscripcion();
+
+  const tienePremium = suscripcionActiva?.Plan === PlanSuscripcion.PREMIUM;
 
   // Estado local de carga de foto (para mostrar spinner mientras se sube)
   const [subiendoFoto, setSubiendoFoto] = useState(false);
@@ -404,11 +409,15 @@ export default function PerfilScreen() {
                     Suscripción Premium
                   </Text>
                   <Text style={[styles.premiumSubtitle, { color: subtitle }]}>
-                    Desbloquea todas las funciones
+                    {tienePremium
+                      ? "Plan activo y vigente"
+                      : "Desbloquea todas las funciones"}
                   </Text>
                 </View>
                 <View style={styles.premiumBadge}>
-                  <Text style={styles.premiumBadgeText}>Ver planes ›</Text>
+                  <Text style={styles.premiumBadgeText}>
+                    {tienePremium ? "Ver suscripción ›" : "Ver planes ›"}
+                  </Text>
                 </View>
               </TouchableOpacity>
               <View style={[styles.divider, { backgroundColor: border }]} />

@@ -45,6 +45,10 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { useRecordatorios } from "@/hooks/useRecordatorios";
 import { useAnimales } from "@/hooks/useAnimales";
 import { useCultivos } from "@/hooks/useCultivos";
+import { useSuscripcion } from "@/hooks/useSuscripcion";
+import { PlanSuscripcion } from "@/ts/suscripcion";
+
+const LIMITE_PLAN_GRATUITO_RECORDATORIOS = 5;
 
 type CategoriaFiltro = "Todos" | "Animales" | "Cultivos";
 
@@ -72,6 +76,7 @@ export default function RecordatoriosScreen() {
   } = useRecordatorios();
   const { animales } = useAnimales();
   const { cultivos } = useCultivos();
+  const { suscripcionActiva } = useSuscripcion();
 
   // Estados del formulario del modal
   const [nuevoTitulo, setNuevoTitulo] = useState("");
@@ -163,6 +168,17 @@ export default function RecordatoriosScreen() {
 
   /** Valida y envía el nuevo recordatorio al backend. */
   const agregar = async () => {
+    // Verificar límite del plan gratuito
+    const esPremium = suscripcionActiva?.Plan === PlanSuscripcion.PREMIUM;
+    if (!esPremium && recordatorios.length >= LIMITE_PLAN_GRATUITO_RECORDATORIOS) {
+      Alert.alert(
+        "Límite alcanzado",
+        `El plan gratuito permite hasta ${LIMITE_PLAN_GRATUITO_RECORDATORIOS} recordatorios. Actualiza a Premium para añadir más.`,
+        [{ text: "Aceptar" }],
+      );
+      return;
+    }
+
     if (!nuevoTitulo.trim()) {
       Alert.alert("Error", "El título no puede estar vacío.");
       return;
@@ -199,7 +215,7 @@ export default function RecordatoriosScreen() {
     } else {
       Alert.alert(
         "Error",
-        "No se pudo guardar el recordatorio. Intenta de nuevo.",
+        error ?? "No se pudo guardar el recordatorio. Intenta de nuevo.",
       );
     }
   };

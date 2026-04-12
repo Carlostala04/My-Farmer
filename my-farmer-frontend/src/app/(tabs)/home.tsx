@@ -25,7 +25,6 @@ import {
   Image,
   ImageBackground,
   ActivityIndicator,
-  Pressable,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -34,6 +33,7 @@ import Colors from "@/constants/colors";
 import { useTheme } from "@/contexts/ThemeContext";
 import LivestockIcon from "@/components/ui/livestock_icon";
 import WheatIcon from "@/components/ui/wheat_icon";
+import MapIcon from "@/components/ui/map_icon";
 import { useAnimales } from "@/hooks/useAnimales";
 import { useCultivos } from "@/hooks/useCultivos";
 import { useUsuario } from "@/hooks/useUsuario";
@@ -167,6 +167,22 @@ export default function Home() {
             </View>
             <Text style={[styles.quickLabel, { color: t.title }]}>
               Ver lista de cultivos
+            </Text>
+            <Text style={styles.quickArrow}>›</Text>
+          </TouchableOpacity>
+
+          <View style={[styles.divider, { backgroundColor: t.border }]} />
+
+          <TouchableOpacity
+            style={styles.quickAccessItem}
+            onPress={() => router.push("/(tabs)/Mapa" as any)}
+            activeOpacity={0.7}
+          >
+            <View style={[styles.quickIcon, { backgroundColor: "#E0F2FE" }]}>
+              <MapIcon size={22} color="#0284C7" />
+            </View>
+            <Text style={[styles.quickLabel, { color: t.title }]}>
+              Ver mis parcelas
             </Text>
             <Text style={styles.quickArrow}>›</Text>
           </TouchableOpacity>
@@ -354,13 +370,6 @@ export default function Home() {
           No hay recordatorios próximos.
         </Text>
 
-        <View style={{ height: 16 }} />
-        <Pressable
-          style={styles.button_map}
-          onPress={() => router.replace("/(tabs)/Mapa")}
-        >
-          <Text style={styles.button_map_text}>Ir a mapa</Text>
-        </Pressable>
       </ScrollView>
     </>
   );
@@ -529,18 +538,4 @@ const styles = StyleSheet.create({
     textShadowRadius: 4,
   },
   cultivoDate: { color: "rgba(255,255,255,0.85)", fontSize: 11 },
-  button_map: {
-    backgroundColor: Colors.PRIMARY_GREEN,
-    width: 100,
-    height: 34,
-    borderRadius: 5,
-  },
-
-  button_map_text: {
-    fontWeight: "700",
-    color: "#fff",
-    fontSize: 16,
-    textAlign: "center",
-    marginTop: 5,
-  },
 });

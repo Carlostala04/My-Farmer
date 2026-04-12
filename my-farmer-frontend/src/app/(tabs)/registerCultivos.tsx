@@ -36,6 +36,10 @@ import { useParcelas } from "@/hooks/useParcelas";
 import { useAuth } from "@/supabase/useAuth";
 import { getCultivoById, actualizarCultivo } from "@/services/cultivosService";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useSuscripcion } from "@/hooks/useSuscripcion";
+import { PlanSuscripcion } from "@/ts/suscripcion";
+
+const LIMITE_PLAN_GRATUITO_CULTIVOS = 5;
 
 export default function RegisterCultivosScreen() {
   const router = useRouter();
@@ -49,7 +53,13 @@ export default function RegisterCultivosScreen() {
   const modoEdicion = !!cultivo_id;
 
   // Hook para crear cultivos en el backend
-  const { crearCultivo, loading: loadingCrear } = useCultivos();
+  const { crearCultivo, loading: loadingCrear, error: errorCultivo, cultivos } = useCultivos();
+  const { suscripcionActiva } = useSuscripcion();
+
+  // Mostrar error del hook cuando ocurre
+  useEffect(() => {
+    if (errorCultivo) Alert.alert("Error", errorCultivo);
+  }, [errorCultivo]);
 
   // Estado de carga para modo edición
   const [guardando, setGuardando] = useState(false);
@@ -238,6 +248,20 @@ export default function RegisterCultivosScreen() {
       return;
     }
 
+    // Verificar límite del plan gratuito solo en modo creación
+    if (!modoEdicion) {
+      const esPremium =
+        suscripcionActiva?.Plan === PlanSuscripcion.PREMIUM;
+      if (!esPremium && cultivos.length >= LIMITE_PLAN_GRATUITO_CULTIVOS) {
+        Alert.alert(
+          "Límite alcanzado",
+          `El plan gratuito permite hasta ${LIMITE_PLAN_GRATUITO_CULTIVOS} cultivos registrados. Actualiza a Premium para registrar más.`,
+          [{ text: "Aceptar" }],
+        );
+        return;
+      }
+    }
+
     if (modoEdicion) {
       // Modo edición: llamar al servicio directamente
       if (!session?.access_token) return;
@@ -289,12 +313,8 @@ export default function RegisterCultivosScreen() {
       if (ok) {
         Alert.alert("Éxito", "Cultivo registrado correctamente.");
         router.back();
-      } else {
-        Alert.alert(
-          "Error",
-          "No se pudo registrar el cultivo. Intenta de nuevo.",
-        );
       }
+      // Si !ok, el useEffect de errorCultivo ya mostrará el mensaje de error del hook
     }
   };
 

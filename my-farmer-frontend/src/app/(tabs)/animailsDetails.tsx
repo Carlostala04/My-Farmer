@@ -307,7 +307,10 @@ const AnimalsDetails = () => {
           onPress={() =>
             router.push({
               pathname: "/(tabs)/historialAnimales",
-              params: { animalId: String(animal_id) },
+              params: {
+                animal_id: String(animal_id),
+                animal_nombre: animal?.Nombre ?? "",
+              },
             })
           }
         >

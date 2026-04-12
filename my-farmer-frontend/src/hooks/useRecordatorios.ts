@@ -107,6 +107,8 @@ export function useRecordatorios() {
   /**
    * Alterna el estado Cancelado de un recordatorio (toggle completado).
    * Actualiza el estado local optimistamente y luego sincroniza con el backend.
+   * Al cancelar usa DELETE para que el backend registre Cancelado_En correctamente.
+   * Al descancelar usa PATCH.
    */
   const toggleRecordatorio = useCallback(
     async (id: number, canceladoActual: boolean): Promise<void> => {
@@ -118,7 +120,13 @@ export function useRecordatorios() {
         ),
       );
       try {
-        await actualizarService(id, { Cancelado: !canceladoActual }, session.access_token);
+        if (!canceladoActual) {
+          // Cancelar: usar DELETE que registra Cancelado_En en el backend
+          await eliminarService(id, session.access_token);
+        } else {
+          // Descancelar: usar PATCH
+          await actualizarService(id, { Cancelado: false }, session.access_token);
+        }
       } catch (e: any) {
         // Revertir si falla
         setRecordatorios((prev) =>

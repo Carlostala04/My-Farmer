@@ -21,6 +21,18 @@ export async function getMiPerfil(token: string): Promise<ResponseUsuarioDto> {
   return apiFetch<ResponseUsuarioDto>("/usuarios/me", { token });
 }
 
+/** Guarda el Expo Push Token del dispositivo en el backend. */
+export async function guardarPushToken(
+  pushToken: string,
+  token: string,
+): Promise<void> {
+  return apiFetch<void>("/usuarios/push-token", {
+    method: "PATCH",
+    token,
+    body: { token: pushToken },
+  });
+}
+
 /**
  * Actualiza campos del perfil del usuario autenticado.
  * Si se pasa imagenUri, la adjunta como archivo (multipart/form-data) igual que animales.

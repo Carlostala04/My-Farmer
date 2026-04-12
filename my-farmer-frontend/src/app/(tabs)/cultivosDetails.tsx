@@ -366,7 +366,10 @@ const CultivosDetail = () => {
           onPress={() =>
             router.push({
               pathname: "/(tabs)/historialCultivos",
-              params: { cultivoId: String(cultivo_id) },
+              params: {
+                cultivo_id: String(cultivo_id),
+                cultivo_nombre: cultivo?.Nombre ?? "",
+              },
             })
           }
         >

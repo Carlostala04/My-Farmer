@@ -27,6 +27,13 @@
     "plugins": [
       "expo-router",
       [
+        "expo-notifications",
+        {
+          "icon": "./assets/icons/logo.png",
+          "color": "#22C55E"
+        }
+      ],
+      [
         "expo-splash-screen",
         {
           "backgroundColor": "#208AEF",
@@ -43,6 +50,13 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "0634db6a-6172-4fb6-b532-48fbb518cd1a"
+      }
+    },
+    "owner": "carlosftg1923"
   }
 }

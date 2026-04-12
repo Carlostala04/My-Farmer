@@ -78,6 +78,7 @@ export default function RecordatoriosScreen() {
   const [nuevaEntidadTipo, setNuevaEntidadTipo] = useState<EntidadTipo | "">(
     "",
   );
+  const [nuevaEntidadTipoId, setNuevaEntidadTipoId] = useState<number | "">("");
   const [nuevaEntidadId, setNuevaEntidadId] = useState<number>(0);
   const [nuevaDescripcion, setNuevaDescripcion] = useState("");
   const [nuevoRecordar, setNuevoRecordar] = useState("");
@@ -152,6 +153,7 @@ export default function RecordatoriosScreen() {
   const resetModal = () => {
     setNuevoTitulo("");
     setNuevaEntidadTipo("");
+    setNuevaEntidadTipoId("");
     setNuevaEntidadId(0);
     setNuevaDescripcion("");
     setNuevoRecordar("");
@@ -459,12 +461,13 @@ export default function RecordatoriosScreen() {
                 <Dropdown
                   data={entidadTipoOpciones}
                   placeholder="Seleccione una categoría"
-                  value={nuevaEntidadTipo}
+                  value={nuevaEntidadTipoId}
                   onValueChange={(val) => {
                     const encontrado = entidadTipoOpciones.find(
                       (o) => o.id === Number(val),
                     );
                     if (encontrado) {
+                      setNuevaEntidadTipoId(Number(val));
                       setNuevaEntidadTipo(encontrado.value);
                       setNuevaEntidadId(0);
                     }

@@ -4,11 +4,11 @@
     "slug": "my-farmer",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icons/logo.png",
+    "icon": "./assets/icons/logo.jpeg",
     "scheme": "myfarmer",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon"
+      "icon": "./assets/icons/icons/logo.jpeg"
     },
     "android": {
       "adaptiveIcon": {

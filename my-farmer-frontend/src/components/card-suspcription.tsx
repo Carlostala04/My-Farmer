@@ -4,6 +4,7 @@ type CardSuspriptionProps = {
   precio: number;
   descuento: boolean;
   porcentajeDescuento: number;
+  esAnual?: boolean;
   onPress?: () => void;
   loading?: boolean;
 };
@@ -19,6 +20,7 @@ const CardSuspription = ({
   precio,
   descuento,
   porcentajeDescuento,
+  esAnual = false,
   onPress,
   loading = false,
 }: CardSuspriptionProps) => {
@@ -37,7 +39,10 @@ const CardSuspription = ({
             <Text style={styles.title}>premium</Text>
           </View>
 
-          <Text style={styles.time}>/mes</Text>
+          <Text style={styles.time}>{esAnual ? "/año" : "/mes"}</Text>
+          {esAnual && (
+            <Text style={styles.timeSubtext}>{`$${Math.round(precio / 12)}/mes`}</Text>
+          )}
         </View>
 
         {descuento && (
@@ -162,6 +167,14 @@ const styles = StyleSheet.create({
     left: 100,
     fontSize: 18,
     fontWeight: "700",
+  },
+  timeSubtext: {
+    color: "#c8f0d2",
+    position: "absolute",
+    bottom: 22,
+    left: 100,
+    fontSize: 13,
+    fontWeight: "500",
   },
   ribbonContainer: {
     position: "absolute",

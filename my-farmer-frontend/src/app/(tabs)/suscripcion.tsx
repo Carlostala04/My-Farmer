@@ -15,7 +15,8 @@ import { useSuscripcion } from '@/hooks/useSuscripcion';
 import { CicloFacturacion } from '@/ts/suscripcion';
 
 const PRECIO_MENSUAL = 15;
-const PRECIO_ANUAL_POR_MES = 10; 
+const PRECIO_ANUAL_POR_MES = 10;
+const PRECIO_ANUAL_TOTAL = PRECIO_ANUAL_POR_MES * 12; // $120
 const DESCUENTO_ANUAL = 25;
 
 export default function Suscripcion() {
@@ -194,9 +195,10 @@ export default function Suscripcion() {
             <CardSuspription
               precio={
                 facturacion === CicloFacturacion.ANUAL
-                  ? PRECIO_ANUAL_POR_MES
+                  ? PRECIO_ANUAL_TOTAL
                   : PRECIO_MENSUAL
               }
+              esAnual={facturacion === CicloFacturacion.ANUAL}
               descuento={false}
               porcentajeDescuento={DESCUENTO_ANUAL}
               onPress={handleActivar}

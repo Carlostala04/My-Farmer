@@ -45,7 +45,6 @@ export default function LoginScreen() {
 
     if (error) {
       Alert.alert("Error", error.message);
-      setLoading(false); // Solo quitamos carga si hay error, si no, navegamos
     } else {
       // 🟢 Sincronizar usuario con el backend
       try {
@@ -61,9 +60,9 @@ export default function LoginScreen() {
         console.log("Error al sincronizar usuario con backend:", e);
       }
 
-      Alert.alert("Éxito", "Has iniciado sesión correctamente");
-      router.replace("/(tabs)/home"); // Redirigir a la pantalla principal
+      router.replace("/(tabs)/home"); // Usuario existente → ir directo al home
     }
+    setLoading(false);
   }
 
   // 🔥 GOOGLE LOGIN (PARA EXPO GO)
@@ -149,8 +148,8 @@ export default function LoginScreen() {
                 console.log("Error al sincronizar usuario con backend:", e);
               }
 
-              console.log("8. Redirigiendo a Mapa...");
-              router.replace("/home");
+              console.log("8. Redirigiendo al home...");
+              router.replace("/(tabs)/home");
             } else {
               console.log("Error: No hay sesión o usuario tras setSession");
               Alert.alert("Error", "El correo o contraseña son incorrectos.");

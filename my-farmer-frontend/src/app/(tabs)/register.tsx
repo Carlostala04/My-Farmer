@@ -107,7 +107,8 @@ export default function RegisterScreen() {
         console.log("Error al sincronizar usuario con backend:", e);
       }
 
-      router.replace("/(tabs)/home");
+      // Usuario nuevo → mostrar onboarding antes de ir al home
+      router.replace("/(tabs)/onboarding");
     } finally {
       setLoading(false);
     }
@@ -161,7 +162,8 @@ export default function RegisterScreen() {
               } catch (e) {
                 console.log("Error al sincronizar usuario con backend:", e);
               }
-              router.replace("/(tabs)/home");
+              // Usuario nuevo vía Google → mostrar onboarding
+              router.replace("/(tabs)/onboarding");
             }
           } else {
             Alert.alert("Error", "La respuesta de Google no fue válida.");

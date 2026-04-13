@@ -9,6 +9,10 @@
  *  4. Registra listeners para manejar notificaciones en foreground
  *     y cuando el usuario toca una notificación.
  *
+ * Todos los errores de notificaciones se suprimen silenciosamente para
+ * no mostrar mensajes de error al iniciar la aplicación (ej: emuladores,
+ * dispositivos sin configuración de push token, permisos denegados).
+ *
  * Uso: llamar con el access_token de Supabase. Si es null (usuario no
  * autenticado aún) el hook no hace nada hasta que el token esté disponible.
  */
@@ -20,22 +24,24 @@ import Constants from "expo-constants";
 import { router } from "expo-router";
 import { guardarPushToken } from "@/services/usuariosService";
 
-// Configura cómo se muestran las notificaciones cuando la app está en primer plano
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowBanner: true,
-    shouldShowList: true,
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-  }),
-});
+// Configura cómo se muestran las notificaciones cuando la app está en primer plano.
+// Envuelto en try/catch para suprimir errores en emuladores o configuraciones incompletas.
+try {
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowBanner: true,
+      shouldShowList: true,
+      shouldPlaySound: true,
+      shouldSetBadge: true,
+    }),
+  });
+} catch {
+  // Silenciar error de configuración de notificaciones al inicio
+}
 
 async function registrarDispositivo(): Promise<string | null> {
   // Las notificaciones push solo funcionan en dispositivos físicos
-  if (!Device.isDevice) {
-    console.log("Notificaciones push no disponibles en emuladores/simuladores.");
-    return null;
-  }
+  if (!Device.isDevice) return null;
 
   try {
     // Verificar / solicitar permisos
@@ -45,29 +51,16 @@ async function registrarDispositivo(): Promise<string | null> {
         await Notifications.requestPermissionsAsync();
       status = nuevoStatus;
     }
-    if (status !== "granted") {
-      console.warn("El usuario denegó los permisos de notificaciones push.");
-      return null;
-    }
+    if (status !== "granted") return null;
 
     // Verificar que el projectId esté configurado
     const projectId = Constants.expoConfig?.extra?.eas?.projectId;
-    if (!projectId) {
-      console.warn(
-        "No se encontró el projectId en la configuración de Expo (eas.projectId). " +
-        "Las notificaciones push no funcionarán correctamente.",
-      );
-      return null;
-    }
+    if (!projectId) return null;
 
     // Obtener el Expo Push Token del dispositivo
     const tokenData = await Notifications.getExpoPushTokenAsync({ projectId });
     return tokenData.data;
-  } catch (error: any) {
-    console.warn(
-      "Error al obtener el token de notificaciones push:",
-      error?.message ?? error,
-    );
+  } catch {
     return null;
   }
 }
@@ -86,16 +79,15 @@ export function useNotifications(authToken: string | null) {
         if (!pushToken) return;
         await guardarPushToken(pushToken, authToken);
       })
-      .catch((error) => {
-        console.warn("Error al registrar notificaciones:", error);
+      .catch(() => {
+        // Suprimir errores de registro de notificaciones al inicio
       });
 
     try {
       // Listener: notificación recibida mientras la app está abierta (foreground)
       receivedListener.current = Notifications.addNotificationReceivedListener(
-        (notification) => {
-          const titulo = notification.request.content.title ?? "Sin título";
-          console.log("Notificación recibida en foreground:", titulo);
+        () => {
+          // Notificación recibida en foreground — no action needed
         },
       );
 
@@ -107,18 +99,12 @@ export function useNotifications(authToken: string | null) {
             if (data?.screen === "recordatorios") {
               router.push("/(tabs)/recordatorios" as any);
             }
-          } catch (navError: any) {
-            console.warn(
-              "Error al navegar desde notificación:",
-              navError?.message ?? navError,
-            );
+          } catch {
+            // Suprimir errores de navegación desde notificación
           }
         });
-    } catch (listenerError: any) {
-      console.warn(
-        "Error al registrar listeners de notificaciones:",
-        listenerError?.message ?? listenerError,
-      );
+    } catch {
+      // Suprimir errores al registrar listeners de notificaciones
     }
 
     return () => {

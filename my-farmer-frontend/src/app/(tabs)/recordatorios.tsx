@@ -9,8 +9,10 @@
  *    del backend mediante los hooks `useAnimales` y `useCultivos`.
  *  - La acción de eliminar (swipe y long press) ahora llama al backend.
  *  - Se agregó un indicador de carga y mensajes de error.
- *  - El "toggle completado" se mantiene solo local ya que el backend no tiene endpoint de toggle;
- *    se usa PATCH con `Cancelado: true` como equivalente a completado.
+ *  - Se agrega la función de editar recordatorio (ícono de edición en cada tarjeta).
+ *  - Se agrega un modal de detalles al hacer tap en una tarjeta.
+ *  - El ícono de eliminar en el swipe usa SVG en lugar de emoji.
+ *  - El toggle usa PATCH para no eliminar el recordatorio del backend.
  */
 
 import React, { useState, useMemo } from "react";
@@ -30,7 +32,9 @@ import {
   ActivityIndicator,
   ScrollView,
 } from "react-native";
-import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
+import DateTimePicker, {
+  DateTimePickerEvent,
+} from "@react-native-community/datetimepicker";
 import {
   GestureHandlerRootView,
   Swipeable,
@@ -38,6 +42,7 @@ import {
 import NavBar from "@/components/navBar";
 import ScreenHeader from "@/components/header";
 import FilterIcon from "@/components/ui/filterIcon";
+import DeleteIcon from "@/components/ui/deleteIcon";
 import Colors from "@/constants/colors";
 import Dropdown from "@/components/dropdown";
 import { EntidadTipo } from "@/ts/recordatorioProps";
@@ -47,6 +52,7 @@ import { useAnimales } from "@/hooks/useAnimales";
 import { useCultivos } from "@/hooks/useCultivos";
 import { useSuscripcion } from "@/hooks/useSuscripcion";
 import { PlanSuscripcion } from "@/ts/suscripcion";
+import { ResponseRecordatorioDto } from "@/ts/recordatorioProps";
 
 const LIMITE_PLAN_GRATUITO_RECORDATORIOS = 5;
 
@@ -65,6 +71,15 @@ export default function RecordatoriosScreen() {
   const [ordenDescendente, setOrdenDescendente] = useState(false);
   const [filterModalVisible, setFilterModalVisible] = useState(false);
 
+  // Modal de detalles
+  const [detalleVisible, setDetalleVisible] = useState(false);
+  const [recordatorioSeleccionado, setRecordatorioSeleccionado] =
+    useState<ResponseRecordatorioDto | null>(null);
+
+  // Modo edición
+  const [modoEdicion, setModoEdicion] = useState(false);
+  const [editandoId, setEditandoId] = useState<number | null>(null);
+
   // Datos reales del backend
   const {
     recordatorios,
@@ -73,6 +88,7 @@ export default function RecordatoriosScreen() {
     crearRecordatorio,
     eliminarRecordatorio,
     toggleRecordatorio,
+    actualizarRecordatorio,
   } = useRecordatorios();
   const { animales } = useAnimales();
   const { cultivos } = useCultivos();
@@ -164,19 +180,58 @@ export default function RecordatoriosScreen() {
     setNuevoRecordar("");
     setRecordarFechaValue(new Date());
     setRecordarHoraValue(new Date());
+    setModoEdicion(false);
+    setEditandoId(null);
   };
 
-  /** Valida y envía el nuevo recordatorio al backend. */
-  const agregar = async () => {
-    // Verificar límite del plan gratuito
-    const esPremium = suscripcionActiva?.Plan === PlanSuscripcion.PREMIUM;
-    if (!esPremium && recordatorios.length >= LIMITE_PLAN_GRATUITO_RECORDATORIOS) {
-      Alert.alert(
-        "Límite alcanzado",
-        `El plan gratuito permite hasta ${LIMITE_PLAN_GRATUITO_RECORDATORIOS} recordatorios. Actualiza a Premium para añadir más.`,
-        [{ text: "Aceptar" }],
-      );
-      return;
+  /** Abre el modal de creación. */
+  const abrirModalCrear = () => {
+    resetModal();
+    setModalVisible(true);
+  };
+
+  /** Abre el modal de edición precargando los datos del recordatorio. */
+  const abrirModalEditar = (rec: ResponseRecordatorioDto) => {
+    setDetalleVisible(false);
+    setModoEdicion(true);
+    setEditandoId(rec.Recordatorio_id);
+    setNuevoTitulo(rec.Titulo);
+    setNuevaDescripcion(rec.Descripcion ?? "");
+
+    const tipoOpcion = entidadTipoOpciones.find(
+      (o) => o.value === rec.Entidad_Tipo,
+    );
+    if (tipoOpcion) {
+      setNuevaEntidadTipoId(tipoOpcion.id);
+      setNuevaEntidadTipo(tipoOpcion.value);
+    }
+    setNuevaEntidadId(rec.Entidad_id);
+
+    // Parsear la fecha y hora existente
+    const fechaObj = new Date(rec.Recordar);
+    setRecordarFechaValue(fechaObj);
+    setRecordarHoraValue(fechaObj);
+    setNuevoRecordar(buildRecordarString(fechaObj, fechaObj));
+
+    setModalVisible(true);
+  };
+
+  /** Valida y envía (crear o editar) el recordatorio al backend. */
+  const guardar = async () => {
+    // Verificar límite del plan gratuito solo al crear
+    if (!modoEdicion) {
+      const esPremium = suscripcionActiva?.Plan === PlanSuscripcion.PREMIUM;
+      if (
+        !esPremium &&
+        recordatorios.length >= LIMITE_PLAN_GRATUITO_RECORDATORIOS
+      ) {
+        Alert.alert(
+          "Límite alcanzado",
+          `El plan gratuito permite hasta ${LIMITE_PLAN_GRATUITO_RECORDATORIOS} recordatorios. Actualiza a Premium para añadir más.`,
+          [{ text: "Aceptar" }],
+        );
+        return;
+      }
     }
 
     if (!nuevoTitulo.trim()) {
@@ -200,13 +255,24 @@ export default function RecordatoriosScreen() {
     }
 
     setGuardando(true);
-    const ok = await crearRecordatorio({
-      Titulo: nuevoTitulo.trim(),
-      Entidad_Tipo: nuevaEntidadTipo as EntidadTipo,
-      Entidad_id: nuevaEntidadId,
-      Descripcion: nuevaDescripcion.trim() || null,
-      Recordar: nuevoRecordar.trim(),
-    });
+    let ok = false;
+
+    if (modoEdicion && editandoId) {
+      ok = await actualizarRecordatorio(editandoId, {
+        Titulo: nuevoTitulo.trim(),
+        Descripcion: nuevaDescripcion.trim() || null,
+        Recordar: nuevoRecordar.trim(),
+      });
+    } else {
+      ok = await crearRecordatorio({
+        Titulo: nuevoTitulo.trim(),
+        Entidad_Tipo: nuevaEntidadTipo as EntidadTipo,
+        Entidad_id: nuevaEntidadId,
+        Descripcion: nuevaDescripcion.trim() || null,
+        Recordar: nuevoRecordar.trim(),
+      });
+    }
+
     setGuardando(false);
 
     if (ok) {
@@ -222,6 +288,7 @@ export default function RecordatoriosScreen() {
 
   /** Confirma y elimina un recordatorio del backend. */
   const confirmarEliminar = (id: number) => {
+    setDetalleVisible(false);
     Alert.alert(
       "Eliminar Recordatorio",
       "¿Estás seguro de que quieres eliminar este recordatorio?",
@@ -241,9 +308,9 @@ export default function RecordatoriosScreen() {
   const renderDeleteAction = (id: number) => (
     <TouchableOpacity
       style={styles.deleteAction}
-      onPress={() => eliminarRecordatorio(id)}
+      onPress={() => confirmarEliminar(id)}
     >
-      <Text style={styles.deleteActionText}>🗑</Text>
+      <DeleteIcon width={22} height={22} color="#fff" />
       <Text style={styles.deleteActionLabel}>Eliminar</Text>
     </TouchableOpacity>
   );
@@ -275,7 +342,7 @@ export default function RecordatoriosScreen() {
                 +
               </Text>
             ),
-            onPress: () => setModalVisible(true),
+            onPress: abrirModalCrear,
           },
         ]}
       />
@@ -334,6 +401,10 @@ export default function RecordatoriosScreen() {
               >
                 <TouchableOpacity
                   activeOpacity={0.9}
+                  onPress={() => {
+                    setRecordatorioSeleccionado(item);
+                    setDetalleVisible(true);
+                  }}
                   onLongPress={() => confirmarEliminar(item.Recordatorio_id)}
                   delayLongPress={500}
                 >
@@ -400,12 +471,156 @@ export default function RecordatoriosScreen() {
         )}
       </View>
 
+      {/* Modal de detalles del recordatorio */}
+      <Modal visible={detalleVisible} transparent animationType="slide">
+        <TouchableWithoutFeedback onPress={() => setDetalleVisible(false)}>
+          <View style={styles.modalOverlay}>
+            <TouchableWithoutFeedback>
+              <View
+                style={[styles.detalleContainer, { backgroundColor: t.card }]}
+              >
+                <View style={styles.detalleTitleRow}>
+                  <Text
+                    style={[styles.modalTitle, { color: t.title, flex: 1 }]}
+                  >
+                    {recordatorioSeleccionado?.Titulo ?? ""}
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() =>
+                      recordatorioSeleccionado &&
+                      abrirModalEditar(recordatorioSeleccionado)
+                    }
+                    style={styles.editarBtn}
+                  >
+                    <Text style={styles.editarBtnText}>Editar</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => setDetalleVisible(false)}
+                    style={[styles.cerrarX, { borderColor: t.border }]}
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  >
+                    <Text style={[styles.cerrarXText, { color: t.subtitle }]}>✕</Text>
+                  </TouchableOpacity>
+                </View>
+
+                <View
+                  style={[styles.detalleDivider, { backgroundColor: t.border }]}
+                />
+
+                <View style={styles.detalleRow}>
+                  <Text style={[styles.detalleLabel, { color: t.subtitle }]}>
+                    Categoría:
+                  </Text>
+                  <View
+                    style={[
+                      styles.badge,
+                      recordatorioSeleccionado?.Entidad_Tipo === "animal"
+                        ? styles.badgeAnimal
+                        : styles.badgeCultivo,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.badgeText,
+                        recordatorioSeleccionado?.Entidad_Tipo === "animal"
+                          ? styles.badgeTextAnimal
+                          : styles.badgeTextCultivo,
+                      ]}
+                    >
+                      {recordatorioSeleccionado?.Entidad_Tipo === "animal"
+                        ? "Animal"
+                        : "Cultivo"}
+                    </Text>
+                  </View>
+                </View>
+
+                <View style={styles.detalleRow}>
+                  <Text style={[styles.detalleLabel, { color: t.subtitle }]}>
+                    Recordar el:
+                  </Text>
+                  <Text style={[styles.detalleValor, { color: t.title }]}>
+                    {recordatorioSeleccionado
+                      ? formatDate(recordatorioSeleccionado.Recordar)
+                      : ""}
+                  </Text>
+                </View>
+
+                <View style={styles.detalleRow}>
+                  <Text style={[styles.detalleLabel, { color: t.subtitle }]}>
+                    Estado:
+                  </Text>
+                  <Text style={[styles.detalleValor, { color: t.title }]}>
+                    {recordatorioSeleccionado?.Cancelado
+                      ? "Completado"
+                      : "Pendiente"}
+                  </Text>
+                </View>
+
+                {recordatorioSeleccionado?.Enviado && (
+                  <View style={styles.detalleRow}>
+                    <Text style={[styles.detalleLabel, { color: t.subtitle }]}>
+                      Notificación:
+                    </Text>
+                    <Text
+                      style={[
+                        styles.detalleValor,
+                        { color: Colors.PRIMARY_GREEN },
+                      ]}
+                    >
+                      Enviada
+                    </Text>
+                  </View>
+                )}
+
+                {recordatorioSeleccionado?.Descripcion ? (
+                  <>
+                    <Text
+                      style={[
+                        styles.detalleLabel,
+                        { color: t.subtitle, marginTop: 8 },
+                      ]}
+                    >
+                      Descripción:
+                    </Text>
+                    <Text
+                      style={[styles.detalleDescripcion, { color: t.title }]}
+                    >
+                      {recordatorioSeleccionado.Descripcion}
+                    </Text>
+                  </>
+                ) : null}
+
+                <View style={styles.detalleActions}>
+                  <TouchableOpacity
+                    style={styles.eliminarBtn}
+                    onPress={() =>
+                      recordatorioSeleccionado &&
+                      confirmarEliminar(
+                        recordatorioSeleccionado.Recordatorio_id,
+                      )
+                    }
+                  >
+                    <DeleteIcon width={18} height={18} color="#fff" />
+                    <Text style={styles.eliminarBtnText}>Eliminar</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </TouchableWithoutFeedback>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
+
       {/* Modal de filtro por fecha */}
       <Modal visible={filterModalVisible} transparent animationType="slide">
         <TouchableWithoutFeedback onPress={() => setFilterModalVisible(false)}>
           <View style={styles.modalOverlay}>
             <TouchableWithoutFeedback>
-              <View style={[styles.filterModalContainer, { backgroundColor: t.card }]}>
+              <View
+                style={[
+                  styles.filterModalContainer,
+                  { backgroundColor: t.card },
+                ]}
+              >
                 <Text style={[styles.modalTitle, { color: t.title }]}>
                   Ordenar por fecha
                 </Text>
@@ -453,7 +668,7 @@ export default function RecordatoriosScreen() {
         </TouchableWithoutFeedback>
       </Modal>
 
-      {/* Modal de creación de recordatorio */}
+      {/* Modal de creación / edición de recordatorio */}
       <Modal visible={modalVisible} transparent animationType="slide">
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <View style={styles.modalOverlay}>
@@ -461,59 +676,89 @@ export default function RecordatoriosScreen() {
               behavior={Platform.OS === "ios" ? "padding" : "height"}
               style={{ width: "100%" }}
             >
-              <View style={[styles.modalContainer, { backgroundColor: t.card }]}>
-                <Text style={[styles.modalTitle, { color: t.title }]}>Nuevo Recordatorio</Text>
+              <View
+                style={[styles.modalContainer, { backgroundColor: t.card }]}
+              >
+                <Text style={[styles.modalTitle, { color: t.title }]}>
+                  {modoEdicion ? "Editar Recordatorio" : "Nuevo Recordatorio"}
+                </Text>
 
-                <Text style={[styles.modalLabel, { color: t.title }]}>Título</Text>
+                <Text style={[styles.modalLabel, { color: t.title }]}>
+                  Título
+                </Text>
                 <TextInput
-                  style={[styles.modalInput, { backgroundColor: t.input, borderColor: t.border, color: t.title }]}
+                  style={[
+                    styles.modalInput,
+                    {
+                      backgroundColor: t.input,
+                      borderColor: t.border,
+                      color: t.title,
+                    },
+                  ]}
                   placeholder="Título del recordatorio"
                   placeholderTextColor={t.placeholder}
                   value={nuevoTitulo}
                   onChangeText={setNuevoTitulo}
                 />
 
-                <Text style={[styles.modalLabel, { color: t.title }]}>Categoría</Text>
-                <Dropdown
-                  data={entidadTipoOpciones}
-                  placeholder="Seleccione una categoría"
-                  value={nuevaEntidadTipoId}
-                  onValueChange={(val) => {
-                    const encontrado = entidadTipoOpciones.find(
-                      (o) => o.id === Number(val),
-                    );
-                    if (encontrado) {
-                      setNuevaEntidadTipoId(Number(val));
-                      setNuevaEntidadTipo(encontrado.value);
-                      setNuevaEntidadId(0);
-                    }
-                  }}
-                />
-
-                {/* Dropdown dinámico de animales o cultivos según categoría */}
-                {nuevaEntidadTipo !== "" && (
+                {/* En modo edición no se puede cambiar la entidad */}
+                {!modoEdicion && (
                   <>
-                    <Text style={styles.modalLabel}>
-                      {nuevaEntidadTipo === "animal"
-                        ? "Animal relacionado"
-                        : "Cultivo relacionado"}
+                    <Text style={[styles.modalLabel, { color: t.title }]}>
+                      Categoría
                     </Text>
                     <Dropdown
-                      data={entidadData}
-                      placeholder={
-                        nuevaEntidadTipo === "animal"
-                          ? "Seleccione un animal"
-                          : "Seleccione un cultivo"
-                      }
-                      value={nuevaEntidadId || ""}
-                      onValueChange={(val) => setNuevaEntidadId(Number(val))}
+                      data={entidadTipoOpciones}
+                      placeholder="Seleccione una categoría"
+                      value={nuevaEntidadTipoId}
+                      onValueChange={(val) => {
+                        const encontrado = entidadTipoOpciones.find(
+                          (o) => o.id === Number(val),
+                        );
+                        if (encontrado) {
+                          setNuevaEntidadTipoId(Number(val));
+                          setNuevaEntidadTipo(encontrado.value);
+                          setNuevaEntidadId(0);
+                        }
+                      }}
                     />
+
+                    {nuevaEntidadTipo !== "" && (
+                      <>
+                        <Text style={styles.modalLabel}>
+                          {nuevaEntidadTipo === "animal"
+                            ? "Animal relacionado"
+                            : "Cultivo relacionado"}
+                        </Text>
+                        <Dropdown
+                          data={entidadData}
+                          placeholder={
+                            nuevaEntidadTipo === "animal"
+                              ? "Seleccione un animal"
+                              : "Seleccione un cultivo"
+                          }
+                          value={nuevaEntidadId || ""}
+                          onValueChange={(val) =>
+                            setNuevaEntidadId(Number(val))
+                          }
+                        />
+                      </>
+                    )}
                   </>
                 )}
 
-                <Text style={[styles.modalLabel, { color: t.title }]}>Descripción</Text>
+                <Text style={[styles.modalLabel, { color: t.title }]}>
+                  Descripción
+                </Text>
                 <TextInput
-                  style={[styles.modalTextArea, { backgroundColor: t.input, borderColor: t.border, color: t.title }]}
+                  style={[
+                    styles.modalTextArea,
+                    {
+                      backgroundColor: t.input,
+                      borderColor: t.border,
+                      color: t.title,
+                    },
+                  ]}
                   placeholder="Descripción del recordatorio (opcional)"
                   placeholderTextColor={t.placeholder}
                   value={nuevaDescripcion}
@@ -522,22 +767,46 @@ export default function RecordatoriosScreen() {
                   numberOfLines={3}
                 />
 
-                <Text style={[styles.modalLabel, { color: t.title }]}>Recordar el</Text>
+                <Text style={[styles.modalLabel, { color: t.title }]}>
+                  Recordar el
+                </Text>
                 <View style={styles.dateRow}>
                   <TouchableOpacity
-                    style={[styles.dateButton, { backgroundColor: t.input, borderColor: t.border }]}
+                    style={[
+                      styles.dateButton,
+                      { backgroundColor: t.input, borderColor: t.border },
+                    ]}
                     onPress={() => setShowFechaPicker(true)}
                   >
-                    <Text style={nuevoRecordar ? [styles.dateText, { color: t.title }] : styles.datePlaceholder}>
-                      {nuevoRecordar ? nuevoRecordar.split(" ")[0] : "YYYY-MM-DD"}
+                    <Text
+                      style={
+                        nuevoRecordar
+                          ? [styles.dateText, { color: t.title }]
+                          : styles.datePlaceholder
+                      }
+                    >
+                      {nuevoRecordar
+                        ? nuevoRecordar.split(" ")[0]
+                        : "YYYY-MM-DD"}
                     </Text>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={[styles.dateButton, { backgroundColor: t.input, borderColor: t.border }]}
+                    style={[
+                      styles.dateButton,
+                      { backgroundColor: t.input, borderColor: t.border },
+                    ]}
                     onPress={() => setShowHoraPicker(true)}
                   >
-                    <Text style={nuevoRecordar ? [styles.dateText, { color: t.title }] : styles.datePlaceholder}>
-                      {nuevoRecordar ? nuevoRecordar.split(" ")[1] ?? "HH:MM" : "HH:MM"}
+                    <Text
+                      style={
+                        nuevoRecordar
+                          ? [styles.dateText, { color: t.title }]
+                          : styles.datePlaceholder
+                      }
+                    >
+                      {nuevoRecordar
+                        ? (nuevoRecordar.split(" ")[1] ?? "HH:MM")
+                        : "HH:MM"}
                     </Text>
                   </TouchableOpacity>
                 </View>
@@ -560,24 +829,31 @@ export default function RecordatoriosScreen() {
 
                 <View style={styles.modalButtons}>
                   <TouchableOpacity
-                    style={[styles.cancelButton, { backgroundColor: t.input, borderColor: t.border }]}
+                    style={[
+                      styles.cancelButton,
+                      { backgroundColor: t.input, borderColor: t.border },
+                    ]}
                     disabled={guardando}
                     onPress={() => {
                       resetModal();
                       setModalVisible(false);
                     }}
                   >
-                    <Text style={[styles.cancelText, { color: t.title }]}>Cancelar</Text>
+                    <Text style={[styles.cancelText, { color: t.title }]}>
+                      Cancelar
+                    </Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={[styles.saveButton, guardando && { opacity: 0.7 }]}
-                    onPress={agregar}
+                    onPress={guardar}
                     disabled={guardando}
                   >
                     {guardando ? (
                       <ActivityIndicator color="#fff" />
                     ) : (
-                      <Text style={styles.saveText}>Guardar</Text>
+                      <Text style={styles.saveText}>
+                        {modoEdicion ? "Actualizar" : "Guardar"}
+                      </Text>
                     )}
                   </TouchableOpacity>
                 </View>
@@ -589,15 +865,16 @@ export default function RecordatoriosScreen() {
     </GestureHandlerRootView>
   );
 }
-function formatDate(date:string){
-  const dateObject = new Date(date)
-  const fechaFormated = new Intl.DateTimeFormat('es-CR',{
-    day:'2-digit',
-    month:"2-digit",
-    year:'numeric'
-
-  }).format(dateObject).toString()
-  return fechaFormated
+function formatDate(date: string) {
+  const dateObject = new Date(date);
+  return new Intl.DateTimeFormat("es-CR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  }).format(dateObject);
 }
 const styles = StyleSheet.create({
   container: {
@@ -664,13 +941,12 @@ const styles = StyleSheet.create({
     width: 80,
     borderRadius: 12,
     marginBottom: 10,
+    gap: 4,
   },
-  deleteActionText: { fontSize: 20 },
   deleteActionLabel: {
     fontSize: 12,
     color: "#fff",
     fontWeight: "600",
-    marginTop: 2,
   },
   errorText: {
     color: "#EF4444",
@@ -679,6 +955,53 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   emptyText: { textAlign: "center", marginTop: 32, fontSize: 14 },
+  // Modal de detalles
+  detalleContainer: {
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 24,
+    gap: 10,
+  },
+  detalleTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  editarBtn: {
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 10,
+    backgroundColor: Colors.PRIMARY_GREEN,
+  },
+  editarBtnText: { color: "#fff", fontSize: 14, fontWeight: "600" },
+  cerrarX: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    marginLeft: 6,
+  },
+  cerrarXText: { fontSize: 14, fontWeight: "600", lineHeight: 16 },
+  detalleDivider: { height: 1 },
+  detalleRow: { flexDirection: "row", alignItems: "center", gap: 8 },
+  detalleLabel: { fontSize: 14, fontWeight: "500" },
+  detalleValor: { fontSize: 14 },
+  detalleDescripcion: { fontSize: 14, lineHeight: 20 },
+  detalleActions: { flexDirection: "row", gap: 12, marginTop: 8 },
+  eliminarBtn: {
+    flex: 1,
+    flexDirection: "row",
+    height: 46,
+    borderRadius: 12,
+    backgroundColor: "#EF4444",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+  },
+  eliminarBtnText: { fontSize: 15, color: "#fff", fontWeight: "600" },
+  // Modal filtro
   filterModalContainer: {
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
@@ -713,8 +1036,10 @@ const styles = StyleSheet.create({
   },
   cerrarBtnText: {
     fontSize: 16,
+    width:150,
     color: "#fff",
     fontWeight: "600",
+    textAlign:'center',
   },
   modalOverlay: {
     flex: 1,

@@ -34,6 +34,8 @@ import DeleteIcon from "@/components/ui/deleteIcon";
 import EditIcon from "@/components/ui/editIcon";
 import { useAuth } from "@/supabase/useAuth";
 import { getCultivoById, eliminarCultivo } from "@/services/cultivosService";
+import { eliminarCrecimiento } from "@/services/crecimientosService";
+import { eliminarCosecha } from "@/services/cosechasService";
 import { useRecordatorios } from "@/hooks/useRecordatorios";
 import { useCosechas } from "@/hooks/useCosechas";
 import { useCrecimientos } from "@/hooks/useCrecimientos";
@@ -63,10 +65,10 @@ const CultivosDetail = () => {
   const { recordatorios } = useRecordatorios();
 
   // Hook de cosechas para este cultivo
-  const { cosechas } = useCosechas(cultivo_id ? Number(cultivo_id) : null);
+  const { cosechas, eliminarCosecha: borrarCosecha, refetch: refetchCosechas } = useCosechas(cultivo_id ? Number(cultivo_id) : null);
 
   // Hook de crecimiento para este cultivo
-  const { crecimientos } = useCrecimientos(
+  const { crecimientos, eliminarCrecimiento: borrarCrecimiento, refetch: refetchCrecimientos } = useCrecimientos(
     cultivo_id ? Number(cultivo_id) : null,
   );
 
@@ -117,6 +119,28 @@ const CultivosDetail = () => {
             }
           },
         },
+      ],
+    );
+  };
+
+  const confirmarEliminarCrecimiento = (id: number) => {
+    Alert.alert(
+      "Eliminar registro",
+      "¿Eliminar este registro de crecimiento?",
+      [
+        { text: "Cancelar", style: "cancel" },
+        { text: "Eliminar", style: "destructive", onPress: () => borrarCrecimiento(id) },
+      ],
+    );
+  };
+
+  const confirmarEliminarCosecha = (id: number) => {
+    Alert.alert(
+      "Eliminar cosecha",
+      "¿Eliminar este registro de cosecha?",
+      [
+        { text: "Cancelar", style: "cancel" },
+        { text: "Eliminar", style: "destructive", onPress: () => borrarCosecha(id) },
       ],
     );
   };
@@ -239,6 +263,17 @@ const CultivosDetail = () => {
                 {isActivo ? "Activo" : "Histórico"}
               </Text>
             </View>
+            <TouchableOpacity
+              onPress={() =>
+                router.push({
+                  pathname: "/(tabs)/registerCrecimiento",
+                  params: { cultivo_id: String(cultivo_id) },
+                })
+              }
+              style={styles.addBtn}
+            >
+              <Text style={styles.addBtnText}>+</Text>
+            </TouchableOpacity>
           </View>
           <View style={[styles.divider, { backgroundColor: t.border }]} />
 
@@ -275,7 +310,9 @@ const CultivosDetail = () => {
             </>
           )}
 
-          {crecimientos.length > 0 && (
+          {crecimientos.length === 0 ? (
+            <Text style={[styles.emptyText, { color: t.subtitle }]}>Sin registros de crecimiento.</Text>
+          ) : (
             <>
               <View style={[styles.divider, { backgroundColor: t.border }]} />
               <Text style={[styles.subSectionTitle, { color: t.title }]}>
@@ -296,6 +333,24 @@ const CultivosDetail = () => {
                   {reg.Observaciones ? (
                     <Text style={[styles.cosechaObs, { color: t.subtitle }]}>{reg.Observaciones}</Text>
                   ) : null}
+                  <View style={styles.rowActions}>
+                    <TouchableOpacity
+                      onPress={() =>
+                        router.push({
+                          pathname: "/(tabs)/registerCrecimiento",
+                          params: {
+                            cultivo_id: String(cultivo_id),
+                            crecimiento_id: String(reg.Crecimiento_id),
+                          },
+                        })
+                      }
+                    >
+                      <EditIcon width={16} height={16} />
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => confirmarEliminarCrecimiento(reg.Crecimiento_id)}>
+                      <DeleteIcon width={16} height={16} color="#EF4444" />
+                    </TouchableOpacity>
+                  </View>
                 </View>
               ))}
             </>
@@ -339,6 +394,17 @@ const CultivosDetail = () => {
           <View style={styles.cardTitleRow}>
             <WheatIcon size={18} color={t.title} />
             <Text style={[styles.sectionTitle, { color: t.title }]}>Cosechas Registradas</Text>
+            <TouchableOpacity
+              onPress={() =>
+                router.push({
+                  pathname: "/(tabs)/registerCosecha",
+                  params: { cultivo_id: String(cultivo_id) },
+                })
+              }
+              style={styles.addBtn}
+            >
+              <Text style={styles.addBtnText}>+</Text>
+            </TouchableOpacity>
           </View>
           <View style={[styles.divider, { backgroundColor: t.border }]} />
           {cosechas.length === 0 ? (
@@ -355,6 +421,24 @@ const CultivosDetail = () => {
                 {cosecha.Observaciones ? (
                   <Text style={[styles.cosechaObs, { color: t.subtitle }]}>{cosecha.Observaciones}</Text>
                 ) : null}
+                <View style={styles.rowActions}>
+                  <TouchableOpacity
+                    onPress={() =>
+                      router.push({
+                        pathname: "/(tabs)/registerCosecha",
+                        params: {
+                          cultivo_id: String(cultivo_id),
+                          cosecha_id: String(cosecha.Cosecha_id),
+                        },
+                      })
+                    }
+                  >
+                    <EditIcon width={16} height={16} />
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={() => confirmarEliminarCosecha(cosecha.Cosecha_id)}>
+                    <DeleteIcon width={16} height={16} color="#EF4444" />
+                  </TouchableOpacity>
+                </View>
               </View>
             ))
           )}
@@ -529,6 +613,26 @@ const styles = StyleSheet.create({
   cosechaFecha: { fontSize: 13 },
   cosechaCantidad: { fontSize: 13, fontWeight: "600" },
   cosechaObs: { fontSize: 12, fontStyle: "italic" },
+  addBtn: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: Colors.PRIMARY_GREEN,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  addBtnText: {
+    color: "#fff",
+    fontSize: 20,
+    fontWeight: "600",
+    lineHeight: 24,
+  },
+  rowActions: {
+    flexDirection: "row",
+    gap: 12,
+    alignItems: "center",
+    marginTop: 4,
+  },
 });
 
 export default CultivosDetail;

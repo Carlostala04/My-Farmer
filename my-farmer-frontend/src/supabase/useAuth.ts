@@ -13,6 +13,8 @@ import { supabase } from './supabaseClient'
 export function useAuth() {
   // Estado que guarda la sesión actual (contiene el usuario y el access_token)
   const [session, setSession] = useState<Session | null>(null)
+  // Indica si ya se intentó recuperar la sesión guardada (evita flash de redirect)
+  const [initialized, setInitialized] = useState(false)
 
   useEffect(() => {
     // Guardia para evitar actualizaciones de estado en componentes desmontados
@@ -20,7 +22,10 @@ export function useAuth() {
 
     // 1. Intentar recuperar la sesión guardada en AsyncStorage al arrancar
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (isMounted) setSession(session)
+      if (isMounted) {
+        setSession(session)
+        setInitialized(true)
+      }
     })
 
     // 2. Suscribirse a cambios en el estado de autenticación (Login, Logout, Token Refresh)
@@ -46,6 +51,6 @@ export function useAuth() {
     }
   }, [])
 
-  // Retornamos la sesión para que cualquier componente pueda usar session.access_token
-  return { session }
+  // Retornamos la sesión y el flag de inicialización
+  return { session, initialized }
 }

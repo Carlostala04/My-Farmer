@@ -3,6 +3,14 @@ import { ThemeProvider, useTheme } from "@/contexts/ThemeContext";
 import { StatusBar } from "expo-status-bar";
 import { useAuth } from "@/supabase/useAuth";
 import { useNotifications } from "@/hooks/useNotifications";
+import { LogBox } from "react-native";
+
+// Ocultar advertencias de expo-notifications en Expo Go / Android sin FCM configurado
+LogBox.ignoreLogs([
+  "expo-notifications",
+  "Android Push",
+  "FirebaseApp",
+]);
 
 function AppContent() {
   const { darkMode } = useTheme();

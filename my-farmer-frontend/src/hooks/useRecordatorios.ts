@@ -107,8 +107,7 @@ export function useRecordatorios() {
   /**
    * Alterna el estado Cancelado de un recordatorio (toggle completado).
    * Actualiza el estado local optimistamente y luego sincroniza con el backend.
-   * Al cancelar usa DELETE para que el backend registre Cancelado_En correctamente.
-   * Al descancelar usa PATCH.
+   * Usa PATCH para conservar el registro en el backend (no lo elimina).
    */
   const toggleRecordatorio = useCallback(
     async (id: number, canceladoActual: boolean): Promise<void> => {
@@ -120,13 +119,11 @@ export function useRecordatorios() {
         ),
       );
       try {
-        if (!canceladoActual) {
-          // Cancelar: usar DELETE que registra Cancelado_En en el backend
-          await eliminarService(id, session.access_token);
-        } else {
-          // Descancelar: usar PATCH
-          await actualizarService(id, { Cancelado: false }, session.access_token);
-        }
+        await actualizarService(
+          id,
+          { Cancelado: !canceladoActual },
+          session.access_token,
+        );
       } catch (e: any) {
         // Revertir si falla
         setRecordatorios((prev) =>
@@ -140,6 +137,31 @@ export function useRecordatorios() {
     [session?.access_token],
   );
 
+  /**
+   * Actualiza los campos de un recordatorio existente.
+   * @returns true si se actualizó correctamente, false si hubo un error
+   */
+  const actualizarRecordatorio = useCallback(
+    async (
+      id: number,
+      data: import("@/ts/recordatorioProps").UpdateRecordatorioDto,
+    ): Promise<boolean> => {
+      if (!session?.access_token) return false;
+      setError(null);
+      try {
+        const actualizado = await actualizarService(id, data, session.access_token);
+        setRecordatorios((prev) =>
+          prev.map((r) => (r.Recordatorio_id === id ? actualizado : r)),
+        );
+        return true;
+      } catch (e: any) {
+        setError(e.message ?? "Error al actualizar el recordatorio");
+        return false;
+      }
+    },
+    [session?.access_token],
+  );
+
   return {
     recordatorios,
     loading,
@@ -148,5 +170,6 @@ export function useRecordatorios() {
     crearRecordatorio,
     eliminarRecordatorio,
     toggleRecordatorio,
+    actualizarRecordatorio,
   };
 }

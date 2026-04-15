@@ -85,7 +85,11 @@ export default function RegisterScreen() {
       });
 
       if (error) {
-        Alert.alert("Error", error.message);
+        const mensaje =
+          error.message === "User already registered"
+            ? "Este correo ya tiene una cuenta. Prueba iniciando sesión."
+            : error.message;
+        Alert.alert("Error", mensaje);
         return;
       }
 

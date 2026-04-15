@@ -28,21 +28,25 @@ const CardSuspription = ({
     <View style={styles.card_container}>
       <View style={styles.card}>
         <View style={styles.card_header}>
-          <Text
-            style={[
-              styles.price,
-              { textDecorationLine: descuento ? "line-through" : "none" },
-            ]}
-          >{`$${precio}`}</Text>
           <View style={styles.premium}>
-            <View style={styles.dot}></View>
+            <View style={styles.dot} />
             <Text style={styles.title}>premium</Text>
           </View>
 
-          <Text style={styles.time}>{esAnual ? "/año" : "/mes"}</Text>
-          {esAnual && (
-            <Text style={styles.timeSubtext}>{`$${Math.round(precio / 12)}/mes`}</Text>
-          )}
+          <View style={styles.priceRow}>
+            <Text
+              style={[
+                styles.price,
+                { textDecorationLine: descuento ? "line-through" : "none" },
+              ]}
+            >{`$${precio}`}</Text>
+            <View style={styles.priceInfo}>
+              <Text style={styles.time}>{esAnual ? "/año" : "/mes"}</Text>
+              {esAnual && (
+                <Text style={styles.timeSubtext}>{`$${Math.round(precio / 12)}/mes`}</Text>
+              )}
+            </View>
+          </View>
         </View>
 
         {descuento && (
@@ -116,30 +120,43 @@ const styles = StyleSheet.create({
 
   card_header: {
     width: "100%",
-    height: 180,
     backgroundColor: "#19c91f",
+    paddingTop: 14,
+    paddingBottom: 18,
+    paddingHorizontal: 16,
+    justifyContent: "space-between",
+  },
+
+  priceRow: {
+    flexDirection: "row",
+    alignItems: "flex-end",
+    marginTop: 8,
+    gap: 6,
+  },
+
+  priceInfo: {
+    flexDirection: "column",
     justifyContent: "flex-end",
-    paddingBottom: 10,
-    paddingRight: 12,
+    paddingBottom: 6,
+    gap: 2,
   },
 
   price: {
-    fontSize: 50,
+    fontSize: 52,
     fontWeight: "800",
     color: "#fff",
-    textAlign: "left",
-    marginBottom: 20,
-    marginLeft: 15,
+    lineHeight: 56,
   },
 
   premium: {
-    position: "absolute",
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: "#137a11",
-    width: 115,
-    height: 44,
-    top: 5,
-    left: 10,
+    alignSelf: "flex-start",
+    paddingHorizontal: 14,
+    paddingVertical: 8,
     borderRadius: 50,
+    gap: 8,
   },
 
   dot: {
@@ -147,32 +164,22 @@ const styles = StyleSheet.create({
     height: 7,
     backgroundColor: "#4ade80",
     borderRadius: 10,
-    top: 20,
-    left: 12,
   },
+
   title: {
     color: "#c8f0d2",
-    position: "absolute",
-    top: 10,
-    left: 25,
-    fontSize: 17,
+    fontSize: 15,
     fontWeight: "700",
-    textAlign: "center",
   },
 
   time: {
     color: "#fff",
-    position: "absolute",
-    bottom: 40,
-    left: 100,
     fontSize: 18,
     fontWeight: "700",
   },
+
   timeSubtext: {
     color: "#c8f0d2",
-    position: "absolute",
-    bottom: 22,
-    left: 100,
     fontSize: 13,
     fontWeight: "500",
   },

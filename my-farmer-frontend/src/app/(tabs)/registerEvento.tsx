@@ -29,6 +29,7 @@ import * as ImagePicker from "expo-image-picker";
 import Colors from "@/constants/colors";
 import { ThemedText } from "@/components/themed-text";
 import ScreenHeader from "@/components/header";
+import { useTheme } from "@/contexts/ThemeContext";
 import Dropdown from "@/components/dropdown";
 import { TipoEvento } from "@/ts/eventoAnimal";
 import { useAuth } from "@/supabase/useAuth";
@@ -68,6 +69,8 @@ export default function RegisterEventoScreen() {
     evento_id?: string;
   }>();
 
+  const { t } = useTheme();
+  const titleStyle = { color: t.title };
   const modoEdicion = !!evento_id;
   const todayISO = toISO(new Date());
 
@@ -214,7 +217,7 @@ export default function RegisterEventoScreen() {
     return (
       <>
         <ScreenHeader title="Editar Evento" />
-        <View style={styles.centered}>
+        <View style={[styles.centered, { backgroundColor: t.bg }]}>
           <ActivityIndicator size="large" color={Colors.PRIMARY_GREEN} />
         </View>
       </>
@@ -231,7 +234,7 @@ export default function RegisterEventoScreen() {
     <>
       <ScreenHeader title={headerTitle} />
       <ScrollView
-        style={styles.scroll}
+        style={[styles.scroll, { backgroundColor: t.bg }]}
         contentContainerStyle={styles.container}
         showsVerticalScrollIndicator={false}
       >
@@ -243,7 +246,7 @@ export default function RegisterEventoScreen() {
           {imagen ? (
             <Image source={{ uri: imagen }} style={styles.imagePreview} />
           ) : (
-            <View style={styles.imagePlaceholder}>
+            <View style={[styles.imagePlaceholder, { backgroundColor: t.input, borderColor: t.border }]}>
               <ThemedText style={styles.imagePlaceholderIcon}>📷</ThemedText>
               <ThemedText style={styles.imagePlaceholderText}>
                 Agregar foto del evento (opcional)
@@ -260,18 +263,18 @@ export default function RegisterEventoScreen() {
         )}
 
         {/* ── Detalles ───────────────────────────────────────────────────── */}
-        <ThemedText style={styles.sectionTitle}>Detalles del Evento</ThemedText>
+        <ThemedText style={[styles.sectionTitle, titleStyle]}>Detalles del Evento</ThemedText>
 
-        <ThemedText style={styles.label}>Título *</ThemedText>
+        <ThemedText style={[styles.label, titleStyle]}>Título *</ThemedText>
         <TextInput
-          style={styles.input}
+          style={[styles.input, { backgroundColor: t.input, borderColor: t.border, color: t.title }]}
           placeholder="Ej: Vacunación anual"
-          placeholderTextColor={Colors.PLACEHOLDER_GRAY}
+          placeholderTextColor={t.placeholder}
           value={titulo}
           onChangeText={setTitulo}
         />
 
-        <ThemedText style={styles.label}>Tipo de Evento *</ThemedText>
+        <ThemedText style={[styles.label, titleStyle]}>Tipo de Evento *</ThemedText>
         <Dropdown
           data={TIPO_OPCIONES}
           placeholder="Seleccione el tipo de evento"
@@ -282,12 +285,12 @@ export default function RegisterEventoScreen() {
           }}
         />
 
-        <ThemedText style={styles.label}>Fecha del Evento *</ThemedText>
+        <ThemedText style={[styles.label, titleStyle]}>Fecha del Evento *</ThemedText>
         <TouchableOpacity
-          style={styles.input}
+          style={[styles.input, { backgroundColor: t.input, borderColor: t.border }]}
           onPress={() => setShowDatePicker(true)}
         >
-          <ThemedText style={fecha ? styles.dateText : styles.datePlaceholder}>
+          <ThemedText style={{ fontSize: 15, color: fecha ? t.title : t.placeholder }}>
             {fecha ? formatDisplayDate(fecha) : "Seleccionar fecha"}
           </ThemedText>
         </TouchableOpacity>
@@ -300,11 +303,11 @@ export default function RegisterEventoScreen() {
           />
         )}
 
-        <ThemedText style={styles.label}>Descripción</ThemedText>
+        <ThemedText style={[styles.label, titleStyle]}>Descripción</ThemedText>
         <TextInput
-          style={styles.textArea}
+          style={[styles.textArea, { backgroundColor: t.input, borderColor: t.border, color: t.title }]}
           placeholder="Describe el evento (opcional)"
-          placeholderTextColor={Colors.PLACEHOLDER_GRAY}
+          placeholderTextColor={t.placeholder}
           value={descripcion}
           onChangeText={setDescripcion}
           multiline
@@ -315,11 +318,11 @@ export default function RegisterEventoScreen() {
         {/* ── Botones ────────────────────────────────────────────────────── */}
         <View style={styles.buttons}>
           <TouchableOpacity
-            style={styles.cancelButton}
+            style={[styles.cancelButton, { backgroundColor: t.input, borderColor: t.border }]}
             onPress={() => router.back()}
             disabled={guardando}
           >
-            <ThemedText style={styles.cancelText}>Cancelar</ThemedText>
+            <ThemedText style={[styles.cancelText, titleStyle]}>Cancelar</ThemedText>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.saveButton, guardando && { opacity: 0.7 }]}
@@ -343,7 +346,6 @@ export default function RegisterEventoScreen() {
 const styles = StyleSheet.create({
   scroll: {
     flex: 1,
-    backgroundColor: Colors.BACKGROUND,
   },
   container: {
     paddingHorizontal: 16,
@@ -355,7 +357,6 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: Colors.BACKGROUND,
   },
 
   // Imagen
@@ -376,8 +377,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
     borderStyle: "dashed",
-    borderColor: Colors.INPUT_BORDER,
-    backgroundColor: Colors.CARD_DETAILS,
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
@@ -385,7 +384,6 @@ const styles = StyleSheet.create({
   imagePlaceholderIcon: { fontSize: 28 },
   imagePlaceholderText: {
     fontSize: 12,
-    color: Colors.PLACEHOLDER_GRAY,
     textAlign: "center",
     paddingHorizontal: 16,
   },
@@ -400,42 +398,32 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: "700",
-    color: Colors.TITLE,
     marginTop: 20,
     marginBottom: 8,
   },
   label: {
     fontSize: 14,
     fontWeight: "500",
-    color: Colors.TITLE,
     marginBottom: 4,
     marginTop: 8,
   },
   input: {
     width: "100%",
     height: 50,
-    backgroundColor: Colors.CARD_DETAILS,
-    borderColor: Colors.INPUT_BORDER,
     borderWidth: 1,
     borderRadius: 12,
     paddingHorizontal: 16,
     fontSize: 15,
-    color: Colors.TITLE,
     justifyContent: "center",
   },
-  dateText: { fontSize: 15, color: Colors.TITLE },
-  datePlaceholder: { fontSize: 15, color: Colors.PLACEHOLDER_GRAY },
   textArea: {
     width: "100%",
     minHeight: 100,
-    backgroundColor: Colors.CARD_DETAILS,
-    borderColor: Colors.INPUT_BORDER,
     borderWidth: 1,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 12,
     fontSize: 15,
-    color: Colors.TITLE,
     textAlignVertical: "top",
   },
 
@@ -450,14 +438,11 @@ const styles = StyleSheet.create({
     height: 50,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: Colors.INPUT_BORDER,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: Colors.CARD_DETAILS,
   },
   cancelText: {
     fontSize: 16,
-    color: Colors.TITLE,
     fontWeight: "500",
   },
   saveButton: {

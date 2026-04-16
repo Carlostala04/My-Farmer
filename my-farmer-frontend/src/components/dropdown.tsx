@@ -116,8 +116,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 12,
     paddingHorizontal: 16,
-    paddingVertical: 12,
-    marginVertical: 4,
+    height: 50,
   },
   selectedText: {
     fontSize: 15,

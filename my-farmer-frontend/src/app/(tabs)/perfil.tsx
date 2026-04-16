@@ -475,7 +475,7 @@ export default function PerfilScreen() {
         </TouchableOpacity>
 
         <Text style={[styles.version, { color: subtitle }]}>
-          Myfarmer v2.4.0 — 2026
+          Myfarmer v1.0.0 — 2026
         </Text>
       </ScrollView>
 

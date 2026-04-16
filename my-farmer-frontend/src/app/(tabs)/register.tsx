@@ -44,7 +44,6 @@ export default function RegisterScreen() {
   const router = useRouter();
   const [nombre, setNombre] = useState("");
   const [apellido, setApellido] = useState("");
-  const [nombreDeUsuario, setNombreDeUsuario] = useState("");
   const [correo, setCorreo] = useState("");
   const [contrasena, setContrasena] = useState("");
   const [confirmContrasena, setConfirmContrasena] = useState("");
@@ -79,7 +78,6 @@ export default function RegisterScreen() {
           data: {
             nombre: nombre.trim(),
             apellido: apellido.trim(),
-            username: nombreDeUsuario.trim() || undefined,
           },
         },
       });
@@ -225,18 +223,6 @@ export default function RegisterScreen() {
                 autoCapitalize="words"
               />
             </View>
-          </View>
-
-          <View style={styles.inputWrapper}>
-            <UserIcon color={Colors.PLACEHOLDER_GRAY} style={styles.inputIcon} />
-            <TextInput
-              style={styles.input}
-              placeholder="Nombre de usuario"
-              placeholderTextColor={Colors.PLACEHOLDER_GRAY}
-              value={nombreDeUsuario}
-              onChangeText={setNombreDeUsuario}
-              autoCapitalize="none"
-            />
           </View>
 
           <View style={styles.inputWrapper}>

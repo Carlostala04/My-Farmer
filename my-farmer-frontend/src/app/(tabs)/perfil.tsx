@@ -54,20 +54,6 @@ const IconSettings = ({ dark }: { dark: boolean }) => (
   </Svg>
 );
 
-const IconBell = ({ dark }: { dark: boolean }) => (
-  <Svg
-    width={18}
-    height={18}
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke={dark ? "#fff" : "#1A1A1A"}
-    strokeWidth={2}
-    strokeLinecap="round"
-  >
-    <Path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-    <Path d="M13.73 21a2 2 0 0 1-3.46 0" />
-  </Svg>
-);
 
 const IconGlobe = ({ dark }: { dark: boolean }) => (
   <Svg
@@ -131,7 +117,6 @@ const IconSync = ({ dark }: { dark: boolean }) => (
 
 export default function PerfilScreen() {
   const { darkMode, toggleDarkMode, t } = useTheme();
-  const [notificaciones, setNotificaciones] = useState(true);
   const [preferenciasOpen, setPreferenciasOpen] = useState(true);
   const [seguridadOpen, setSeguridadOpen] = useState(false);
   const [sincronizacionOpen, setSincronizacionOpen] = useState(false);
@@ -420,19 +405,6 @@ export default function PerfilScreen() {
                   </Text>
                 </View>
               </TouchableOpacity>
-              <View style={[styles.divider, { backgroundColor: border }]} />
-              <View style={styles.settingRow}>
-                <IconBell dark={d} />
-                <Text style={[styles.settingLabel, { color: title }]}>
-                  Notificaciones
-                </Text>
-                <Switch
-                  value={notificaciones}
-                  onValueChange={setNotificaciones}
-                  trackColor={{ false: "#D1D5DB", true: Colors.PRIMARY_GREEN }}
-                  thumbColor="#fff"
-                />
-              </View>
               <View style={[styles.divider, { backgroundColor: border }]} />
               <TouchableOpacity style={styles.settingRow}>
                 <IconGlobe dark={d} />

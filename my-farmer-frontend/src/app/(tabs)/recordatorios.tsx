@@ -725,7 +725,7 @@ export default function RecordatoriosScreen() {
 
                     {nuevaEntidadTipo !== "" && (
                       <>
-                        <Text style={styles.modalLabel}>
+                        <Text style={[styles.modalLabel, { color: t.title }]}>
                           {nuevaEntidadTipo === "animal"
                             ? "Animal relacionado"
                             : "Cultivo relacionado"}

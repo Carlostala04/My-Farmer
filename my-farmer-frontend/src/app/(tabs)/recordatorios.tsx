@@ -64,7 +64,7 @@ const entidadTipoOpciones = [
 ];
 
 export default function RecordatoriosScreen() {
-  const { t } = useTheme();
+  const { t, darkMode } = useTheme();
   const [categoriaActiva, setCategoriaActiva] =
     useState<CategoriaFiltro>("Todos");
   const [modalVisible, setModalVisible] = useState(false);
@@ -811,20 +811,38 @@ export default function RecordatoriosScreen() {
                   </TouchableOpacity>
                 </View>
                 {showFechaPicker && (
-                  <DateTimePicker
-                    value={recordarFechaValue}
-                    mode="date"
-                    display={Platform.OS === "ios" ? "spinner" : "default"}
-                    onChange={handleFechaChange}
-                  />
+                  <View
+                    style={
+                      Platform.OS === "ios"
+                        ? [styles.pickerWrapper, { backgroundColor: t.card }]
+                        : undefined
+                    }
+                  >
+                    <DateTimePicker
+                      value={recordarFechaValue}
+                      mode="date"
+                      display={Platform.OS === "ios" ? "spinner" : "default"}
+                      onChange={handleFechaChange}
+                      themeVariant={darkMode ? "dark" : "light"}
+                    />
+                  </View>
                 )}
                 {showHoraPicker && (
-                  <DateTimePicker
-                    value={recordarHoraValue}
-                    mode="time"
-                    display={Platform.OS === "ios" ? "spinner" : "default"}
-                    onChange={handleHoraChange}
-                  />
+                  <View
+                    style={
+                      Platform.OS === "ios"
+                        ? [styles.pickerWrapper, { backgroundColor: t.card }]
+                        : undefined
+                    }
+                  >
+                    <DateTimePicker
+                      value={recordarHoraValue}
+                      mode="time"
+                      display={Platform.OS === "ios" ? "spinner" : "default"}
+                      onChange={handleHoraChange}
+                      themeVariant={darkMode ? "dark" : "light"}
+                    />
+                  </View>
                 )}
 
                 <View style={styles.modalButtons}>
@@ -1109,6 +1127,11 @@ const styles = StyleSheet.create({
   },
   saveText: { fontSize: 16, color: "#fff", fontWeight: "600" },
   dateRow: { flexDirection: "row", gap: 8 },
+  pickerWrapper: {
+    borderRadius: 12,
+    overflow: "hidden",
+    marginTop: 4,
+  },
   dateButton: {
     flex: 1,
     borderWidth: 1,
